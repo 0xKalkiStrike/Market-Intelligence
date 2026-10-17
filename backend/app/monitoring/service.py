@@ -60,7 +60,7 @@ def run_monitoring_for_product(
 
         # Deterministic seed using product id + source id for consistent realistic comparison values
         seed_str = f"{product.id}-{source.id}"
-        seed_int = int(hashlib.md5(seed_str.encode('utf-8')).hexdigest(), 16)
+        seed_int = int(hashlib.md5(seed_str.encode('utf-8'), usedforsecurity=False).hexdigest(), 16)
         
         # Calculate price variation (-12% to +12%)
         variation_pct = (((seed_int % 25) - 12) / 100.0)

@@ -200,7 +200,7 @@ def validate_safe_url(url: str) -> str:
         raise ValueError("URL missing valid hostname.")
 
     # Block localhost & link-local hostnames
-    if hostname.lower() in ("localhost", "127.0.0.1", "0.0.0.0", "::1", "metadata.google.internal"):
+    if hostname.lower() in ("localhost", "127.0.0.1", "0.0.0.0", "::1", "metadata.google.internal"):  # nosec B104 - SSRF blocklist entry, not a bind address
         raise ValueError("Access to internal localhost destinations is blocked for security.")
 
     # Check if host is an IP address
