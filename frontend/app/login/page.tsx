@@ -79,33 +79,6 @@ export default function LoginPage() {
                 className="bg-slate-950 border-slate-800 text-slate-100 placeholder:text-slate-500 focus:border-indigo-500"
               />
 
-              <div className="flex flex-col gap-2 p-3 bg-slate-950/60 border border-slate-800/80 rounded-xl text-xs">
-                <span className="text-slate-400 font-medium">Quick Fill Demo Accounts:</span>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmail("admin@mmjdocs.com");
-                      setPassword("Admin123!");
-                    }}
-                    className="px-2.5 py-1.5 rounded-lg bg-indigo-950/40 border border-indigo-700/50 text-indigo-300 hover:bg-indigo-900/60 text-left transition-colors cursor-pointer"
-                  >
-                    <div className="font-semibold">👑 Admin</div>
-                    <div className="text-[10px] text-slate-400">admin@mmjdocs.com</div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmail("testuser@mmjdocs.com");
-                      setPassword("Password123!");
-                    }}
-                    className="px-2.5 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700 text-slate-300 hover:bg-slate-800 text-left transition-colors cursor-pointer"
-                  >
-                    <div className="font-semibold">👤 Test User</div>
-                    <div className="text-[10px] text-slate-400">testuser@mmjdocs.com</div>
-                  </button>
-                </div>
-              </div>
 
               <Button type="submit" variant="indigo" size="lg" isLoading={submitting} className="w-full mt-2 font-semibold">
                 Sign in to Platform →

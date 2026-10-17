@@ -100,14 +100,14 @@ async def lifespan(app_instance: FastAPI):
     # Pre-warm analytical and geospatial in-memory caches and ensure default organization in background thread on startup
     import threading
     from app.database.session import SessionLocal
-    from app.auth.router import ensure_seed_users
+    from app.auth.router import cleanup_demo_users
     from app.services.analytics_service import AnalyticsService
     from app.services.geographic_optimization_service import GeographicOptimizationService
 
     def warm_startup_cache():
         try:
             with SessionLocal() as db:
-                ensure_seed_users(db)
+                cleanup_demo_users(db)
                 TenantMembershipService.ensure_default_organization(db)
                 AnalyticsService().get_dashboard_metrics(db)
                 geo_svc = GeographicOptimizationService(db)
