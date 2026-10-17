@@ -41,8 +41,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: market-intelligence-backend
-          property: host
+        value: https://market-intelligence-backend-2afj.onrender.com
+      - key: BACKEND_URL
+        value: https://market-intelligence-backend-2afj.onrender.com
     healthCheckPath: /

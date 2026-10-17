@@ -1,10 +1,21 @@
 export function normalizeApiUrl(raw?: string): string {
   if (!raw) return "http://localhost:8000";
-  const trimmed = raw.trim();
+  let trimmed = raw.trim();
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-    return trimmed.replace(/\/$/, "");
+    trimmed = trimmed.replace(/\/$/, "");
+  } else {
+    trimmed = `https://${trimmed}`.replace(/\/$/, "");
   }
-  return `https://${trimmed}`.replace(/\/$/, "");
+  try {
+    const url = new URL(trimmed);
+    if (!url.hostname.includes(".") && !url.hostname.includes("localhost")) {
+      url.hostname = `${url.hostname}.onrender.com`;
+      return url.origin;
+    }
+  } catch {
+    // fallback to trimmed
+  }
+  return trimmed;
 }
 
 export const API_URL = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
