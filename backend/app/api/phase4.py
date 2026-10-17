@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -51,7 +51,7 @@ class AlertPriorityRequest(BaseModel):
 class ForecastGenerateRequest(BaseModel):
     metric_name: str = "APPOINTMENT_VOLUME"
     state: str = "FL"
-    horizon_days: int = 30
+    horizon_days: Union[int, str] = 30
     model_type: str = "SEASONAL"
 
 class GeoClusterCreateRequest(BaseModel):

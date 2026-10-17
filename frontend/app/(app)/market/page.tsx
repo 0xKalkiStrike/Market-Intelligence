@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Search } from "lucide-react";
 import { api } from "@/lib/api";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
@@ -266,9 +267,17 @@ export default function MarketExplorerPage() {
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Button variant="secondary" size="xs" onClick={() => handleOpenDetail(e.id)}>
-                        Inspect
-                      </Button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Button variant="secondary" size="xs" onClick={() => handleOpenDetail(e.id)}>
+                          Quick View
+                        </Button>
+                        <Link
+                          href={`/entities/${e.id}`}
+                          className="inline-flex items-center gap-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white px-2.5 py-1 font-bold transition-all text-[11px] border border-indigo-500/30"
+                        >
+                          Dossier ↗
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -393,6 +402,17 @@ export default function MarketExplorerPage() {
                 </div>
               </div>
             )}
+
+            {/* Modal Action Bar */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800">
+              <span className="text-[11px] text-slate-500 font-mono">Entity ID: {detail.id}</span>
+              <Link
+                href={`/entities/${detail.id}`}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 text-xs shadow-md shadow-indigo-600/30 transition-all"
+              >
+                Open Full Executive Dossier ↗
+              </Link>
+            </div>
           </div>
         ) : (
           <p className="text-slate-500 dark:text-slate-400">Failed to load entity details.</p>

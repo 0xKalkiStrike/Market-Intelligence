@@ -57,29 +57,23 @@ from app.database.models import CollectionRun, Credential, Entity, Product, Proj
 
 @pytest.fixture(autouse=True)
 def setup_db():
+    import sqlalchemy as sa
+    TestingSessionLocal.close_all()
+    with engine.connect() as conn:
+        conn.execute(sa.text("PRAGMA foreign_keys = OFF"))
+        conn.commit()
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
     try:
-        db.query(Entity).delete()
-        db.query(CollectionRun).delete()
-        db.query(Product).delete()
-        db.query(Project).delete()
-        db.query(Credential).delete()
-        db.query(Source).delete()
-        db.query(User).delete()
-        db.query(Role).delete()
-        db.query(Permission).delete()
+        admin_role = Role(name="admin", description="Administrator")
+        analyst_role = Role(name="analyst", description="Analyst")
+        perm_read_users = Permission(code="users:read", description="Read users")
+        admin_role.permissions.append(perm_read_users)
+        db.add_all([admin_role, analyst_role, perm_read_users])
         db.commit()
     finally:
         db.close()
-
-    admin_role = Role(name="admin", description="Administrator")
-    analyst_role = Role(name="analyst", description="Analyst")
-    perm_read_users = Permission(code="users:read", description="Read users")
-    admin_role.permissions.append(perm_read_users)
-    db.add_all([admin_role, analyst_role, perm_read_users])
-    db.commit()
-    db.close()
 
 
 

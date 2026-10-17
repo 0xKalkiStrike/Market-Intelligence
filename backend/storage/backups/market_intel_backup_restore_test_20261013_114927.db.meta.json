@@ -1,0 +1,11 @@
+{
+  "backup_filename": "market_intel_backup_restore_test_20261013_114927.db",
+  "backup_path": "C:\\hacker\\Market-Intelligence\\backend\\storage\\backups\\market_intel_backup_restore_test_20261013_114927.db",
+  "checksum_sha256": "66a2d5ce9b8ee05fb96866ef8c761e09152a3b4be805c7555391e80d14d588cf",
+  "size_bytes": 1950552064,
+  "duration_seconds": 39.89,
+  "timestamp_utc": "2026-10-13T11:50:07.444456+00:00",
+  "rpo_target": "1 hour",
+  "rto_target": "15 minutes",
+  "verified": false
+}

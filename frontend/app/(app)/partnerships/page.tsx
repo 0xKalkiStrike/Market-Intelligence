@@ -1,10 +1,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Handshake, Search, Filter, MapPin, Building2, Phone, Mail, ChevronRight, Check } from "lucide-react";
+import Link from "next/link";
+import {
+  Handshake,
+  Search,
+  Filter,
+  MapPin,
+  Building2,
+  Phone,
+  Mail,
+  ChevronRight,
+  CheckCircle2,
+  ExternalLink,
+  Store,
+  TrendingUp,
+  Award,
+  RefreshCw,
+} from "lucide-react";
+import { api } from "@/lib/api";
+import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
 
 interface PartnershipOpp {
   id: string;
+  entity_id?: string;
   name: string;
   parent_company: string;
   brand: string;
@@ -16,46 +36,45 @@ interface PartnershipOpp {
   location_count: number;
   partnership_status: string;
   partnership_score: number;
+  distance_miles?: number;
+  local_patient_volume?: number;
+  competitor_presence_level?: string;
   internal_notes: string;
 }
 
 const STATUS_OPTIONS = [
-  "ALL",
-  "NOT_CONTACTED",
-  "CONTACTED",
-  "FOLLOW_UP_NEEDED",
-  "INTERESTED",
-  "MEETING_SCHEDULED",
-  "PARTNER",
-  "ACTIVE_REFERRAL",
-  "INACTIVE",
-  "NOT_INTERESTED",
+  { value: "ALL", label: "All Statuses" },
+  { value: "active", label: "Active Referral Partner" },
+  { value: "negotiating", label: "Negotiating / Meeting" },
+  { value: "contacted", label: "Contacted / In Discussion" },
+  { value: "not_contacted", label: "Not Yet Contacted" },
+  { value: "closed", label: "Archived / Closed" },
 ];
 
 export default function PartnershipsPage() {
   const [opportunities, setOpportunities] = useState<PartnershipOpp[]>([]);
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [stateFilter, setStateFilter] = useState("ALL");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPartnerships();
-  }, [statusFilter, search]);
+  }, [statusFilter, stateFilter]);
 
   async function fetchPartnerships() {
     setLoading(true);
     try {
-      const url = new URL(`${API_BASE}/api/market-intelligence/partnerships`);
-      if (statusFilter !== "ALL") url.searchParams.append("status", statusFilter);
-      if (search) url.searchParams.append("search", search);
+      const params = new URLSearchParams();
+      if (statusFilter !== "ALL") params.append("status", statusFilter.toLowerCase());
+      if (stateFilter !== "ALL") params.append("state", stateFilter);
+      if (search.trim()) params.append("search", search.trim());
 
-      const res = await fetch(url.toString());
-      if (res.ok) {
-        const data = await res.json();
-        setOpportunities(data.opportunities || []);
-      }
+      const res = await api.get<{ opportunities: PartnershipOpp[] }>(
+        `/api/market-intelligence/partnerships?${params.toString()}`
+      );
+      setOpportunities(res.opportunities || []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -63,120 +82,266 @@ export default function PartnershipsPage() {
     }
   }
 
-  async function updateStatus(id: string, newStatus: string) {
+  async function updateStatus(oppId: string, newStatus: string) {
+    setUpdatingId(oppId);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE}/api/market-intelligence/partnerships/status`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-        body: JSON.stringify({ opportunity_id: id, new_status: newStatus }),
+      await api.post("/api/market-intelligence/partnerships/status", {
+        opportunity_id: oppId,
+        new_status: newStatus,
       });
-
-      if (res.ok) {
-        fetchPartnerships();
-      }
+      // Update local state immediately for responsiveness
+      setOpportunities((prev) =>
+        prev.map((opp) => (opp.id === oppId ? { ...opp, partnership_status: newStatus } : opp))
+      );
     } catch (e) {
       console.error(e);
+    } finally {
+      setUpdatingId(null);
     }
   }
 
+  // Filtered by local search query
+  const filtered = opportunities.filter((opp) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      opp.name?.toLowerCase().includes(q) ||
+      opp.parent_company?.toLowerCase().includes(q) ||
+      opp.city?.toLowerCase().includes(q) ||
+      opp.state?.toLowerCase().includes(q)
+    );
+  });
+
+  // KPI Calculations
+  const totalCount = opportunities.length;
+  const avgScore = totalCount
+    ? (opportunities.reduce((acc, o) => acc + (o.partnership_score || 0), 0) / totalCount).toFixed(1)
+    : "0.0";
+  const activeCount = opportunities.filter(
+    (o) => o.partnership_status?.toLowerCase() === "active" || o.partnership_status?.toLowerCase() === "negotiating"
+  ).length;
+  const totalStores = opportunities.reduce((acc, o) => acc + (o.location_count || 1), 0);
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-5">
+    <div className="space-y-6 pb-12">
+      {/* Header Banner */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-slate-800 pb-5">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-            <Handshake className="h-6 w-6 text-indigo-400" /> Dispensary Partnership Opportunity Engine
+          <div className="inline-flex items-center gap-2 rounded-full bg-indigo-950/80 px-3 py-0.5 text-xs font-bold text-indigo-300 border border-indigo-800/50 mb-1.5">
+            DISPENSARY CO-MARKETING PIPELINE
+          </div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2 sm:text-3xl">
+            <Handshake className="h-7 w-7 text-indigo-400" /> Dispensary Partnership Engine
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            CRM pipeline connecting MMJ-DOCS internal business metrics with surface-web dispensary data.
+          <p className="text-xs text-slate-400 mt-1 max-w-2xl">
+            B2B co-marketing & patient referral opportunity pipeline connecting licensed dispensaries with MMJ-DOCS certifying clinics.
           </p>
+        </div>
+
+        <button
+          onClick={fetchPartnerships}
+          disabled={loading}
+          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 border border-slate-700 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition-colors self-start md:self-auto"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+          Refresh Pipeline
+        </button>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Tracked Dispensaries</p>
+          <p className="mt-1 text-2xl font-extrabold text-white">{totalCount.toLocaleString()}</p>
+          <p className="mt-0.5 text-[10px] text-indigo-400 font-medium">Licensed retail footprints</p>
+        </div>
+
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Average Opportunity Score</p>
+          <p className="mt-1 text-2xl font-extrabold text-emerald-400">{avgScore} <span className="text-xs text-slate-500 font-normal">/ 100</span></p>
+          <p className="mt-0.5 text-[10px] text-slate-400 font-medium">Weighted location & volume score</p>
+        </div>
+
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Active / Negotiating</p>
+          <p className="mt-1 text-2xl font-extrabold text-indigo-400">{activeCount.toLocaleString()}</p>
+          <p className="mt-0.5 text-[10px] text-indigo-300 font-medium">In active partnership pipeline</p>
+        </div>
+
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Store Footprint</p>
+          <p className="mt-1 text-2xl font-extrabold text-teal-400">{totalStores.toLocaleString()}</p>
+          <p className="mt-0.5 text-[10px] text-slate-400 font-medium">Combined dispensary locations</p>
         </div>
       </div>
 
-      {/* Filters & Search */}
-      <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+      {/* Filter and Search Bar */}
+      <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
         <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
           <input
             type="text"
-            placeholder="Search dispensaries or city..."
+            placeholder="Search dispensary brand, MSO, city..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg bg-slate-950 border border-slate-700 pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500"
+            className="w-full rounded-xl bg-slate-950 border border-slate-800 pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Filter className="h-4 w-4 text-slate-400" />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-xs text-white"
-          >
-            {STATUS_OPTIONS.map((st) => (
-              <option key={st} value={st}>
-                {st.replace(/_/g, " ")}
-              </option>
-            ))}
-          </select>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          {/* State Filter */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-semibold text-slate-400">State:</span>
+            <select
+              value={stateFilter}
+              onChange={(e) => setStateFilter(e.target.value)}
+              className="rounded-xl bg-slate-950 border border-slate-800 px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+            >
+              <option value="ALL">All States</option>
+              <option value="CA">California (CA)</option>
+              <option value="FL">Florida (FL)</option>
+              <option value="PA">Pennsylvania (PA)</option>
+              <option value="TX">Texas (TX)</option>
+            </select>
+          </div>
+
+          {/* Status Filter */}
+          <div className="flex items-center gap-1.5">
+            <Filter className="h-3.5 w-3.5 text-slate-500" />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="rounded-xl bg-slate-950 border border-slate-800 px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+            >
+              {STATUS_OPTIONS.map((st) => (
+                <option key={st.value} value={st.value}>
+                  {st.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Table / Cards */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900/50 overflow-hidden">
+      {/* Main Opportunities Table */}
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-300">
-            <thead className="border-b border-slate-800 bg-slate-950/80 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            <thead className="border-b border-slate-800 bg-slate-950/90 text-[10px] font-bold uppercase tracking-wider text-slate-400">
               <tr>
-                <th className="px-4 py-3">Dispensary</th>
-                <th className="px-4 py-3">Location</th>
-                <th className="px-4 py-3">Locations</th>
-                <th className="px-4 py-3">Opportunity Score</th>
-                <th className="px-4 py-3">Pipeline Status</th>
-                <th className="px-4 py-3">Quick Actions</th>
+                <th className="px-4 py-3.5">Dispensary & Brand</th>
+                <th className="px-4 py-3.5">Geography</th>
+                <th className="px-4 py-3.5">Store Network</th>
+                <th className="px-4 py-3.5">Opportunity Score</th>
+                <th className="px-4 py-3.5">Contact Channels</th>
+                <th className="px-4 py-3.5">Pipeline Status</th>
+                <th className="px-4 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800">
-              {opportunities.map((opp) => (
-                <tr key={opp.id} className="hover:bg-slate-800/40">
-                  <td className="px-4 py-3 font-medium text-white">
-                    <div>{opp.name}</div>
-                    <span className="text-[10px] text-slate-500">{opp.parent_company}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1 text-slate-300">
-                      <MapPin className="h-3 w-3 text-slate-500" />
-                      {opp.city}, {opp.state}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 font-mono">{opp.location_count} stores</td>
-                  <td className="px-4 py-3 font-bold text-emerald-400 text-sm">
-                    {opp.partnership_score.toFixed(1)} / 100
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="inline-block rounded px-2 py-0.5 text-[10px] font-semibold bg-indigo-950 text-indigo-300 border border-indigo-800">
-                      {opp.partnership_status.replace(/_/g, " ")}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <select
-                      value={opp.partnership_status}
-                      onChange={(e) => updateStatus(opp.id, e.target.value)}
-                      className="rounded bg-slate-950 border border-slate-700 px-2 py-1 text-[11px] text-slate-200"
-                    >
-                      {STATUS_OPTIONS.filter((s) => s !== "ALL").map((st) => (
-                        <option key={st} value={st}>
-                          {st.replace(/_/g, " ")}
-                        </option>
-                      ))}
-                    </select>
+            <tbody className="divide-y divide-slate-800/80 font-medium">
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-12 text-center text-slate-500">
+                    No dispensary partnership opportunities found matching criteria.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filtered.map((opp) => {
+                  const normalizedStatus = opp.partnership_status?.toLowerCase();
+                  return (
+                    <tr key={opp.id} className="hover:bg-slate-800/40 transition-colors">
+                      <td className="px-4 py-3.5">
+                        <div className="font-bold text-white text-sm">{opp.name}</div>
+                        <div className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                          <Building2 className="h-3 w-3 text-slate-500" />
+                          <span>{opp.parent_company || "Independent Operator"}</span>
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-1 text-slate-300">
+                          <MapPin className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                          <span>{opp.city}, {opp.state}</span>
+                        </div>
+                        {opp.address && (
+                          <div className="text-[10px] text-slate-500 truncate max-w-[180px] mt-0.5">
+                            {opp.address}
+                          </div>
+                        )}
+                      </td>
+
+                      <td className="px-4 py-3.5">
+                        <span className="inline-flex items-center gap-1 font-mono text-xs font-semibold text-slate-200">
+                          <Store className="h-3.5 w-3.5 text-slate-400" />
+                          {opp.location_count || 1} {opp.location_count === 1 ? "store" : "stores"}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-extrabold text-emerald-400 text-sm">
+                            {opp.partnership_score?.toFixed(1) || "50.0"}
+                          </span>
+                          <span className="text-[10px] text-slate-500">/ 100</span>
+                        </div>
+                        {opp.local_patient_volume && (
+                          <div className="text-[10px] text-slate-500">
+                            ~{opp.local_patient_volume.toLocaleString()} patients
+                          </div>
+                        )}
+                      </td>
+
+                      <td className="px-4 py-3.5">
+                        <div className="space-y-0.5 text-[11px]">
+                          {opp.phone ? (
+                            <div className="flex items-center gap-1.5 text-slate-300">
+                              <Phone className="h-3 w-3 text-slate-500" />
+                              <span>{opp.phone}</span>
+                            </div>
+                          ) : (
+                            <span className="text-slate-500 text-[10px]">No phone</span>
+                          )}
+                          {opp.email && (
+                            <div className="flex items-center gap-1.5 text-slate-400">
+                              <Mail className="h-3 w-3 text-slate-500" />
+                              <span className="truncate max-w-[140px]">{opp.email}</span>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-3.5">
+                        <select
+                          value={normalizedStatus}
+                          disabled={updatingId === opp.id}
+                          onChange={(e) => updateStatus(opp.id, e.target.value)}
+                          className="rounded-lg bg-slate-950 border border-slate-700 px-2.5 py-1 text-[11px] font-semibold text-slate-200 focus:outline-none focus:border-indigo-500"
+                        >
+                          <option value="not_contacted">Not Contacted</option>
+                          <option value="contacted">Contacted</option>
+                          <option value="negotiating">Negotiating</option>
+                          <option value="active">Active Partner</option>
+                          <option value="closed">Closed / Archived</option>
+                        </select>
+                      </td>
+
+                      <td className="px-4 py-3.5 text-right">
+                        {opp.entity_id ? (
+                          <Link
+                            href={`/entities/${opp.entity_id}`}
+                            className="inline-flex items-center gap-1 rounded-lg bg-indigo-950/80 px-2.5 py-1 text-[11px] font-semibold text-indigo-300 hover:bg-indigo-900 border border-indigo-800 transition-colors"
+                          >
+                            <span>Dossier</span>
+                            <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        ) : (
+                          <span className="text-[10px] text-slate-600 font-mono">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>

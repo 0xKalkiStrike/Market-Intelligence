@@ -1,0 +1,88 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: mmj_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: market_intelligence
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_secure_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d market_intelligence"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: mmj_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_secure_password}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mmj_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres_secure_password}@db:5432/market_intelligence
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_secure_password}@redis:6379/0
+      JWT_SECRET: ${JWT_SECRET:-production_secure_jwt_secret_min_32_chars}
+      CREDENTIAL_ENCRYPTION_KEY: ${CREDENTIAL_ENCRYPTION_KEY:-production_32_byte_fernet_key_base64_encoded==}
+      CORS_ORIGINS: '["http://localhost:3000","https://intelligence.mmj-docs.com"]'
+      STORAGE_PATH: /app/storage
+    volumes:
+      - backend_storage:/app/storage
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    networks:
+      - internal_network
+      - public_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mmj_frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:8000
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    networks:
+      - public_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  backend_storage:
+
+networks:
+  internal_network:
+    driver: bridge
+    internal: true
+  public_network:
+    driver: bridge

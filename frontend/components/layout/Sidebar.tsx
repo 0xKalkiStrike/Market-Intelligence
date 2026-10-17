@@ -4,109 +4,123 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import {
+  Activity,
   LayoutDashboard,
   Search,
-  Building2,
   Swords,
   Map,
-  Stethoscope,
-  Link2,
-  Rocket,
-  ShieldCheck,
   FileText,
   TrendingUp,
-  Globe,
-  Folder,
-  Settings2,
-  ScrollText,
-  KeyRound,
   Settings,
   X,
   Sparkles,
   Target,
   Handshake,
-  UserCheck,
-  BarChart3,
-  MessageSquare,
   Scale,
   Bell,
   FileSpreadsheet,
+  ShieldCheck,
+  Share2,
+  FlaskConical,
+  Compass,
+  LineChart,
+  Building2,
+  CreditCard,
+  ShieldAlert,
   type LucideIcon,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
 
-const NAV_GROUPS: { title: string; items: { href: string; label: string; icon: LucideIcon }[] }[] = [
+interface NavItem {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  badge?: string;
+}
+
+interface NavGroup {
+  title: string;
+  items: NavItem[];
+}
+
+const NAV_GROUPS: NavGroup[] = [
   {
-    title: "Phase 4 Continuous Intelligence",
+    title: "Executive",
     items: [
-      { href: "/command-center", label: "Executive Command Center", icon: LayoutDashboard },
-      { href: "/forecasting", label: "Multi-Horizon Forecasting", icon: TrendingUp },
-      { href: "/watchlists", label: "Continuous Watchlists", icon: Sparkles },
-      { href: "/workflows", label: "Workflows & Approvals", icon: FileText },
-      { href: "/geo-optimization", label: "Geo Spatial Grid", icon: Map },
-      { href: "/management-queue", label: "Management Review Queue", icon: ShieldCheck },
-      { href: "/ai-costs", label: "AI Costs & Router", icon: Settings2 },
-    ],
-  },
-  {
-    title: "Market Intelligence Engine",
-    items: [
-      { href: "/dashboard", label: "Executive Dashboard", icon: LayoutDashboard },
-      { href: "/executive-report", label: "Executive Weekly Report", icon: FileSpreadsheet },
-      { href: "/ai-query", label: "AI Market Assistant", icon: Sparkles },
-      { href: "/what-changed", label: "What Changed Engine", icon: TrendingUp },
-      { href: "/scenarios", label: "Scenario Analysis", icon: Target },
-      { href: "/opportunity-scoring", label: "Opportunity Scoring", icon: Target },
-      { href: "/geography", label: "Geographic Intelligence", icon: Map },
-      { href: "/competitors", label: "Competitor Pricing", icon: Swords },
-      { href: "/partnerships", label: "Dispensary Partnerships", icon: Handshake },
-      { href: "/physicians", label: "Physician Coverage", icon: UserCheck },
-      { href: "/seo", label: "SEO Intelligence", icon: BarChart3 },
-      { href: "/reviews", label: "Review Intelligence", icon: MessageSquare },
-      { href: "/regulatory", label: "Regulatory Intelligence", icon: Scale },
-      { href: "/events", label: "Intelligence Events", icon: Bell },
-      { href: "/ai-admin", label: "AI Admin & Observability", icon: Settings2 },
-    ],
-  },
-  {
-    title: "Core Data & Directory",
-    items: [
+      { href: "/command-center", label: "Command Center", icon: LayoutDashboard },
+      { href: "/dashboard", label: "Pipeline Overview", icon: Activity },
+      { href: "/executive-report", label: "Executive Brief", icon: FileSpreadsheet },
       { href: "/market", label: "Market Explorer", icon: Search },
-      { href: "/entities", label: "Entity Intelligence", icon: Building2 },
-      { href: "/services", label: "Service Intelligence", icon: Stethoscope },
-      { href: "/relationships", label: "Entity Relationships", icon: Link2 },
     ],
   },
   {
-    title: "Collection & Verification",
+    title: "Market Intelligence",
     items: [
-      { href: "/collection", label: "Data Collection", icon: Rocket },
-      { href: "/verification", label: "Verification", icon: ShieldCheck },
-      { href: "/evidence", label: "Source Evidence", icon: FileText },
-      { href: "/data-quality", label: "Data Quality & Freshness", icon: TrendingUp },
-      { href: "/sources", label: "Data Sources", icon: Globe },
+      { href: "/competitors", label: "Competitors & Pricing", icon: Swords },
+      { href: "/partnerships", label: "Dispensary Partners", icon: Handshake },
+      { href: "/geography", label: "Geospatial Density", icon: Map },
+      { href: "/regulatory", label: "Regulatory Intel", icon: Scale },
     ],
   },
   {
-    title: "System & Infrastructure",
+    title: "Advanced Research & Optimization",
     items: [
-      { href: "/projects", label: "Projects", icon: Folder },
-      { href: "/jobs", label: "Executions & Jobs", icon: Settings2 },
-      { href: "/audit", label: "Audit Logs", icon: ScrollText },
-      { href: "/credentials", label: "API Credentials", icon: KeyRound },
-      { href: "/settings", label: "Settings", icon: Settings },
+      { href: "/research", label: "Research Workspace", icon: FlaskConical, badge: "P7" },
+      { href: "/competitive-patterns", label: "Competitive Patterns", icon: Swords },
+      { href: "/geo-opportunity-v2", label: "Geo Opportunity v2", icon: Compass },
+      { href: "/pricing-research", label: "Pricing Research", icon: Target },
+      { href: "/scenario-comparison", label: "Scenario Studio", icon: LineChart },
+    ],
+  },
+  {
+    title: "Analytics & AI",
+    items: [
+      { href: "/forecasting", label: "Market Forecasts", icon: TrendingUp },
+      { href: "/scenarios", label: "Scenario Modeling", icon: Target },
+      { href: "/ai-query", label: "AI Copilot", icon: Sparkles, badge: "AI" },
+      { href: "/watchlists", label: "Market Watchlists", icon: Bell },
+    ],
+  },
+  {
+    title: "Organization & Enterprise",
+    items: [
+      { href: "/organization", label: "Organization & Team", icon: Building2, badge: "P9" },
+      { href: "/organization/billing", label: "Plans & Billing", icon: CreditCard },
+      { href: "/onboarding", label: "Setup Wizard", icon: Compass },
+      { href: "/admin-platform", label: "Platform Admin", icon: ShieldAlert, badge: "Admin" },
+    ],
+  },
+  {
+    title: "Operations & Governance",
+    items: [
+      { href: "/admin-quality", label: "Quality Center", icon: ShieldCheck, badge: "P8" },
+      { href: "/integrations-center", label: "Integrations Hub", icon: Share2 },
+      { href: "/operations-center", label: "Operations Hub", icon: Activity },
+      { href: "/data-quality", label: "Data Quality", icon: ShieldCheck },
+      { href: "/workflows", label: "Workflow Reviews", icon: FileText },
+      { href: "/settings", label: "System Settings", icon: Settings },
     ],
   },
 ];
 
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname();
+  const [activeOrg, setActiveOrg] = useState<{ name: string; plan_tier: string } | null>(null);
+
+  useEffect(() => {
+    api
+      .get<{ name: string; plan_tier: string }>("/api/tenants/current")
+      .then((data) => setActiveOrg(data))
+      .catch(() => {});
+  }, []);
 
   return (
     <>
       {/* Mobile Backdrop */}
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs transition-opacity lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-xs transition-opacity lg:hidden"
           onClick={onClose}
         />
       )}
@@ -114,41 +128,69 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
       {/* Sidebar Container */}
       <aside
         className={clsx(
-          "fixed inset-y-0 left-0 z-50 w-64 shrink-0 border-r border-slate-800 bg-[#0f172a] text-slate-300 shadow-xl transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 flex flex-col",
+          "fixed inset-y-0 left-0 z-50 w-64 shrink-0 border-r border-slate-800 bg-[#0c1222] text-slate-300 shadow-2xl transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 flex flex-col",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* Brand Header */}
-        <div className="flex h-16 items-center justify-between border-b border-slate-800 px-5 bg-[#0f172a]">
-          <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white font-bold text-xs">
+        <div className="flex h-16 items-center justify-between border-b border-slate-800/80 px-5 bg-[#0a0f1d]">
+          <Link href="/command-center" className="flex items-center gap-3 group">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 text-white font-black text-xs shadow-md shadow-indigo-600/30 group-hover:scale-105 transition-transform">
               MI
             </div>
             <div>
-              <span className="text-sm font-semibold tracking-tight text-white block">Market-Intelligence</span>
-              <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider block">Enterprise Platform</span>
+              <span className="text-sm font-bold tracking-tight text-white block group-hover:text-indigo-300 transition-colors">
+                Market Intelligence
+              </span>
+              <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">
+                Enterprise Platform
+              </span>
             </div>
           </Link>
 
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white lg:hidden"
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white lg:hidden transition-colors"
             aria-label="Close sidebar"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
+        {/* Workspace Identity Badge */}
+        {activeOrg && (
+          <div className="px-3 pt-3">
+            <Link
+              href="/organization"
+              className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/80 p-2.5 transition-all hover:border-emerald-500/50 hover:bg-slate-900"
+            >
+              <div className="truncate">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  Workspace
+                </span>
+                <span className="block truncate text-xs font-semibold text-white">
+                  {activeOrg.name}
+                </span>
+              </div>
+              <span className="rounded-md border border-emerald-500/30 bg-emerald-950/40 px-1.5 py-0.5 text-[9px] font-bold text-emerald-400">
+                {activeOrg.plan_tier}
+              </span>
+            </Link>
+          </div>
+        )}
+
         {/* Navigation Sections */}
-        <nav className="flex-1 space-y-5 overflow-y-auto p-3.5 custom-scrollbar">
+        <nav className="flex-1 space-y-6 overflow-y-auto p-3.5 custom-scrollbar">
           {NAV_GROUPS.map((group) => (
-            <div key={group.title} className="space-y-1">
-              <h3 className="px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+            <div key={group.title} className="space-y-1.5">
+              <h3 className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 {group.title}
               </h3>
-              <div className="mt-1 space-y-0.5">
+              <div className="space-y-1">
                 {group.items.map((item) => {
-                  const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/"));
+                  const active =
+                    pathname === item.href ||
+                    (item.href !== "/" && pathname.startsWith(item.href + "/"));
                   const Icon = item.icon;
                   return (
                     <Link
@@ -156,14 +198,27 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
                       href={item.href}
                       onClick={onClose}
                       className={clsx(
-                        "flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium transition-colors",
+                        "group flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition-all",
                         active
-                          ? "bg-indigo-600 text-white font-semibold"
-                          : "text-slate-400 hover:bg-slate-800/70 hover:text-slate-200"
+                          ? "bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md shadow-indigo-600/25 font-bold"
+                          : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
                       )}
                     >
-                      <Icon className={clsx("h-4 w-4 shrink-0", active ? "opacity-100" : "opacity-70")} strokeWidth={2} />
-                      <span className="truncate">{item.label}</span>
+                      <div className="flex items-center gap-3 truncate">
+                        <Icon
+                          className={clsx(
+                            "h-4 w-4 shrink-0 transition-transform group-hover:scale-110",
+                            active ? "text-white" : "text-slate-400 group-hover:text-indigo-400"
+                          )}
+                          strokeWidth={2}
+                        />
+                        <span className="truncate">{item.label}</span>
+                      </div>
+                      {item.badge && (
+                        <span className="ml-2 rounded-md bg-indigo-500/20 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-indigo-300 border border-indigo-500/30">
+                          {item.badge}
+                        </span>
+                      )}
                     </Link>
                   );
                 })}
@@ -173,14 +228,17 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="border-t border-slate-800 p-3 bg-[#0b1120]">
-          <div className="flex items-center justify-between rounded-lg bg-slate-900 border border-slate-800 p-2 text-xs">
+        <div className="border-t border-slate-800/80 p-3 bg-[#080d19]">
+          <div className="flex items-center justify-between rounded-xl bg-slate-900/90 border border-slate-800 px-3 py-2 text-xs shadow-inner">
             <div className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              <span className="text-slate-300 font-medium text-[11px]">Sync Engine Live</span>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-slate-300 font-semibold text-[11px]">Sync Engine Live</span>
             </div>
-            <span className="text-[10px] font-mono text-slate-500 font-medium bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">
-              v2.4
+            <span className="text-[10px] font-mono text-indigo-400 font-bold bg-indigo-950/80 px-2 py-0.5 rounded-md border border-indigo-800/60">
+              v2.5 PROD
             </span>
           </div>
         </div>

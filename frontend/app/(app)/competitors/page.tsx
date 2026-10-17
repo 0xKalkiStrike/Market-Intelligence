@@ -304,10 +304,10 @@ export default function CompetitorsPage() {
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <Link
-                        href={`/data-explorer?search=${encodeURIComponent(c.name)}`}
+                        href={`/entities/${c.id}`}
                         className="inline-flex items-center gap-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white px-3 py-1.5 font-bold transition-all text-[11px] border border-indigo-500/30"
                       >
-                        Intelligence Details →
+                        Full Dossier ↗
                       </Link>
                     </td>
                   </tr>

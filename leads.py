@@ -68,7 +68,14 @@ if not hasattr(socket, "_real_getaddrinfo"):
 
 _ORIGINAL_GETADDRINFO = socket._real_getaddrinfo
 
+_RESOLVED_DNS_CACHE: Dict[str, str] = {}
+
 def custom_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    if host in _RESOLVED_DNS_CACHE:
+        try:
+            return [(_ORIGINAL_GETADDRINFO(_RESOLVED_DNS_CACHE[host], port, family, type, proto, flags)[0])]
+        except Exception:
+            pass
     try:
         return _ORIGINAL_GETADDRINFO(host, port, family, type, proto, flags)
     except socket.gaierror:
@@ -82,6 +89,7 @@ def custom_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
                     data = json.loads(resp.read())
                     ips = [ans["data"] for ans in data.get("Answer", []) if ans.get("type") == 1]
                     if ips:
+                        _RESOLVED_DNS_CACHE[host] = ips[0]
                         return [(_ORIGINAL_GETADDRINFO(ips[0], port, family, type, proto, flags)[0])]
             except Exception:
                 pass
@@ -1234,7 +1242,7 @@ async def _collect_osm_async(category: str, location: str, max_records: int) -> 
     }
     limits = httpx.Limits(max_connections=30, max_keepalive_connections=30)
     try:
-        async with httpx.AsyncClient(http2=True, headers=headers, limits=limits, timeout=10.0) as client:
+        async with httpx.AsyncClient(http2=True, headers=headers, limits=limits, timeout=30.0) as client:
             place = await geocode_location(client, location or "USA")
             lat = float(place["lat"])
             lon = float(place["lon"])
@@ -1247,7 +1255,7 @@ async def _collect_osm_async(category: str, location: str, max_records: int) -> 
             }
             for overpass_url in OVERPASS_URLS:
                 try:
-                    r = await client.post(overpass_url, data={"data": query}, headers=overpass_headers, timeout=10.0)
+                    r = await client.post(overpass_url, data={"data": query}, headers=overpass_headers, timeout=25.0)
                     if r.status_code == 200:
                         elements = r.json().get("elements", [])
                         for el in elements:

@@ -1,3 +1,4 @@
+import os
 import json
 from uuid import uuid4
 from datetime import datetime, timezone
@@ -169,8 +170,8 @@ class CollectionService:
                         email=con_data.get("email"),
                         website=con_data.get("website"),
                     )
-                    # Public website -> social profiles, emails, phones (real pages only).
-                    if con.website and websites_enriched_count < MAX_WEBSITE_ENRICHMENTS_PER_RUN:
+                    skip_live = bool(os.getenv("TESTING") or os.getenv("SKIP_LIVE_LOOKUPS") or is_demo)
+                    if con.website and websites_enriched_count < MAX_WEBSITE_ENRICHMENTS_PER_RUN and not skip_live:
                         web = enrich_website(con.website)
                         websites_enriched_count += 1
                         con.social_links = social_links_json(web["social_links"])
@@ -181,7 +182,8 @@ class CollectionService:
                     entity.contacts.append(con)
 
                 # Enrich reviews via Google Maps if not present yet
-                if (entity.rating is None or entity.review_count is None) and reviews_enriched_count < MAX_REVIEW_ENRICHMENTS_PER_RUN:
+                skip_live = bool(os.getenv("TESTING") or os.getenv("SKIP_LIVE_LOOKUPS") or is_demo)
+                if (entity.rating is None or entity.review_count is None) and reviews_enriched_count < MAX_REVIEW_ENRICHMENTS_PER_RUN and not skip_live:
                     r_data = review_enricher.get_rating(
                         entity.name, loc_data.get("city"), loc_data.get("state")
                     )
@@ -297,76 +299,119 @@ class CollectionService:
                 batch_objects.clear()
 
             # Step 2: Automated Competitor Scraping & Discovery for target market
-            try:
-                import leads
-                clean_q = (query or entity_type or "").replace("competitors", "").replace("competitor", "").strip()
-                comp_query = f"{clean_q} Competitor".strip()
-                comp_records = leads.fetch_live_market_records(
-                    category=comp_query,
-                    location=location or "USA",
-                    max_records=10,
-                )
-                comp_entities = []
-                for c_raw in comp_records:
-                    c_clean = self.cleaner.clean_payload(c_raw)
-                    c_id = uuid4().hex
-                    c_name = c_clean.get("name")
-                    if not c_name:
-                        continue
+            if not skip_live:
+                try:
+                    import leads
+                    clean_q = (query or entity_type or "").replace("competitors", "").replace("competitor", "").strip()
+                    comp_query = f"{clean_q} Competitor".strip()
+                    comp_records = leads.fetch_live_market_records(
+                        category=comp_query,
+                        location=location or "USA",
+                        max_records=10,
+                    )
+                    comp_entities = []
+                    for c_raw in comp_records:
+                        c_clean = self.cleaner.clean_payload(c_raw)
+                        c_id = uuid4().hex
+                        c_name = c_clean.get("name")
+                        if not c_name:
+                            continue
+                        
+                        c_entity = Entity(
+                            id=c_id,
+                            name=c_name,
+                            entity_type="COMPETITOR",
+                            verification_status="UNVERIFIED",
+                            freshness_status="FRESH",
+                            # Only real, sourced values. Missing data stays NULL
+                            # ("not publicly disclosed") -- never a placeholder.
+                            estimated_revenue=c_clean.get("estimated_revenue") or None,
+                            rating=c_clean.get("rating"),
+                            review_count=c_clean.get("review_count"),
+                            reviews_source_url=c_clean.get("reviews_source_url"),
+                            employee_count=c_clean.get("employee_count") or None,
+                            is_demo=is_demo,
+                            data_quality_score=0.0,
+                        )
+                        # Support both nested location dict and top-level address/city/state
+                        loc_addr = c_clean.get("address") or (c_clean.get("location", {}).get("address") if isinstance(c_clean.get("location"), dict) else None)
+                        loc_city = c_clean.get("city") or (c_clean.get("location", {}).get("city") if isinstance(c_clean.get("location"), dict) else None) or location
+                        loc_state = c_clean.get("state") or (c_clean.get("location", {}).get("state") if isinstance(c_clean.get("location"), dict) else None)
+                        loc_zip = c_clean.get("zip_code") or (c_clean.get("location", {}).get("zip_code") if isinstance(c_clean.get("location"), dict) else None)
+
+                        if loc_addr or loc_city:
+                            c_entity.locations.append(EntityLocation(
+                                entity_id=c_id,
+                                address=loc_addr,
+                                city=loc_city,
+                                state=loc_state,
+                                zip_code=loc_zip,
+                                country="USA",
+                            ))
+
+                        # Support both nested contact dict and top-level phone/website/email
+                        con_phone = c_clean.get("phone") or (c_clean.get("contact", {}).get("phone") if isinstance(c_clean.get("contact"), dict) else None)
+                        con_email = c_clean.get("email") or (c_clean.get("contact", {}).get("email") if isinstance(c_clean.get("contact"), dict) else None)
+                        con_web = c_clean.get("website") or (c_clean.get("contact", {}).get("website") if isinstance(c_clean.get("contact"), dict) else None)
+
+                        if con_phone or con_email or con_web:
+                            c_entity.contacts.append(EntityContact(
+                                entity_id=c_id,
+                                phone=con_phone,
+                                email=con_email,
+                                website=con_web,
+                            ))
+
+                        # Source link
+                        src_name = c_clean.get("source_name") or "OpenStreetMap / Community Business Registry"
+                        src_url = c_clean.get("source_url") or "https://www.openstreetmap.org"
+                        c_entity.source_links.append(EntitySourceLink(
+                            entity_id=c_id,
+                            source_name=src_name,
+                            source_url=src_url,
+                        ))
+
+                        # Services
+                        prods = c_clean.get("products_services") or f"{clean_q} Commercial Offerings"
+                        if prods:
+                            for p_item in [p.strip() for p in prods.split(",") if p.strip()]:
+                                c_entity.services.append(EntityService(
+                                    entity_id=c_id,
+                                    service_name=p_item,
+                                    service_category="COMPETITOR",
+                                ))
+
+                        c_detail = CompetitorDetail(
+                            entity_id=c_id,
+                            business_type=c_clean.get("business_type") or "Market Competitor",
+                            business_description=c_clean.get("business_description") or f"Direct competitor in {location}.",
+                            products_services=prods,
+                            estimated_revenue=c_entity.estimated_revenue,
+                            employee_count=c_entity.employee_count,
+                            rating=c_entity.rating,
+                            review_count=c_entity.review_count,
+                            reviews_source_url=c_entity.reviews_source_url,
+                        )
+                        c_entity.competitor_detail = c_detail
+
+                        # Evaluate quality and verification status
+                        v_st, v_sc, v_ev = VerificationService.evaluate_entity(c_entity)
+                        c_entity.verification_status = v_st
+                        c_entity.data_quality_score = v_sc
+                        db.add(VerificationResult(
+                            entity_id=c_id,
+                            status=v_st,
+                            confidence_score=v_sc,
+                            evidence=v_ev,
+                        ))
+
+                        comp_entities.append(c_entity)
                     
-                    c_entity = Entity(
-                        id=c_id,
-                        name=c_name,
-                        entity_type="COMPETITOR",
-                        verification_status="UNVERIFIED",
-                        freshness_status="FRESH",
-                        # Only real, sourced values. Missing data stays NULL
-                        # ("not publicly disclosed") -- never a placeholder.
-                        estimated_revenue=c_clean.get("estimated_revenue") or None,
-                        rating=c_clean.get("rating"),
-                        review_count=c_clean.get("review_count"),
-                        reviews_source_url=c_clean.get("reviews_source_url"),
-                        employee_count=c_clean.get("employee_count") or None,
-                        is_demo=is_demo,
-                        data_quality_score=0.0,
-                    )
-                    c_loc = c_clean.get("location", {})
-                    if c_loc and (c_loc.get("city") or c_loc.get("address")):
-                        c_entity.locations.append(EntityLocation(
-                            entity_id=c_id,
-                            address=c_loc.get("address"),
-                            city=c_loc.get("city") or location,
-                            state=c_loc.get("state"),
-                            zip_code=c_loc.get("zip_code"),
-                            country="USA",
-                        ))
-                    c_con = c_clean.get("contact", {})
-                    if c_con:
-                        c_entity.contacts.append(EntityContact(
-                            entity_id=c_id,
-                            phone=c_con.get("phone"),
-                            email=c_con.get("email"),
-                            website=c_con.get("website"),
-                        ))
-                    c_detail = CompetitorDetail(
-                        entity_id=c_id,
-                        business_type="Market Competitor",
-                        business_description=c_clean.get("business_description") or f"Direct competitor in {location}.",
-                        products_services=c_clean.get("products_services") or f"{comp_query} Services",
-                        estimated_revenue=c_entity.estimated_revenue,
-                        employee_count=c_entity.employee_count,
-                        rating=c_entity.rating,
-                        review_count=c_entity.review_count,
-                        reviews_source_url=c_entity.reviews_source_url,
-                    )
-                    c_entity.competitor_detail = c_detail
-                    comp_entities.append(c_entity)
-                
-                if comp_entities:
-                    db.add_all(comp_entities)
-                    db.commit()
-            except Exception as c_err:
-                print(f"[!] Competitor discovery sweep note: {c_err}")
+                    if comp_entities:
+                        db.add_all(comp_entities)
+                        db.commit()
+                except Exception as c_err:
+                    print(f"[!] Competitor discovery sweep note: {c_err}")
 
             # Finalize run metadata
             run_obj = db.query(CollectionRun).filter(CollectionRun.id == run_id).first() or run

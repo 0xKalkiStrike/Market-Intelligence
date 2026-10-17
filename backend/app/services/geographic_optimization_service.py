@@ -1,9 +1,12 @@
 import json
+import time
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import select, desc, func
 
 from app.database.models import GeographicCluster, StateMarketMetric, Entity, EntityLocation
+
+_GEO_CACHE: Dict[str, Any] = {}
 
 class GeographicOptimizationService:
     def __init__(self, db: Session):
@@ -11,12 +14,17 @@ class GeographicOptimizationService:
 
     def get_geo_grid(self, state: str = "FL") -> Dict[str, Any]:
         state_code = state.upper()
+        now = time.time()
+        cached = _GEO_CACHE.get(state_code)
+        if cached and (now - cached["timestamp"]) < 300:
+            return cached["data"]
+
         metric = self.db.scalar(select(StateMarketMetric).where(StateMarketMetric.state_code == state_code))
 
-        # Real entity counts in DB for this state
-        dispensaries = self.db.query(Entity).filter(Entity.entity_type == "DISPENSARY").join(EntityLocation).filter(EntityLocation.state.ilike(f"%{state_code}%")).count()
-        doctors = self.db.query(Entity).filter(Entity.entity_type == "DOCTOR").join(EntityLocation).filter(EntityLocation.state.ilike(f"%{state_code}%")).count()
-        competitors = self.db.query(Entity).filter(Entity.entity_type == "COMPETITOR").join(EntityLocation).filter(EntityLocation.state.ilike(f"%{state_code}%")).count()
+        # Real entity counts in DB for this state using exact state code
+        dispensaries = self.db.query(Entity).filter(Entity.entity_type == "DISPENSARY").join(EntityLocation).filter(EntityLocation.state == state_code).count()
+        doctors = self.db.query(Entity).filter(Entity.entity_type == "DOCTOR").join(EntityLocation).filter(EntityLocation.state == state_code).count()
+        competitors = self.db.query(Entity).filter(Entity.entity_type == "COMPETITOR").join(EntityLocation).filter(EntityLocation.state == state_code).count()
         base_pop = metric.patient_population if metric else 185000 + (doctors * 250)
 
         # Real ZIP Code grouping from EntityLocation
@@ -26,7 +34,7 @@ class GeographicOptimizationService:
                 EntityLocation.city,
                 func.count(EntityLocation.id).label("loc_count")
             )
-            .filter(EntityLocation.state.ilike(f"%{state_code}%"))
+            .filter(EntityLocation.state == state_code)
             .filter(EntityLocation.zip_code.isnot(None))
             .filter(EntityLocation.zip_code != "")
             .group_by(EntityLocation.zip_code, EntityLocation.city)
@@ -89,7 +97,7 @@ class GeographicOptimizationService:
                 "recommendation": c.recommendation
             })
 
-        return {
+        result = {
             "state": state_code,
             "state_metrics": {
                 "population": base_pop,
@@ -100,6 +108,8 @@ class GeographicOptimizationService:
             "zip_grid": zip_grid,
             "geographic_clusters": cluster_data
         }
+        _GEO_CACHE[state_code] = {"timestamp": time.time(), "data": result}
+        return result
 
     def create_cluster(
         self,

@@ -75,6 +75,7 @@ class Project(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(String(1000), default="")
     owner_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("users.id"), nullable=False)
+    organization_id: Mapped[Optional[str]] = mapped_column(UUID(as_uuid=False), ForeignKey("organizations.id", ondelete="SET NULL"), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(default=utc_now, onupdate=utc_now)
 
@@ -826,6 +827,8 @@ class Watchlist(Base):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     category: Mapped[str] = mapped_column(String(100), default="Competitor")  # Competitor, State, Pricing, Regulatory, Dispensary, Physician, SEO
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    sharing_scope: Mapped[str] = mapped_column(String(50), default="PERSONAL")  # PERSONAL, TEAM, PUBLIC
+    team_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     created_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(default=utc_now, onupdate=utc_now)
@@ -1020,6 +1023,10 @@ class IntelligenceFeedback(Base):
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     user_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=utc_now)
+    status: Mapped[str] = mapped_column(String(50), default="PENDING_REVIEW")  # PENDING_REVIEW, INVESTIGATING, RESOLVED, DISMISSED
+    resolution_notes: Mapped[str] = mapped_column(Text, default="")
+    resolved_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
 
 class AiCostLog(Base):
@@ -1049,6 +1056,784 @@ class ManagementReviewItem(Base):
     status: Mapped[str] = mapped_column(String(50), default="PENDING", index=True)  # PENDING, INVESTIGATED, ACCEPTED, REJECTED
     assigned_to: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+
+# ==========================================
+# PHASE 5: ENTERPRISE OPERATIONS, GOVERNANCE & PRODUCTION READINESS MODELS
+# ==========================================
+
+class EntityAuditTrail(Base):
+    __tablename__ = "entity_audit_trail"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    entity_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("entities.id", ondelete="CASCADE"), nullable=False, index=True)
+    changed_by_user_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    changed_by_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    action: Mapped[str] = mapped_column(String(100), nullable=False, index=True)  # FIELD_CORRECTION, MANUAL_MERGE, STATUS_CHANGE, DISMISS_DUPLICATE
+    field_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    old_value: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    new_value: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+
+class IncidentRecord(Base):
+    __tablename__ = "incident_records"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), default="MEDIUM", index=True)  # CRITICAL, HIGH, MEDIUM, LOW
+    affected_component: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), default="OPEN", index=True)  # OPEN, INVESTIGATING, MITIGATED, RESOLVED, CLOSED
+    detection_method: Mapped[str] = mapped_column(String(100), default="AUTOMATED_HEALTH_CHECK")
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    related_logs: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    impact: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    assigned_owner: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    root_cause: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    corrective_action: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    started_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    closed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+
+class IntegrationConnectorStatus(Base):
+    __tablename__ = "integration_connector_statuses"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    connector_name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
+    connector_type: Mapped[str] = mapped_column(String(50), nullable=False)  # GOV_API, DIRECTORY, SEARCH, LLM, MAP, SCRAPER
+    base_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    status: Mapped[str] = mapped_column(String(50), default="HEALTHY", index=True)  # HEALTHY, DEGRADED, UNAVAILABLE
+    last_successful_request: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    last_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    latency_ms: Mapped[float] = mapped_column(Float, default=0.0)
+    requests_count_24h: Mapped[int] = mapped_column(Integer, default=0)
+    errors_count_24h: Mapped[int] = mapped_column(Integer, default=0)
+    quota_remaining: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    data_freshness_status: Mapped[str] = mapped_column(String(50), default="CURRENT")  # CURRENT, STALE, EXPIRED
+    sync_frequency: Mapped[str] = mapped_column(String(50), default="HOURLY")  # CONTINUOUS, HOURLY, DAILY, WEEKLY, MANUAL
+    supported_entities: Mapped[Optional[str]] = mapped_column(String(255), default="DOCTOR,DISPENSARY,COMPETITOR")
+    is_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    last_sync_checkpoint: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(default=utc_now, onupdate=utc_now)
+
+
+class AiEvaluationBenchmarkRun(Base):
+    __tablename__ = "ai_evaluation_benchmark_runs"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    prompt_version: Mapped[str] = mapped_column(String(50), default="v5.0")
+    model_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    benchmark_suite_name: Mapped[str] = mapped_column(String(100), default="EXECUTIVE_CORE_6")
+    total_questions: Mapped[int] = mapped_column(Integer, default=6)
+    passed_questions: Mapped[int] = mapped_column(Integer, default=0)
+    accuracy_score: Mapped[float] = mapped_column(Float, default=0.0)  # 0.0 - 1.0
+    groundedness_score: Mapped[float] = mapped_column(Float, default=0.0)  # 0.0 - 1.0
+    hallucination_rate: Mapped[float] = mapped_column(Float, default=0.0)  # 0.0 - 1.0
+    results_json: Mapped[str] = mapped_column(Text, default="[]")
+    executed_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+
+# ==========================================
+# PHASE 6: ENTERPRISE INTEGRATIONS, PLATFORM EXTENSIBILITY & COLLABORATION MODELS
+# ==========================================
+
+class ApiKey(Base):
+    __tablename__ = "api_keys"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    prefix: Mapped[str] = mapped_column(String(32), unique=True, index=True, nullable=False)
+    hashed_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    user_id: Mapped[Optional[str]] = mapped_column(UUID(as_uuid=False), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    scopes: Mapped[str] = mapped_column(Text, default='["intelligence:read"]')  # JSON string array
+    rate_limit_per_minute: Mapped[int] = mapped_column(Integer, default=60)
+    requests_count: Mapped[int] = mapped_column(Integer, default=0)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    last_used_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now)
+
+
+class WebhookSubscription(Base):
+    __tablename__ = "webhook_subscriptions"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    target_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    secret_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    event_types: Mapped[str] = mapped_column(Text, default='["*"]')  # JSON string array
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now)
+
+
+class WebhookDeliveryLog(Base):
+    __tablename__ = "webhook_delivery_logs"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    subscription_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("webhook_subscriptions.id", ondelete="CASCADE"), nullable=False, index=True)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    event_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    payload_json: Mapped[str] = mapped_column(Text, nullable=False)
+    http_status: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    status: Mapped[str] = mapped_column(String(50), default="PENDING", index=True)  # SUCCESS, FAILED, RETRYING, PENDING
+    attempts: Mapped[int] = mapped_column(Integer, default=1)
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    delivered_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+
+class DataImport(Base):
+    __tablename__ = "data_imports"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    file_format: Mapped[str] = mapped_column(String(50), default="CSV")  # CSV, XLSX, JSON
+    entity_type: Mapped[str] = mapped_column(String(50), default="DISPENSARY")  # DOCTOR, DISPENSARY, COMPETITOR
+    status: Mapped[str] = mapped_column(String(50), default="PREVIEW", index=True)  # PREVIEW, VALIDATED, COMPLETED, FAILED
+    total_records: Mapped[int] = mapped_column(Integer, default=0)
+    added_records: Mapped[int] = mapped_column(Integer, default=0)
+    updated_records: Mapped[int] = mapped_column(Integer, default=0)
+    duplicate_records: Mapped[int] = mapped_column(Integer, default=0)
+    error_records: Mapped[int] = mapped_column(Integer, default=0)
+    validation_report_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+
+class ExportJob(Base):
+    __tablename__ = "export_jobs"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    export_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    entity_type: Mapped[str] = mapped_column(String(50), default="ALL")
+    format: Mapped[str] = mapped_column(String(50), default="CSV")  # CSV, XLSX, JSON
+    filters_json: Mapped[str] = mapped_column(Text, default="{}")
+    fields_json: Mapped[str] = mapped_column(Text, default="[]")
+    status: Mapped[str] = mapped_column(String(50), default="PENDING", index=True)  # PENDING, COMPLETED, FAILED
+    record_count: Mapped[int] = mapped_column(Integer, default=0)
+    file_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    created_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+
+class CrossSystemEntityLink(Base):
+    __tablename__ = "cross_system_entity_links"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    canonical_entity_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("entities.id", ondelete="CASCADE"), nullable=False, index=True)
+    system_name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)  # INTERNAL_EHR, STATE_DOH, NPI_REGISTRY, BUSINESS_REGISTRY
+    external_system_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    match_confidence: Mapped[float] = mapped_column(Float, default=1.0)
+    match_reasons: Mapped[str] = mapped_column(Text, default="[]")  # JSON array
+    review_status: Mapped[str] = mapped_column(String(50), default="CONFIRMED", index=True)  # CONFIRMED, PENDING_REVIEW, DISMISSED
+    created_at: Mapped[datetime] = mapped_column(default=utc_now)
+    reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+
+class DataConflict(Base):
+    __tablename__ = "data_conflicts"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    entity_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("entities.id", ondelete="CASCADE"), nullable=False, index=True)
+    field_name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    source_a_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    source_a_value: Mapped[str] = mapped_column(Text, nullable=False)
+    source_a_timestamp: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    source_b_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    source_b_value: Mapped[str] = mapped_column(Text, nullable=False)
+    source_b_timestamp: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    resolution_status: Mapped[str] = mapped_column(String(50), default="UNRESOLVED", index=True)  # UNRESOLVED, RESOLVED_SOURCE_A, RESOLVED_SOURCE_B, MANUALLY_OVERRIDDEN
+    winning_value: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    resolution_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    resolved_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+
+class CollaborationFinding(Base):
+    __tablename__ = "collaboration_findings"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    category: Mapped[str] = mapped_column(String(100), default="OPPORTUNITY", index=True)  # OPPORTUNITY, COMPETITOR, REGULATORY, PRICING, GEO
+    entity_id: Mapped[Optional[str]] = mapped_column(UUID(as_uuid=False), ForeignKey("entities.id", ondelete="SET NULL"), nullable=True)
+    finding_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    evidence_sources: Mapped[str] = mapped_column(Text, default="[]")  # JSON array of source references
+    status: Mapped[str] = mapped_column(String(50), default="DRAFT", index=True)  # DRAFT, UNDER_REVIEW, ACTION_APPROVED, RESOLVED, DISMISSED
+    assigned_reviewer: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    follow_up_owner: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    management_decision: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+    updated_at: Mapped[datetime] = mapped_column(default=utc_now, onupdate=utc_now)
+
+
+class IntelligenceNote(Base):
+    __tablename__ = "intelligence_notes"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    finding_id: Mapped[Optional[str]] = mapped_column(UUID(as_uuid=False), ForeignKey("collaboration_findings.id", ondelete="CASCADE"), nullable=True, index=True)
+    entity_id: Mapped[Optional[str]] = mapped_column(UUID(as_uuid=False), ForeignKey("entities.id", ondelete="CASCADE"), nullable=True, index=True)
+    author_email: Mapped[str] = mapped_column(String(255), nullable=False)
+    note_content: Mapped[str] = mapped_column(Text, nullable=False)
+    is_internal_only: Mapped[bool] = mapped_column(Boolean, default=True)  # Strictly guarded internal notes
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+
+class IntelligenceCase(Base):
+    __tablename__ = "intelligence_cases"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    case_number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    category: Mapped[str] = mapped_column(String(100), nullable=False, index=True)  # COMPETITOR_MOVEMENT, PRICING_CHANGE, REGULATORY_REVIEW, GEOGRAPHIC_OPPORTUNITY, PARTNERSHIP_OPPORTUNITY, DATA_QUALITY_INCIDENT, FORECAST_DEVIATION
+    severity: Mapped[str] = mapped_column(String(50), default="MEDIUM", index=True)  # CRITICAL, HIGH, MEDIUM, LOW
+    status: Mapped[str] = mapped_column(String(50), default="OPEN", index=True)  # OPEN, INVESTIGATING, REVIEW_REQUIRED, DECISION_RECORDED, CLOSED
+    assigned_investigator: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    assigned_reviewer: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    evidence_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    investigation_findings: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    management_decision: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    outcome_recorded: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+    updated_at: Mapped[datetime] = mapped_column(default=utc_now, onupdate=utc_now)
+    closed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+
+class ReportDistributionConfig(Base):
+    __tablename__ = "report_distribution_configs"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    report_type: Mapped[str] = mapped_column(String(100), nullable=False)  # EXECUTIVE_WEEKLY, MARKET_OPPORTUNITY, COMPETITOR_PRICING, REGULATORY_BULLETIN
+    channel: Mapped[str] = mapped_column(String(50), default="IN_APP")  # IN_APP, EMAIL, WEBHOOK, EXPORT
+    recipient_target: Mapped[str] = mapped_column(String(500), nullable=False)
+    schedule_cron: Mapped[Optional[str]] = mapped_column(String(100), default="0 9 * * 1")  # e.g., weekly Monday 9am
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    last_distributed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    delivery_status: Mapped[str] = mapped_column(String(50), default="IDLE")  # IDLE, SUCCESS, FAILED
+    created_at: Mapped[datetime] = mapped_column(default=utc_now)
+
+
+# ============================================================================
+# PHASE 7: ADVANCED INTELLIGENCE RESEARCH & OPTIMIZATION MODELS
+# ============================================================================
+
+class ResearchProject(Base):
+    __tablename__ = "research_projects"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, default="")
+    organization_id: Mapped[Optional[str]] = mapped_column(UUID(as_uuid=False), ForeignKey("organizations.id", ondelete="SET NULL"), nullable=True, index=True)
+    status: Mapped[str] = mapped_column(String(50), default="ACTIVE", index=True)  # ACTIVE, ARCHIVED, COMPLETED
+    target_states: Mapped[str] = mapped_column(Text, default="[]")  # JSON array
+    created_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+    updated_at: Mapped[datetime] = mapped_column(default=utc_now, onupdate=utc_now)
+
+    hypotheses: Mapped[list["ResearchHypothesis"]] = relationship("ResearchHypothesis", back_populates="project", cascade="all, delete-orphan")
+    findings: Mapped[list["ResearchFinding"]] = relationship("ResearchFinding", back_populates="project", cascade="all, delete-orphan")
+
+
+class ResearchHypothesis(Base):
+    __tablename__ = "research_hypotheses"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    project_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("research_projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    hypothesis_statement: Mapped[str] = mapped_column(Text, nullable=False)
+    geographic_scope: Mapped[str] = mapped_column(String(100), default="NATIONAL")  # NATIONAL, STATE, COUNTY, ZIP
+    geographic_target: Mapped[str] = mapped_column(String(100), default="ALL")  # "FL", "12086", "33101"
+    time_period_start: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    time_period_end: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    comparison_groups_json: Mapped[str] = mapped_column(Text, default="[]")  # JSON array
+    target_metrics_json: Mapped[str] = mapped_column(Text, default="[]")  # JSON array
+    status: Mapped[str] = mapped_column(String(50), default="DRAFT", index=True)  # DRAFT, TESTING, SUPPORTED, CONTRADICTED, INCONCLUSIVE
+    confidence_score: Mapped[float] = mapped_column(Float, default=0.0)  # 0.0 - 1.0
+    methodology_notes: Mapped[str] = mapped_column(Text, default="")
+    limitations_notes: Mapped[str] = mapped_column(Text, default="")
+    created_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+    updated_at: Mapped[datetime] = mapped_column(default=utc_now, onupdate=utc_now)
+
+    project: Mapped["ResearchProject"] = relationship("ResearchProject", back_populates="hypotheses")
+    findings: Mapped[list["ResearchFinding"]] = relationship("ResearchFinding", back_populates="hypothesis")
+
+
+class ResearchFinding(Base):
+    __tablename__ = "research_findings"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    project_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("research_projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    hypothesis_id: Mapped[Optional[str]] = mapped_column(UUID(as_uuid=False), ForeignKey("research_hypotheses.id", ondelete="SET NULL"), nullable=True, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    statement: Mapped[str] = mapped_column(Text, nullable=False)
+    category: Mapped[str] = mapped_column(String(100), default="OPPORTUNITY", index=True)  # OPPORTUNITY, COMPETITOR, PRICING, GEOGRAPHY, REGULATORY, DEMAND
+    status: Mapped[str] = mapped_column(String(50), default="DRAFT", index=True)  # DRAFT, UNDER_INVESTIGATION, EVIDENCE_REVIEWED, VALIDATED, NEEDS_REASSESSMENT, SUPERSEDED, REJECTED
+    calculation_method: Mapped[str] = mapped_column(String(255), default="DESCRIPTIVE_AGGREGATE")
+    sample_size: Mapped[int] = mapped_column(Integer, default=0)
+    data_coverage_pct: Mapped[float] = mapped_column(Float, default=100.0)
+    confidence_score: Mapped[float] = mapped_column(Float, default=0.5)  # 0.0 - 1.0
+    limitations: Mapped[str] = mapped_column(Text, default="")
+    contradictory_evidence: Mapped[str] = mapped_column(Text, default="")
+    recommended_next_step: Mapped[str] = mapped_column(Text, default="")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    reviewer_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+    updated_at: Mapped[datetime] = mapped_column(default=utc_now, onupdate=utc_now)
+
+    project: Mapped["ResearchProject"] = relationship("ResearchProject", back_populates="findings")
+    hypothesis: Mapped[Optional["ResearchHypothesis"]] = relationship("ResearchHypothesis", back_populates="findings")
+    evidence_references: Mapped[list["EvidenceReference"]] = relationship("EvidenceReference", back_populates="finding", cascade="all, delete-orphan")
+    review_history: Mapped[list["ResearchReviewHistory"]] = relationship("ResearchReviewHistory", back_populates="finding", cascade="all, delete-orphan")
+
+
+class EvidenceReference(Base):
+    __tablename__ = "evidence_references"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    finding_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("research_findings.id", ondelete="CASCADE"), nullable=False, index=True)
+    source_type: Mapped[str] = mapped_column(String(100), default="PUBLIC_SURFACE_WEB", index=True)  # INTERNAL_AGGREGATE, STATE_DOH, NPI_REGISTRY, PUBLIC_SURFACE_WEB, OSM_DIRECTORY
+    source_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    source_uri: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    observation_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    record_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    sample_count: Mapped[int] = mapped_column(Integer, default=1)
+    confidence_weight: Mapped[float] = mapped_column(Float, default=1.0)
+    supporting_data_json: Mapped[str] = mapped_column(Text, default="{}")
+    is_contradictory: Mapped[bool] = mapped_column(Boolean, default=False)
+    verification_status: Mapped[str] = mapped_column(String(50), default="VERIFIED", index=True)  # VERIFIED, UNVERIFIED, CONFLICTING, STALE
+    created_at: Mapped[datetime] = mapped_column(default=utc_now)
+
+    finding: Mapped["ResearchFinding"] = relationship("ResearchFinding", back_populates="evidence_references")
+
+
+class ResearchReviewHistory(Base):
+    __tablename__ = "research_review_history"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    finding_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("research_findings.id", ondelete="CASCADE"), nullable=False, index=True)
+    reviewer_email: Mapped[str] = mapped_column(String(255), nullable=False)
+    previous_status: Mapped[str] = mapped_column(String(50), nullable=False)
+    new_status: Mapped[str] = mapped_column(String(50), nullable=False)
+    review_notes: Mapped[str] = mapped_column(Text, default="")
+    rationale: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+    finding: Mapped["ResearchFinding"] = relationship("ResearchFinding", back_populates="review_history")
+
+
+class ScoringModelVersion(Base):
+    __tablename__ = "scoring_model_versions"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    version_tag: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)  # e.g., "v1.0-default", "v2.0-expansion"
+    model_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    weights_json: Mapped[str] = mapped_column(Text, nullable=False)
+    description: Mapped[str] = mapped_column(Text, default="")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+
+class GeographicScoreSnapshot(Base):
+    __tablename__ = "geographic_score_snapshots"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    model_version_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("scoring_model_versions.id", ondelete="CASCADE"), nullable=False, index=True)
+    geographic_level: Mapped[str] = mapped_column(String(50), default="STATE", index=True)  # STATE, COUNTY, ZIP
+    geographic_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)  # "FL", "12086", "33101"
+    geographic_name: Mapped[str] = mapped_column(String(255), default="")
+    total_score: Mapped[float] = mapped_column(Float, nullable=False)
+    component_scores_json: Mapped[str] = mapped_column(Text, default="{}")
+    factor_contributions_json: Mapped[str] = mapped_column(Text, default="{}")
+    data_freshness_days: Mapped[int] = mapped_column(Integer, default=0)
+    missing_inputs_json: Mapped[str] = mapped_column(Text, default="[]")
+    calculation_date: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+
+class ScenarioDefinition(Base):
+    __tablename__ = "scenario_definitions"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    scenario_type: Mapped[str] = mapped_column(String(100), default="STATE_EXPANSION", index=True)  # STATE_EXPANSION, PRICE_ADJUSTMENT, PROMOTION_CADENCE, PHYSICIAN_CAPACITY, MULTI_STRATEGY
+    target_state: Mapped[str] = mapped_column(String(50), default="FL")
+    baseline_assumptions_json: Mapped[str] = mapped_column(Text, default="{}")
+    candidate_assumptions_json: Mapped[str] = mapped_column(Text, default="{}")
+    base_case_projection_json: Mapped[str] = mapped_column(Text, default="{}")
+    best_case_projection_json: Mapped[str] = mapped_column(Text, default="{}")
+    downside_case_projection_json: Mapped[str] = mapped_column(Text, default="{}")
+    sensitivity_matrix_json: Mapped[str] = mapped_column(Text, default="{}")
+    evidence_quality_score: Mapped[float] = mapped_column(Float, default=1.0)
+    limitations_json: Mapped[str] = mapped_column(Text, default="[]")
+    created_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+
+class AnalyticalRun(Base):
+    __tablename__ = "analytical_runs"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    analysis_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)  # DESCRIPTIVE, CORRELATION, TIME_SERIES, CHANGE_POINT, SENSITIVITY, SEGMENT_COMPARISON
+    parameters_json: Mapped[str] = mapped_column(Text, default="{}")
+    input_sample_size: Mapped[int] = mapped_column(Integer, default=0)
+    status: Mapped[str] = mapped_column(String(50), default="COMPLETED", index=True)  # COMPLETED, INSUFFICIENT_DATA, FAILED
+    results_json: Mapped[str] = mapped_column(Text, default="{}")
+    confidence_intervals_json: Mapped[str] = mapped_column(Text, default="{}")
+    assumptions_json: Mapped[str] = mapped_column(Text, default="[]")
+    limitations_json: Mapped[str] = mapped_column(Text, default="[]")
+    execution_duration_ms: Mapped[int] = mapped_column(Integer, default=0)
+    executed_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    executed_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+
+class CompetitivePatternRecord(Base):
+    __tablename__ = "competitive_pattern_records"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    pattern_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)  # SUSTAINED_PRICE_DROP, PROMOTION_SURGE, GEOGRAPHIC_EXPANSION, SERVICE_EXPANSION, APPOINTMENT_CRUNCH, REVIEW_SENTIMENT_SHIFT
+    competitor_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    state: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    observation_count: Mapped[int] = mapped_column(Integer, default=1)
+    time_horizon_days: Mapped[int] = mapped_column(Integer, default=30)
+    confidence_score: Mapped[float] = mapped_column(Float, default=0.8)
+    is_sustained: Mapped[bool] = mapped_column(Boolean, default=True)  # True = sustained trend, False = isolated spike
+    supporting_records_json: Mapped[str] = mapped_column(Text, default="[]")
+    is_dismissed: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    dismissal_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    dismissed_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    dismissed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    detected_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+
+# =============================================================================
+# PHASE 8: CONTINUOUS IMPROVEMENT, PRODUCT MATURITY & INTELLIGENCE QUALITY MODELS
+# =============================================================================
+
+class QualityMetricSnapshot(Base):
+    __tablename__ = "quality_metric_snapshots"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    metric_name: Mapped[str] = mapped_column(String(100), index=True)  # DATA_COMPLETENESS, DATA_FRESHNESS_HOURS, SOURCE_RELIABILITY_PCT, DUPLICATE_RECORD_RATE, CONFLICT_RECORD_RATE, MISSING_ATTRIBUTION_RATE, CITATION_CORRECTNESS_PCT
+    metric_category: Mapped[str] = mapped_column(String(50), default="DATA_QUALITY", index=True)  # DATA_QUALITY, AI_QUALITY, FORECAST_QUALITY, OPERATIONAL
+    measured_value: Mapped[float] = mapped_column(Float, nullable=False)
+    threshold_warning: Mapped[float] = mapped_column(Float, default=80.0)
+    threshold_critical: Mapped[float] = mapped_column(Float, default=60.0)
+    status: Mapped[str] = mapped_column(String(20), default="HEALTHY", index=True)  # HEALTHY, WARNING, CRITICAL
+    sample_count: Mapped[int] = mapped_column(Integer, default=0)
+    coverage_pct: Mapped[float] = mapped_column(Float, default=100.0)
+    measurement_window_days: Mapped[int] = mapped_column(Integer, default=30)
+    details_json: Mapped[str] = mapped_column(Text, default="{}")
+    measured_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+
+class QualityRemediationLog(Base):
+    __tablename__ = "quality_remediation_logs"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    incident_type: Mapped[str] = mapped_column(String(100), index=True)  # STALE_DATA_REFRESH, DUPLICATE_CANDIDATE_FLAG, JOB_RETRY, QUARANTINE_RECORD, CACHE_INVALIDATION
+    target_entity_type: Mapped[str] = mapped_column(String(100))
+    target_entity_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    action_taken: Mapped[str] = mapped_column(String(100))
+    is_automated: Mapped[bool] = mapped_column(Boolean, default=True)
+    triggered_by: Mapped[str] = mapped_column(String(255), default="system")
+    status: Mapped[str] = mapped_column(String(50), default="SUCCESS")  # SUCCESS, FAILED, PENDING_HUMAN_APPROVAL, REVERTED
+    result_notes: Mapped[str] = mapped_column(Text, default="")
+    rollback_instructions: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+
+class AiRegressionTestCase(Base):
+    __tablename__ = "ai_regression_test_cases"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    suite_name: Mapped[str] = mapped_column(String(100), default="CORE_BENCHMARK", index=True)
+    test_type: Mapped[str] = mapped_column(String(50), default="FACTUAL", index=True)  # FACTUAL, CITATION_VALIDITY, NUMERICAL, PROMPT_INJECTION, PHI_LEAKAGE, PERMISSION
+    question: Mapped[str] = mapped_column(Text, nullable=False)
+    expected_answer: Mapped[str] = mapped_column(Text, nullable=False)
+    expected_citations_json: Mapped[str] = mapped_column(Text, default="[]")
+    risk_level: Mapped[str] = mapped_column(String(20), default="MEDIUM")  # LOW, MEDIUM, HIGH, CRITICAL
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now)
+
+
+class AiRegressionRun(Base):
+    __tablename__ = "ai_regression_runs"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    suite_name: Mapped[str] = mapped_column(String(100), default="CORE_BENCHMARK", index=True)
+    model_name: Mapped[str] = mapped_column(String(100), default="gpt-4o")
+    prompt_version: Mapped[str] = mapped_column(String(50), default="v7.0")
+    dataset_version: Mapped[str] = mapped_column(String(50), default="v1.0")
+    total_cases: Mapped[int] = mapped_column(Integer, default=0)
+    passed_cases: Mapped[int] = mapped_column(Integer, default=0)
+    failed_cases: Mapped[int] = mapped_column(Integer, default=0)
+    citation_accuracy_pct: Mapped[float] = mapped_column(Float, default=100.0)
+    numerical_accuracy_pct: Mapped[float] = mapped_column(Float, default=100.0)
+    injection_resistance_pct: Mapped[float] = mapped_column(Float, default=100.0)
+    phi_leakage_cases: Mapped[int] = mapped_column(Integer, default=0)
+    overall_score: Mapped[float] = mapped_column(Float, default=1.0)
+    is_regression_detected: Mapped[bool] = mapped_column(Boolean, default=False)
+    execution_time_ms: Mapped[int] = mapped_column(Integer, default=0)
+    results_json: Mapped[str] = mapped_column(Text, default="[]")
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+
+class ForecastOutcomeRecord(Base):
+    __tablename__ = "forecast_outcome_records"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    forecast_id: Mapped[Optional[str]] = mapped_column(UUID(as_uuid=False), ForeignKey("forecasts.id", ondelete="SET NULL"), nullable=True, index=True)
+    metric_name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    target_state: Mapped[str] = mapped_column(String(50), default="FL", index=True)
+    prediction_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    target_date: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
+    predicted_value: Mapped[float] = mapped_column(Float, nullable=False)
+    actual_value: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    absolute_error: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    percentage_error: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    directional_correct: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    verification_source: Mapped[str] = mapped_column(String(255), default="STATE_DOH_REGISTRY")
+    status: Mapped[str] = mapped_column(String(50), default="PENDING", index=True)  # PENDING, VERIFIED, DISPUTED
+    verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now)
+
+
+class RecommendationOutcomeRecord(Base):
+    __tablename__ = "recommendation_outcome_records"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    finding_id: Mapped[Optional[str]] = mapped_column(UUID(as_uuid=False), ForeignKey("research_findings.id", ondelete="SET NULL"), nullable=True, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    target_state: Mapped[str] = mapped_column(String(50), default="FL")
+    recommendation_type: Mapped[str] = mapped_column(String(100), default="PRICING_ADJUSTMENT")
+    action_recommended: Mapped[str] = mapped_column(Text, nullable=False)
+    adoption_status: Mapped[str] = mapped_column(String(50), default="PROPOSED", index=True)  # PROPOSED, ACCEPTED, REJECTED, EXECUTED
+    rejection_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    execution_notes: Mapped[str] = mapped_column(Text, default="")
+    baseline_metric_val: Mapped[float] = mapped_column(Float, default=0.0)
+    measured_outcome_val: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    outcome_delta: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    is_outcome_favorable: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    adopted_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    adopted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    measured_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+
+class ModelDriftRecord(Base):
+    __tablename__ = "model_drift_records"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    model_or_feature_name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    drift_type: Mapped[str] = mapped_column(String(100), default="INPUT_DISTRIBUTION", index=True)  # INPUT_DISTRIBUTION, OPPORTUNITY_SCORE, PRICE_VOLATILITY, MISSING_VALUE_RATE
+    baseline_period: Mapped[str] = mapped_column(String(100))
+    current_period: Mapped[str] = mapped_column(String(100))
+    psi_score: Mapped[float] = mapped_column(Float, default=0.0)
+    ks_statistic: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    p_value: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    drift_status: Mapped[str] = mapped_column(String(50), default="STABLE", index=True)  # STABLE, MODERATE_DRIFT, SIGNIFICANT_DRIFT
+    classification: Mapped[str] = mapped_column(String(100), default="MARKET_CONDITION_SHIFT")  # MARKET_CONDITION_SHIFT, DATA_QUALITY_INCIDENT, MODEL_DEGRADATION, INSUFFICIENT_EVIDENCE
+    details_json: Mapped[str] = mapped_column(Text, default="{}")
+    recommended_action: Mapped[str] = mapped_column(Text, default="")
+    detected_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+
+# ============================================================================
+# PHASE 9: ENTERPRISE MULTI-TENANCY, ONBOARDING & COMMERCIAL READINESS MODELS
+# ============================================================================
+
+class Organization(Base):
+    __tablename__ = "organizations"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    slug: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)
+    domain: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    status: Mapped[str] = mapped_column(String(50), default="ACTIVE", index=True)  # ACTIVE, ONBOARDING, SUSPENDED, DEACTIVATED
+    plan_tier: Mapped[str] = mapped_column(String(50), default="STARTER", index=True)  # STARTER, PROFESSIONAL, ENTERPRISE
+    is_demo: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+    updated_at: Mapped[datetime] = mapped_column(default=utc_now, onupdate=utc_now)
+
+    members: Mapped[list["OrganizationMembership"]] = relationship("OrganizationMembership", back_populates="organization", cascade="all, delete-orphan")
+    invitations: Mapped[list["OrganizationInvitation"]] = relationship("OrganizationInvitation", back_populates="organization", cascade="all, delete-orphan")
+    settings: Mapped[Optional["OrganizationSettings"]] = relationship("OrganizationSettings", back_populates="organization", cascade="all, delete-orphan", uselist=False)
+    subscription: Mapped[Optional["OrganizationSubscription"]] = relationship("OrganizationSubscription", back_populates="organization", cascade="all, delete-orphan", uselist=False)
+
+
+class OrganizationMembership(Base):
+    __tablename__ = "organization_memberships"
+    __table_args__ = (UniqueConstraint("organization_id", "user_id", name="uq_org_membership_user"),)
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    organization_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    role: Mapped[str] = mapped_column(String(50), default="ANALYST", index=True)  # OWNER, ADMIN, ANALYST, VIEWER, SERVICE_ACCOUNT
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    joined_at: Mapped[datetime] = mapped_column(default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(default=utc_now, onupdate=utc_now)
+
+    organization: Mapped["Organization"] = relationship("Organization", back_populates="members")
+    user: Mapped["User"] = relationship("User")
+
+
+class OrganizationInvitation(Base):
+    __tablename__ = "organization_invitations"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    organization_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    role: Mapped[str] = mapped_column(String(50), default="ANALYST")
+    token: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    invited_by_user_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="PENDING", index=True)  # PENDING, ACCEPTED, REVOKED, EXPIRED
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now)
+
+    organization: Mapped["Organization"] = relationship("Organization", back_populates="invitations")
+
+
+class OrganizationSettings(Base):
+    __tablename__ = "organization_settings"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    organization_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("organizations.id", ondelete="CASCADE"), unique=True, nullable=False)
+    permitted_geographic_markets_json: Mapped[str] = mapped_column(Text, default='["FL"]')
+    monitored_competitors_json: Mapped[str] = mapped_column(Text, default="[]")
+    custom_opportunity_weights_json: Mapped[str] = mapped_column(Text, default="{}")
+    alert_thresholds_json: Mapped[str] = mapped_column(Text, default="{}")
+    notification_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    onboarding_status: Mapped[str] = mapped_column(String(50), default="COMPLETED", index=True)  # PROFILE, GEO_SCOPE, COMPETITORS, TEAM_INVITE, COMPLETED
+    onboarding_step: Mapped[int] = mapped_column(Integer, default=5)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(default=utc_now, onupdate=utc_now)
+
+    organization: Mapped["Organization"] = relationship("Organization", back_populates="settings")
+
+
+class OrganizationSubscription(Base):
+    __tablename__ = "organization_subscriptions"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    organization_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("organizations.id", ondelete="CASCADE"), unique=True, nullable=False)
+    plan_tier: Mapped[str] = mapped_column(String(50), default="STARTER", index=True)  # STARTER, PROFESSIONAL, ENTERPRISE
+    status: Mapped[str] = mapped_column(String(50), default="ACTIVE", index=True)  # ACTIVE, TRIALING, PAST_DUE, CANCELED
+    billing_cycle: Mapped[str] = mapped_column(String(50), default="MONTHLY")  # MONTHLY, ANNUAL
+    current_period_start: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    current_period_end: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    cancel_at_period_end: Mapped[bool] = mapped_column(Boolean, default=False)
+    provider_name: Mapped[str] = mapped_column(String(50), default="STRIPE")  # STRIPE, SANDBOX
+    provider_subscription_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(default=utc_now, onupdate=utc_now)
+
+    organization: Mapped["Organization"] = relationship("Organization", back_populates="subscription")
+
+
+class BillingCustomer(Base):
+    __tablename__ = "billing_customers"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    organization_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("organizations.id", ondelete="CASCADE"), unique=True, nullable=False)
+    provider_name: Mapped[str] = mapped_column(String(50), default="STRIPE")
+    provider_customer_id: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    billing_email: Mapped[str] = mapped_column(String(255), nullable=False)
+    currency: Mapped[str] = mapped_column(String(10), default="usd")
+    created_at: Mapped[datetime] = mapped_column(default=utc_now)
+
+
+class BillingInvoice(Base):
+    __tablename__ = "billing_invoices"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    organization_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
+    invoice_number: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)
+    amount_due_usd: Mapped[float] = mapped_column(Float, default=0.0)
+    amount_paid_usd: Mapped[float] = mapped_column(Float, default=0.0)
+    status: Mapped[str] = mapped_column(String(50), default="PAID", index=True)  # PAID, OPEN, VOID, UNCOLLECTIBLE
+    period_start: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    period_end: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    pdf_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+
+class BillingWebhookEvent(Base):
+    __tablename__ = "billing_webhook_events"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    provider_name: Mapped[str] = mapped_column(String(50), default="STRIPE", index=True)
+    event_id: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    payload_json: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="PROCESSED", index=True)  # PROCESSED, FAILED, IGNORED
+    processed_at: Mapped[datetime] = mapped_column(default=utc_now)
+
+
+class TenantUsageRecord(Base):
+    __tablename__ = "tenant_usage_records"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    organization_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
+    metric_name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)  # AI_TOKENS, EXPORTS_GENERATED, API_REQUESTS, MONITORED_ENTITIES, SCENARIOS_RUN
+    quantity: Mapped[int] = mapped_column(Integer, nullable=False)
+    period_key: Mapped[str] = mapped_column(String(20), nullable=False, index=True)  # YYYY-MM
+    source_ref: Mapped[str] = mapped_column(String(255), default="")
+    idempotency_key: Mapped[Optional[str]] = mapped_column(String(255), unique=True, index=True, nullable=True)
+    recorded_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+
+class TenantAuditLog(Base):
+    __tablename__ = "tenant_audit_logs"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    organization_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
+    actor_user_id: Mapped[Optional[str]] = mapped_column(UUID(as_uuid=False), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    actor_email: Mapped[str] = mapped_column(String(255), nullable=False)
+    action: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    target_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    target_id: Mapped[str] = mapped_column(String(255), default="")
+    metadata_json: Mapped[str] = mapped_column(Text, default="{}")
+    ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now, index=True)
+
+
+class TenantApiKey(Base):
+    __tablename__ = "tenant_api_keys"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    organization_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    key_prefix: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    hashed_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    scopes_json: Mapped[str] = mapped_column(Text, default='["intelligence:read"]')
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now)
+
+
+class TenantWebhook(Base):
+    __tablename__ = "tenant_webhooks"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    organization_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
+    target_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    signing_secret: Mapped[str] = mapped_column(String(255), nullable=False)
+    events_json: Mapped[str] = mapped_column(Text, default='["finding.validated","alert.created"]')
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(default=utc_now)
+
+
+
+
 
 
 

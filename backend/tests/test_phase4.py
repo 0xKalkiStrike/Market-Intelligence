@@ -70,6 +70,20 @@ def test_forecasting():
     assert "forecast_value" in data
     assert data["horizon_days"] == 30
 
+    # Generate All Time lifetime forecast
+    res_all = client.post("/api/phase4/forecasts", json={
+        "metric_name": "REVENUE",
+        "state": "FL",
+        "horizon_days": 0,
+        "model_type": "SEASONAL"
+    })
+    assert res_all.status_code == 200
+    data_all = res_all.json()
+    assert data_all["horizon_days"] == 0
+    assert "All Time" in data_all["forecast_period"]
+    assert "Lifetime Revenue" in data_all["explanation"]
+    assert data_all["data_points_used"] > 1000
+
     # Evaluations
     res = client.get("/api/phase4/forecasts/evaluations")
     assert res.status_code == 200

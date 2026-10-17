@@ -44,7 +44,7 @@ JUNK_EMAIL = re.compile(r"\.(png|jpg|jpeg|gif|svg|webp|css|js)$|example\.|sentry
 
 def _fetch_html(client: httpx.Client, url: str) -> str:
     try:
-        r = client.get(url, timeout=8.0, follow_redirects=True)
+        r = client.get(url, timeout=2.5, follow_redirects=True)
         if r.status_code == 200 and "html" in r.headers.get("content-type", "").lower():
             return r.text[:800_000]
     except Exception:

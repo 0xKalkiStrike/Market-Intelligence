@@ -28,7 +28,7 @@ class ExecutiveCommandCenterService:
 
         watchlists = ci_svc.get_watchlists()
         monitoring_rules = ci_svc.get_monitoring_rules()
-        forecasts = fc_svc.list_forecasts(limit=5)
+        forecasts = fc_svc.list_forecasts(limit=5, state=state)
         evaluations = fc_svc.list_evaluations()
         capacity_analysis = cd_svc.analyze_capacity_and_demand(state=state)
         geo_grid = geo_svc.get_geo_grid(state=state)

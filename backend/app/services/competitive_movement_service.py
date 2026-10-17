@@ -81,16 +81,16 @@ class CompetitiveMovementService:
         stmt = select(CompetitorMovementScore)
         if state:
             stmt = stmt.where(CompetitorMovementScore.state == state)
-        stmt = stmt.order_by(desc(CompetitorMovementScore.activity_score))
+        stmt = stmt.order_by(desc(CompetitorMovementScore.updated_at), desc(CompetitorMovementScore.activity_score))
 
         scores = self.db.scalars(stmt).all()
         if not scores:
             # Provide initial baseline scores for standard market competitors
             defaults = [
-                ("Veriheal", "FL", 78.5, 4, 2, 1, 6, "INCREASING"),
-                ("NuggMD", "FL", 62.0, 3, 1, 0, 4, "STABLE"),
-                ("Leafwell", "FL", 54.0, 2, 1, 0, 3, "STABLE"),
-                ("Dr. Weedy", "FL", 35.0, 1, 0, 0, 2, "DECREASING")
+                ("Veriheal", state or "FL", 78.5, 4, 2, 1, 6, "INCREASING"),
+                ("NuggMD", state or "FL", 62.0, 3, 1, 0, 4, "STABLE"),
+                ("Leafwell", state or "FL", 54.0, 2, 1, 0, 3, "STABLE"),
+                ("Dr. Weedy", state or "FL", 35.0, 1, 0, 0, 2, "DECREASING")
             ]
             for comp, st, score, p_cnt, l_cnt, s_cnt, seo_cnt, mom in defaults:
                 item = CompetitorMovementScore(
@@ -108,6 +108,14 @@ class CompetitiveMovementService:
             self.db.commit()
             scores = self.db.scalars(stmt).all()
 
+        # Deduplicate to show only the latest movement score per competitor
+        seen_competitors = set()
+        deduped_scores = []
+        for s in scores:
+            if s.competitor_name not in seen_competitors:
+                seen_competitors.add(s.competitor_name)
+                deduped_scores.append(s)
+
         return [
             {
                 "id": s.id,
@@ -120,5 +128,5 @@ class CompetitiveMovementService:
                 "seo_changes_count": s.seo_changes_count,
                 "momentum": s.momentum,
                 "updated_at": s.updated_at.isoformat() if s.updated_at else None
-            } for s in scores
+            } for s in deduped_scores
         ]

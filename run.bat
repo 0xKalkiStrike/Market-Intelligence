@@ -14,7 +14,7 @@ for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":8000 :3000" ^| findstr "LIS
 )
 
 echo Starting backend service (FastAPI) on http://localhost:8000 ...
-start "Backend Service - FastAPI" cmd /k "cd /d "%ROOT%backend" && .venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
+start "Backend Service - FastAPI" cmd /k "cd /d "%ROOT%backend" && .venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000"
 
 echo Starting frontend service (Next.js) on http://localhost:3000 ...
 start "Frontend Service - Next.js" cmd /k "cd /d "%ROOT%frontend" && npm run dev"

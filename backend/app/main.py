@@ -62,6 +62,14 @@ async def lifespan(app_instance: FastAPI):
                 ("competitor_details", "rating", "FLOAT"),
                 ("competitor_details", "review_count", "INTEGER"),
                 ("competitor_details", "reviews_source_url", "VARCHAR(500)"),
+                ("watchlists", "sharing_scope", "VARCHAR(50) DEFAULT 'PERSONAL'"),
+                ("watchlists", "team_name", "VARCHAR(100)"),
+                ("integration_connector_statuses", "sync_frequency", "VARCHAR(50) DEFAULT 'HOURLY'"),
+                ("integration_connector_statuses", "supported_entities", "VARCHAR(255) DEFAULT 'DOCTOR,DISPENSARY,COMPETITOR'"),
+                ("integration_connector_statuses", "is_enabled", "BOOLEAN DEFAULT 1"),
+                ("integration_connector_statuses", "last_sync_checkpoint", "VARCHAR(255)"),
+                ("projects", "organization_id", "VARCHAR(36)"),
+                ("research_projects", "organization_id", "VARCHAR(36)"),
             ]
             for tbl, col, col_type in migrations:
                 try:
@@ -74,30 +82,73 @@ async def lifespan(app_instance: FastAPI):
                     pass
     except Exception as e:
         print("Database startup schema migration note:", e)
+
+    # Pre-warm analytical and geospatial in-memory caches and ensure default organization in background thread on startup
+    import threading
+    from app.database.session import SessionLocal
+    from app.services.analytics_service import AnalyticsService
+    from app.services.geographic_optimization_service import GeographicOptimizationService
+    from app.services.tenant_membership_service import TenantMembershipService
+
+    def warm_startup_cache():
+        try:
+            with SessionLocal() as db:
+                TenantMembershipService.ensure_default_organization(db)
+                AnalyticsService().get_dashboard_metrics(db)
+                geo_svc = GeographicOptimizationService(db)
+                for st in ["FL", "CA", "PA", "TX"]:
+                    geo_svc.get_geo_grid(st)
+        except Exception as ex:
+            print("Cache warm exception:", ex)
+
+    threading.Thread(target=warm_startup_cache, daemon=True).start()
+
     yield
 
 
 
 from fastapi.responses import JSONResponse
+from app.core.observability import ObservabilityMiddleware
+from app.core.rate_limit import RateLimitMiddleware
+from app.api.operations import router as operations_router
+from app.api.governed import router as governed_router
+from app.api.research import router as research_router
+from app.api.quality import router as quality_router
 
-app = FastAPI(title=settings.app_name, version="0.1.0", lifespan=lifespan)
+from app.api.tenants import router as tenants_router
+from app.api.onboarding import router as onboarding_router
+from app.api.subscriptions import router as subscriptions_router
+from app.api.billing import router as billing_router
+from app.api.usage import router as usage_router
+from app.api.platform_admin import router as platform_admin_router
+from app.services.tenant_membership_service import TenantMembershipService
 
+app = FastAPI(title=settings.app_name, version="0.9.0", lifespan=lifespan)
+
+# Enterprise Observability & Rate Limiting Middleware
+app.add_middleware(ObservabilityMiddleware)
+app.add_middleware(RateLimitMiddleware)
+
+# Secure Enterprise CORS Middleware
+cors_origins = settings.cors_origins if settings.cors_origins else ["http://localhost:3000"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_origin_regex=r".*",
+    allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["X-Request-ID", "X-Response-Time-Ms", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-Organization-Id"],
 )
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc: Exception):
+    origin = request.headers.get("origin", "")
+    allowed_origin = origin if origin in cors_origins else cors_origins[0]
     return JSONResponse(
         status_code=500,
         content={"detail": str(exc)},
         headers={
-            "Access-Control-Allow-Origin": request.headers.get("origin", "*"),
+            "Access-Control-Allow-Origin": allowed_origin,
             "Access-Control-Allow-Credentials": "true"
         }
     )
@@ -119,7 +170,16 @@ app.include_router(workers_router)
 app.include_router(dashboard_router)
 app.include_router(market_intelligence_router)
 app.include_router(phase4_router)
-
+app.include_router(operations_router)
+app.include_router(governed_router)
+app.include_router(research_router)
+app.include_router(quality_router)
+app.include_router(tenants_router)
+app.include_router(onboarding_router)
+app.include_router(subscriptions_router)
+app.include_router(billing_router)
+app.include_router(usage_router)
+app.include_router(platform_admin_router)
 
 
 @app.get("/api/health")
@@ -129,5 +189,5 @@ def health() -> dict:
 
 @app.get("/api/health/system")
 def system_health() -> dict:
-    return {"status": "ok", "system": "Market Intelligence Engine v2.4.0"}
+    return {"status": "ok", "system": "Market Intelligence Platform Enterprise v5.0.0"}
 

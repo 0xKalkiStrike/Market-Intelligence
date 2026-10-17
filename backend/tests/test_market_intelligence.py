@@ -1,3 +1,6 @@
+import os
+os.environ["TESTING"] = "1"
+os.environ["SKIP_LIVE_LOOKUPS"] = "1"
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine

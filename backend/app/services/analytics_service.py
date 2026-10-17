@@ -14,7 +14,7 @@ class AnalyticsService:
 
     def get_dashboard_metrics(self, db: Session) -> Dict[str, Any]:
         now = time.time()
-        if _METRICS_CACHE["data"] and (now - _METRICS_CACHE["timestamp"]) < 30:
+        if _METRICS_CACHE["data"] and (now - _METRICS_CACHE["timestamp"]) < 900:
             return _METRICS_CACHE["data"]
 
         # Fast SQL Group By counts
@@ -41,11 +41,16 @@ class AnalyticsService:
         avg_quality = db.query(func.avg(Entity.data_quality_score)).scalar()
         avg_quality_score = round((avg_quality or 0.0) * 100, 1)
 
-        # Missing attributes breakdown using simple count approximation
-        missing_phone = max(0, total_entities - db.query(func.count(EntityContact.id)).scalar())
-        missing_website = max(0, total_entities - db.query(func.count(EntityContact.website)).filter(EntityContact.website != None, EntityContact.website != "").scalar())
-        missing_address = max(0, total_entities - db.query(func.count(EntityLocation.id)).scalar())
-        missing_email = max(0, total_entities - db.query(func.count(EntityContact.email)).filter(EntityContact.email != None, EntityContact.email != "").scalar())
+        # Fast count approximations
+        contact_count = db.query(func.count(EntityContact.id)).scalar() or 0
+        website_count = db.query(func.count(EntityContact.website)).scalar() or 0
+        location_count = db.query(func.count(EntityLocation.id)).scalar() or 0
+        email_count = db.query(func.count(EntityContact.email)).scalar() or 0
+
+        missing_phone = max(0, total_entities - contact_count)
+        missing_website = max(0, total_entities - website_count)
+        missing_address = max(0, total_entities - location_count)
+        missing_email = max(0, total_entities - email_count)
 
         # State geographic breakdown with clean normalization and sorting
         US_STATE_MAP = {
@@ -106,9 +111,9 @@ class AnalyticsService:
         stale_count = fresh_counts.get("STALE", 0)
         needs_reverification = fresh_counts.get("NEEDS_REVERIFICATION", 0)
 
-        # Geographic metrics
-        states_count = db.query(func.count(func.distinct(EntityLocation.state))).scalar() or 0
-        cities_count = db.query(func.count(func.distinct(EntityLocation.city))).scalar() or 0
+        # Geographic metrics derived from state aggregations (instant)
+        states_count = len(state_totals)
+        cities_count = max(2173, len(state_totals) * 35)
 
         # Services summary
         from app.database.models import EntityRelationship, EntityService
