@@ -9,11 +9,11 @@ Provides governed, multi-channel distribution of executive market reports:
 Enforces strict recipient authorization and data redaction prior to dispatch.
 """
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from sqlalchemy.orm import Session
 
 from app.auth.rbac import validate_safe_url
-from app.database.models import ReportDistributionConfig, utc_now
+from app.database.models import ReportDistributionConfig
 from app.services.executive_report_v3_service import ExecutiveReportV3Service
 
 
@@ -75,7 +75,7 @@ class ReportDistributionService:
             raise ValueError("Distribution configuration not found.")
 
         # Generate report payload
-        report_payload = self.report_service.generate_daily_briefing(self.db)
+        self.report_service.generate_daily_briefing(self.db)
 
         # Channel dispatch execution
         delivery_note = ""

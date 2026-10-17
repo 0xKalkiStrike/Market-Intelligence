@@ -2,7 +2,7 @@ import os
 import json
 from uuid import uuid4
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any, List
 from sqlalchemy.orm import Session
 
 from app.collectors.business_directory.collector import BusinessDirectoryCollector
@@ -18,7 +18,6 @@ from app.database.models import (
     Entity,
     EntityContact,
     EntityLocation,
-    EntityRelationship,
     EntityService,
     EntitySourceLink,
     RawRecord,

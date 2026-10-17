@@ -1,6 +1,5 @@
 import json
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from sqlalchemy.orm import Session
 
 from app.database.models import ScenarioSimulation, StateMarketMetric
@@ -74,7 +73,7 @@ class ScenarioService:
 
         assumptions = [
             f"Year 1 market penetration estimated at 1.0% of addressable patient population ({patient_pop:,}).",
-            f"Certification pricing fixed at $149 baseline.",
+            "Certification pricing fixed at $149 baseline.",
             f"Telehealth regulation status: {'Permitted' if telehealth_allowed else 'In-Person Required'}.",
             f"Initial setup cost estimated at ${estimated_setup_cost:,.2f}.",
         ]

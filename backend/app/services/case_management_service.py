@@ -11,7 +11,6 @@ Categories:
 - DATA_QUALITY_INCIDENT
 - FORECAST_DEVIATION
 """
-import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session

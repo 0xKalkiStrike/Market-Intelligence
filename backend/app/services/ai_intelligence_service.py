@@ -1,6 +1,6 @@
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 from sqlalchemy.orm import Session
-from app.database.models import Entity, PriceHistory, StateMarketMetric, RegulatoryChange, PartnershipOpportunity, IntelligenceEvent
+from app.database.models import Entity, PriceHistory, StateMarketMetric, RegulatoryChange, IntelligenceEvent
 
 class AiIntelligenceService:
     """Provides grounded, factual AI market answers referencing underlying database records without hallucinations."""

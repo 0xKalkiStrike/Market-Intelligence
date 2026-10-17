@@ -7,16 +7,14 @@ Differentiates Data-Quality Incidents from Market Condition Shifts and Model Deg
 import math
 import json
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
-from sqlalchemy import desc, select
+from typing import Any, Dict, List
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.database.models import (
     ModelDriftRecord,
     PriceHistory,
     GeographicScoreSnapshot,
-    StateMarketMetric,
-    utc_now,
 )
 
 

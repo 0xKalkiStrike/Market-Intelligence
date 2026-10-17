@@ -10,17 +10,13 @@ Executes version-controlled benchmark evaluations across:
 """
 import json
 import time
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
-from sqlalchemy import desc, select
+from typing import Any, Dict, List
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.database.models import (
     AiRegressionTestCase,
     AiRegressionRun,
-    StateMarketMetric,
-    PriceHistory,
-    utc_now,
 )
 from app.services.evidence_grounded_ai_research_service import EvidenceGroundedAiResearchService
 

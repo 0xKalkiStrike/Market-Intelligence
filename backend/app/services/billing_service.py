@@ -12,13 +12,12 @@ from app.core.config import settings
 from app.database.models import (
     Organization,
     OrganizationSubscription,
-    BillingCustomer,
     BillingInvoice,
     BillingWebhookEvent,
     User,
 )
 from app.services.tenant_audit_service import TenantAuditService
-from app.services.subscription_entitlement_service import PLAN_DEFINITIONS, SubscriptionEntitlementService
+from app.services.subscription_entitlement_service import PLAN_DEFINITIONS
 
 
 class BillingService:

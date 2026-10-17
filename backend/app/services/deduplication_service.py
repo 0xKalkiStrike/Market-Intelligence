@@ -1,6 +1,6 @@
-from typing import Any, Dict, List, Tuple
+from typing import List, Tuple
 from sqlalchemy.orm import Session
-from app.database.models import Entity, EntityContact, EntityLocation, DuplicateCandidate
+from app.database.models import Entity, EntityContact, DuplicateCandidate
 
 
 class DeduplicationService:

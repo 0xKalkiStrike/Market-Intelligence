@@ -1,11 +1,9 @@
-import json
-from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import select, desc
 
 from app.database.models import (
-    Watchlist, WatchlistItem, MonitoringRule, IntelligenceEvent, AlertNotification, ManagementReviewItem
+    Watchlist, WatchlistItem, MonitoringRule
 )
 
 class ContinuousIntelligenceService:

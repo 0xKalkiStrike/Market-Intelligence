@@ -1,6 +1,6 @@
 import json
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any, Dict
 from sqlalchemy.orm import Session
 
 from app.database.models import AiEvaluationItem

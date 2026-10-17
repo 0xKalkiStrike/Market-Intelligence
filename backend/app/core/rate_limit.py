@@ -5,7 +5,6 @@ Protects API endpoints from denial-of-service, scraping abuse, and brute-force a
 import time
 from collections import defaultdict
 from threading import Lock
-from typing import Optional
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response

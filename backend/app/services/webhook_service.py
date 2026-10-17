@@ -15,10 +15,9 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 import httpx
 from sqlalchemy.orm import Session
-from sqlalchemy import select
 
 from app.auth.rbac import validate_safe_url
-from app.database.models import WebhookSubscription, WebhookDeliveryLog, utc_now
+from app.database.models import WebhookSubscription, WebhookDeliveryLog
 
 
 SUPPORTED_EVENT_TYPES = [
@@ -223,16 +222,16 @@ class WebhookService:
         )
         return [
             {
-                "id": l.id,
-                "subscription_id": l.subscription_id,
-                "event_type": l.event_type,
-                "event_id": l.event_id,
-                "http_status": l.http_status,
-                "status": l.status,
-                "attempts": l.attempts,
-                "error_message": l.error_message,
-                "delivered_at": l.delivered_at.isoformat() if l.delivered_at else None,
-                "created_at": l.created_at.isoformat() if l.created_at else None,
+                "id": log.id,
+                "subscription_id": log.subscription_id,
+                "event_type": log.event_type,
+                "event_id": log.event_id,
+                "http_status": log.http_status,
+                "status": log.status,
+                "attempts": log.attempts,
+                "error_message": log.error_message,
+                "delivered_at": log.delivered_at.isoformat() if log.delivered_at else None,
+                "created_at": log.created_at.isoformat() if log.created_at else None,
             }
-            for l in logs
+            for log in logs
         ]

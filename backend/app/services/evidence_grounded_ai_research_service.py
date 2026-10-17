@@ -8,23 +8,14 @@ Guarantees:
 3. Explicit identification of missing, stale, conflicting, or insufficient data.
 4. Zero hallucinated citations or unsupported metrics.
 """
-import json
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
 from app.database.models import (
     ResearchFinding,
-    ResearchHypothesis,
-    ResearchProject,
-    EvidenceReference,
-    PriceHistory,
     StateMarketMetric,
-    CompetitivePatternRecord,
-    RegulatoryChange,
     Entity,
-    EntityLocation,
     utc_now,
 )
 from app.services.advanced_geographic_opportunity_service import AdvancedGeographicOpportunityService
@@ -339,7 +330,7 @@ class EvidenceGroundedAiResearchService:
             f"Market median initial consultation price: ${spread_data['market_median_initial_price']:.2f}.",
             f"Market median annual recertification renewal price: ${spread_data['market_median_renewal_price']:.2f}.",
             f"Average initial-to-renewal discount spread: ${spread_data['market_median_spread_dollar']:.2f}.",
-            f"MMJ-DOCS initial pricing ($149.00) vs renewal pricing ($99.00) represents a $50.00 renewal loyalty incentive.",
+            "MMJ-DOCS initial pricing ($149.00) vs renewal pricing ($99.00) represents a $50.00 renewal loyalty incentive.",
         ]
 
         if top_gap:
@@ -396,7 +387,7 @@ class EvidenceGroundedAiResearchService:
 
         facts = [
             f"Top 3 market opportunity states based on verified metrics: {', '.join(top_states)}.",
-            f"Platform monitors over 492,000 healthcare, dispensary, and clinic entities across the United States.",
+            "Platform monitors over 492,000 healthcare, dispensary, and clinic entities across the United States.",
             "All intelligence observations are strictly restricted to public surface web, state DOH portals, and authorized aggregates.",
         ]
 

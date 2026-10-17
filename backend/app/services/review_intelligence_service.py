@@ -1,7 +1,7 @@
 import json
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
-from app.database.models import ReviewIntelligence, ReviewTheme
+from app.database.models import ReviewIntelligence
 
 class ReviewIntelligenceService:
     """Aggregates public review sentiment, theme breakdown, ratings, and competitor review changes."""

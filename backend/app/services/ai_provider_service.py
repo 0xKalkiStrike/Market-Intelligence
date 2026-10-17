@@ -1,6 +1,5 @@
 import json
 import time
-from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 
@@ -49,7 +48,7 @@ class AiProviderService:
     """Service managing LLM provider configurations, routing, audit logging, and token cost tracking."""
 
     def get_active_config(self, db: Session) -> AiProviderConfig:
-        config = db.query(AiProviderConfig).filter(AiProviderConfig.is_active == True, AiProviderConfig.is_default == True).first()
+        config = db.query(AiProviderConfig).filter(AiProviderConfig.is_active, AiProviderConfig.is_default).first()
         if not config:
             config = AiProviderConfig(
                 provider_name="Mock",
@@ -135,19 +134,19 @@ class AiProviderService:
         logs = db.query(AiAuditLog).order_by(AiAuditLog.created_at.desc()).limit(limit).all()
         return [
             {
-                "id": l.id,
-                "user_email": l.user_email or "System / Admin",
-                "question": l.question,
-                "intent": l.intent,
-                "entities_detected": json.loads(l.entities_detected_json or "[]"),
-                "generated_query": l.generated_query,
-                "records_retrieved_count": l.records_retrieved_count,
-                "model_used": l.model_used,
-                "tokens": l.input_tokens + l.output_tokens,
-                "latency_ms": round(l.latency_ms, 1),
-                "confidence": l.confidence,
-                "response_summary": l.response_summary,
-                "created_at": l.created_at.isoformat() if l.created_at else None,
+                "id": log.id,
+                "user_email": log.user_email or "System / Admin",
+                "question": log.question,
+                "intent": log.intent,
+                "entities_detected": json.loads(log.entities_detected_json or "[]"),
+                "generated_query": log.generated_query,
+                "records_retrieved_count": log.records_retrieved_count,
+                "model_used": log.model_used,
+                "tokens": log.input_tokens + log.output_tokens,
+                "latency_ms": round(log.latency_ms, 1),
+                "confidence": log.confidence,
+                "response_summary": log.response_summary,
+                "created_at": log.created_at.isoformat() if log.created_at else None,
             }
-            for l in logs
+            for log in logs
         ]

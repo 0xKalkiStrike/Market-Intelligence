@@ -12,15 +12,12 @@ Maps Enterprise Roles:
 Enforces backend authorization, least-privilege policies, and internal data protection.
 """
 import ipaddress
-import re
 import urllib.parse
-from typing import Any, Callable, Dict, List, Optional, Set
-from fastapi import Depends, HTTPException, Request, status
-from sqlalchemy.orm import Session
+from typing import Any, Dict, List, Set
+from fastapi import Depends, HTTPException, status
 
 from app.auth.deps import get_current_user
-from app.database.models import User, Role, Permission
-from app.database.session import get_db
+from app.database.models import User
 
 
 # Complete Enterprise Role & Permission Mapping

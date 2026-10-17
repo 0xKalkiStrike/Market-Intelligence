@@ -1,6 +1,4 @@
-import re
-from typing import Any, Dict, List, Optional
-from sqlalchemy import text
+from typing import Any, Dict
 from sqlalchemy.orm import Session
 
 from app.database.models import (
@@ -197,7 +195,7 @@ class NlQueryEngine:
             "intent": intent,
             "state_filter": target_state,
             "table_used": "entities",
-            "generated_query_summary": f"SELECT * FROM entities ORDER BY created_at DESC LIMIT 20",
+            "generated_query_summary": "SELECT * FROM entities ORDER BY created_at DESC LIMIT 20",
             "records_retrieved": len(data),
             "data": data,
             "recommended_visualization": "table",

@@ -9,12 +9,12 @@ Tracks, monitors, probes, and manages status for:
 """
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 import httpx
 from sqlalchemy.orm import Session
 
 from app.core.circuit_breaker import circuit_breaker_registry
-from app.database.models import IntegrationConnectorStatus, utc_now
+from app.database.models import IntegrationConnectorStatus
 
 DEFAULT_CONNECTORS = [
     {
@@ -185,5 +185,5 @@ class IntegrationManagementService:
                 "status": c.status,
                 "latency_ms": elapsed_ms,
                 "error": str(err),
-                "message": f"Integration connector probe failed.",
+                "message": "Integration connector probe failed.",
             }

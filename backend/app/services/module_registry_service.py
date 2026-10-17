@@ -8,7 +8,6 @@ Each module declares:
 - health_status probe
 """
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional
 
 

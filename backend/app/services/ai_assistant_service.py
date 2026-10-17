@@ -1,14 +1,6 @@
 from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 
-from app.database.models import (
-    Entity,
-    IntelligenceEvent,
-    PartnershipOpportunity,
-    PriceHistory,
-    RegulatoryChange,
-    StateMarketMetric,
-)
 from app.services.ai_provider_service import AiProviderAdapter, AiProviderService
 from app.services.nl_query_engine import NlQueryEngine
 
@@ -46,7 +38,7 @@ class AiAssistantService:
                     key_changes = ["No price reductions detected in the current window; market prices remain stable."]
                 
                 sources = list(set([d.get("source") or "Surface Web Pricing Engine" for d in data if d.get("source")]))
-                answer = f"Found {rec_count} verified competitor pricing records" + (f" in {state_filter}" if state_filter else "") + f". MMJ-DOCS initial certification price is $149."
+                answer = f"Found {rec_count} verified competitor pricing records" + (f" in {state_filter}" if state_filter else "") + ". MMJ-DOCS initial certification price is $149."
                 limitations = f"Based on {rec_count} verified records. Competitors without recent public updates were excluded."
             else:
                 answer = "No recent price changes matching your filter were found in the database."

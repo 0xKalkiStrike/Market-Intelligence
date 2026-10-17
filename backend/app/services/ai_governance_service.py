@@ -7,19 +7,16 @@ Implements:
 - Groundedness, Hallucination Rate, and Uncertainty validation
 """
 import json
-import re
-from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.auth.rbac import get_user_permission_codes
 from app.database.models import (
-    AiAuditLog,
     AiCostLog,
     AiEvaluationBenchmarkRun,
     User,
-    utc_now,
 )
 from app.services.ai_assistant_service import AiAssistantService
 

@@ -8,19 +8,13 @@ Analyzes competitor advertised pricing across markets:
 - Identification of actionable market pricing gaps
 - Decision support only: Never automatically executes commercial pricing changes.
 """
-import math
-from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, func
+from sqlalchemy import desc
 
 from app.database.models import (
     PriceHistory,
     StateMarketMetric,
-    Entity,
-    EntityLocation,
-    CompetitorDetail,
-    utc_now,
 )
 
 
@@ -73,7 +67,6 @@ class PricingResearchService:
             spread_pct = round((spread_dollar / avg_init * 100.0), 1) if (spread_dollar and avg_init) else None
 
             # Service Equivalence Check
-            has_telehealth_note = True  # Standard telehealth consultation
             warning = None
             if avg_init and avg_init > 250.0:
                 warning = "NON_EQUIVALENT_SERVICE_WARNING: High price point suggests full in-person physical exam or bundled clinical diagnostic testing."

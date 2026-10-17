@@ -1,10 +1,8 @@
-import json
-from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 from sqlalchemy.orm import Session
-from sqlalchemy import select, desc, func
+from sqlalchemy import select, desc
 
-from app.database.models import AiCostLog, AiProviderConfig
+from app.database.models import AiCostLog
 
 class AiCostManagementService:
     def __init__(self, db: Session):
@@ -95,12 +93,12 @@ class AiCostManagementService:
             self.db.commit()
             logs = self.db.scalars(select(AiCostLog).order_by(desc(AiCostLog.created_at)).limit(100)).all()
 
-        total_cost = sum(l.calculated_cost_usd for l in logs)
-        total_tokens = sum(l.input_tokens + l.output_tokens for l in logs)
+        total_cost = sum(log.calculated_cost_usd for log in logs)
+        total_tokens = sum(log.input_tokens + log.output_tokens for log in logs)
 
         by_feature = {}
-        for l in logs:
-            by_feature[l.feature_name] = by_feature.get(l.feature_name, 0.0) + l.calculated_cost_usd
+        for log in logs:
+            by_feature[log.feature_name] = by_feature.get(log.feature_name, 0.0) + log.calculated_cost_usd
 
         return {
             "total_cost_usd": round(total_cost, 4),
@@ -109,13 +107,13 @@ class AiCostManagementService:
             "cost_by_feature": {k: round(v, 4) for k, v in by_feature.items()},
             "recent_logs": [
                 {
-                    "id": l.id,
-                    "provider": l.provider_name,
-                    "model": l.model_name,
-                    "feature": l.feature_name,
-                    "tokens": l.input_tokens + l.output_tokens,
-                    "cost_usd": l.calculated_cost_usd,
-                    "created_at": l.created_at.isoformat() if l.created_at else None
-                } for l in logs[:10]
+                    "id": log.id,
+                    "provider": log.provider_name,
+                    "model": log.model_name,
+                    "feature": log.feature_name,
+                    "tokens": log.input_tokens + log.output_tokens,
+                    "cost_usd": log.calculated_cost_usd,
+                    "created_at": log.created_at.isoformat() if log.created_at else None
+                } for log in logs[:10]
             ]
         }

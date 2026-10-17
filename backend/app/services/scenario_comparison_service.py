@@ -8,7 +8,6 @@ Enables multi-variable strategy modeling without modifying production records:
 - Zero-mutation guarantee: simulations remain strictly isolated in scenario_definitions.
 """
 import json
-from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
@@ -16,10 +15,6 @@ from sqlalchemy import desc
 from app.database.models import (
     ScenarioDefinition,
     StateMarketMetric,
-    Entity,
-    EntityLocation,
-    PriceHistory,
-    utc_now,
 )
 
 
@@ -51,8 +46,6 @@ class ScenarioComparisonService:
         ).first()
 
         patient_pop = metric.patient_population if metric else 75000
-        mkt_growth = metric.population_growth_rate if metric else 12.0
-        avg_price = metric.avg_market_price if metric else 149.0
         current_mmj_price = metric.mmj_price if metric else 139.0
 
         # Construct defaults if not specified

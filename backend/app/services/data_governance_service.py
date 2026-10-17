@@ -7,8 +7,6 @@ Implements:
 - Duplicate Candidate Review & Resolution (Merge / Dismiss)
 - Provenance and Lineage tracking
 """
-import json
-import re
 from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 from sqlalchemy import func, or_
@@ -17,13 +15,10 @@ from sqlalchemy.orm import Session
 from app.database.models import (
     Entity,
     EntityLocation,
-    EntityContact,
     EntitySourceLink,
     DuplicateCandidate,
     PriceHistory,
-    RegulatoryChange,
     EntityAuditTrail,
-    utc_now,
 )
 
 
@@ -111,7 +106,7 @@ class DataGovernanceService:
         entities_without_sources = (
             self.db.query(Entity)
             .outerjoin(EntitySourceLink, Entity.id == EntitySourceLink.entity_id)
-            .filter(EntitySourceLink.id == None)
+            .filter(EntitySourceLink.id is None)
             .limit(10)
             .all()
         )
@@ -127,7 +122,7 @@ class DataGovernanceService:
         # 3. Missing geographic fields
         locations_missing_geo = (
             self.db.query(EntityLocation)
-            .filter(or_(EntityLocation.state == None, EntityLocation.state == "", EntityLocation.city == None))
+            .filter(or_(EntityLocation.state is None, EntityLocation.state == "", EntityLocation.city is None))
             .limit(10)
             .all()
         )
@@ -137,13 +132,13 @@ class DataGovernanceService:
                 "severity": "MEDIUM",
                 "entity_id": loc.entity_id,
                 "entity_name": f"Location {loc.id[:8]}",
-                "description": f"Entity location lacks standard city/state geographic classification.",
+                "description": "Entity location lacks standard city/state geographic classification.",
             })
 
         # 4. Invalid prices
         invalid_prices = (
             self.db.query(PriceHistory)
-            .filter(or_(PriceHistory.initial_price <= 0, PriceHistory.initial_price == None))
+            .filter(or_(PriceHistory.initial_price <= 0, PriceHistory.initial_price is None))
             .limit(10)
             .all()
         )

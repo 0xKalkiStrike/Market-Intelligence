@@ -1,6 +1,6 @@
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
-from app.database.models import PhysicianCoverage, Entity, DoctorDetail, EntityLocation
+from app.database.models import PhysicianCoverage
 
 class PhysicianCoverageService:
     """Tracks physician licensing, telehealth eligibility, capacity vs demand metrics."""
@@ -17,7 +17,7 @@ class PhysicianCoverageService:
             query = query.filter(PhysicianCoverage.state.ilike(f"%{state}%"))
 
         if telehealth_only is True:
-            query = query.filter(PhysicianCoverage.telehealth_eligible == True)
+            query = query.filter(PhysicianCoverage.telehealth_eligible)
 
         physicians = query.all()
 

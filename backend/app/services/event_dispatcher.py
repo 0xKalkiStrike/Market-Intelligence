@@ -131,7 +131,7 @@ class EventDispatcher:
 
     def _get_matching_subscriptions(self, event_type: str) -> List[WebhookSubscription]:
         """Finds all active webhook subscriptions subscribed to this event type or '*'."""
-        subs = self.db.query(WebhookSubscription).filter(WebhookSubscription.is_active == True).all()
+        subs = self.db.query(WebhookSubscription).filter(WebhookSubscription.is_active).all()
         matched = []
         for s in subs:
             try:

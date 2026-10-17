@@ -1,13 +1,10 @@
 import json
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from sqlalchemy.orm import Session
 
 from app.database.models import (
-    Entity,
     IntelligenceEvent,
     IntelligenceKnowledgeObject,
-    PartnershipOpportunity,
     PriceHistory,
     RegulatoryChange,
     StateMarketMetric,

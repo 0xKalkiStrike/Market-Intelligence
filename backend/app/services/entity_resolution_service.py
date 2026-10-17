@@ -13,12 +13,11 @@ Never merges solely on name similarity.
 """
 import json
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.database.models import (
     Entity,
-    EntityContact,
     EntityLocation,
     CrossSystemEntityLink,
     utc_now,
@@ -144,7 +143,7 @@ class EntityResolutionService:
                 norm_a2 = re.sub(r"[^a-z0-9]", "", cand_address.lower())
                 if norm_a1 and (norm_a1 in norm_a2 or norm_a2 in norm_a1):
                     score += 0.20
-                    reasons.append(f"Physical address match")
+                    reasons.append("Physical address match")
 
             # Name similarity
             name_sim = self.calculate_name_similarity(name, cand.name)
@@ -201,17 +200,17 @@ class EntityResolutionService:
             .all()
         )
         results = []
-        for l in links:
-            ent = self.db.get(Entity, l.canonical_entity_id)
+        for link in links:
+            ent = self.db.get(Entity, link.canonical_entity_id)
             results.append({
-                "id": l.id,
-                "canonical_entity_id": l.canonical_entity_id,
+                "id": link.id,
+                "canonical_entity_id": link.canonical_entity_id,
                 "canonical_name": ent.name if ent else "Unknown",
-                "system_name": l.system_name,
-                "external_system_id": l.external_system_id,
-                "match_confidence": l.match_confidence,
-                "match_reasons": json.loads(l.match_reasons) if l.match_reasons else [],
-                "created_at": l.created_at.isoformat() if l.created_at else None,
+                "system_name": link.system_name,
+                "external_system_id": link.external_system_id,
+                "match_confidence": link.match_confidence,
+                "match_reasons": json.loads(link.match_reasons) if link.match_reasons else [],
+                "created_at": link.created_at.isoformat() if link.created_at else None,
             })
         return results
 

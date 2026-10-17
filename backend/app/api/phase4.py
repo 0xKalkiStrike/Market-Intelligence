@@ -1,6 +1,6 @@
 from typing import Dict, Any, List, Optional, Union
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db

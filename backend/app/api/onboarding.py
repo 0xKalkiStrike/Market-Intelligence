@@ -1,5 +1,5 @@
 """Customer Onboarding API - Guided setup wizard endpoints with safe state resumption."""
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session

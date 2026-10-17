@@ -9,18 +9,15 @@ Analyzes competitor patterns from historical records:
 - Explicit warnings: Advertised prices do not equal realized transaction prices.
 """
 import json
-from datetime import datetime, timezone, timedelta
+from datetime import timedelta
 from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, func
+from sqlalchemy import desc
 
 from app.database.models import (
     CompetitivePatternRecord,
     PriceHistory,
     IntelligenceEvent,
-    Entity,
-    EntityLocation,
-    CompetitorDetail,
     utc_now,
 )
 
@@ -44,7 +41,7 @@ class CompetitivePatternService:
         evidence-backed competitive patterns, distinguishing sustained movements from isolated noise.
         """
         patterns: List[Dict[str, Any]] = []
-        cutoff = utc_now() - timedelta(days=time_horizon_days)
+        utc_now() - timedelta(days=time_horizon_days)
 
         # 1. Price Movement Pattern Analysis
         price_query = db.query(PriceHistory)
@@ -103,8 +100,8 @@ class CompetitivePatternService:
                         "earliest_price": earliest.new_price,
                         "supporting_record_ids": supporting_ids,
                         "why_it_matters": (
-                            f"Impacts price competitiveness against MMJ-DOCS standard pricing. "
-                            f"Note: Advertised public price may differ from realized transaction price."
+                            "Impacts price competitiveness against MMJ-DOCS standard pricing. "
+                            "Note: Advertised public price may differ from realized transaction price."
                         ),
                     })
 
@@ -178,7 +175,7 @@ class CompetitivePatternService:
     ) -> List[Dict[str, Any]]:
         query = db.query(CompetitivePatternRecord)
         if not include_dismissed:
-            query = query.filter(CompetitivePatternRecord.is_dismissed == False)
+            query = query.filter(not CompetitivePatternRecord.is_dismissed)
         if state:
             query = query.filter(CompetitivePatternRecord.state == state)
         if pattern_type:

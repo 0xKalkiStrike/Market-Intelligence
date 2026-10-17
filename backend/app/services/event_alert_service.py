@@ -1,7 +1,7 @@
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
-from app.database.models import IntelligenceEvent, AlertConfig, AlertNotification
+from app.database.models import IntelligenceEvent, AlertNotification
 
 class EventAlertService:
     """Centralized universal event logging and configurable alert engine."""

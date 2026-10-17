@@ -3,7 +3,7 @@ import secrets
 import re
 import uuid
 from datetime import datetime, timezone, timedelta
-from typing import Optional, List, Dict, Any, Tuple
+from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import select, and_, func
 
@@ -221,7 +221,7 @@ class TenantMembershipService:
             .where(
                 and_(
                     OrganizationMembership.user_id == user_id,
-                    OrganizationMembership.is_active == True,
+                    OrganizationMembership.is_active,
                     Organization.status != "DEACTIVATED",
                 )
             )
@@ -251,7 +251,7 @@ class TenantMembershipService:
             .where(
                 and_(
                     OrganizationMembership.organization_id == organization_id,
-                    OrganizationMembership.is_active == True,
+                    OrganizationMembership.is_active,
                 )
             )
             .order_by(OrganizationMembership.joined_at.asc())
@@ -344,7 +344,7 @@ class TenantMembershipService:
             and_(
                 OrganizationMembership.organization_id == organization_id,
                 OrganizationMembership.user_id == target_user_id,
-                OrganizationMembership.is_active == True,
+                OrganizationMembership.is_active,
             )
         )
         membership = db.execute(stmt).scalar_one_or_none()
@@ -358,7 +358,7 @@ class TenantMembershipService:
                     and_(
                         OrganizationMembership.organization_id == organization_id,
                         OrganizationMembership.role == "OWNER",
-                        OrganizationMembership.is_active == True,
+                        OrganizationMembership.is_active,
                     )
                 )
             ).scalar() or 0
@@ -395,7 +395,7 @@ class TenantMembershipService:
             and_(
                 OrganizationMembership.organization_id == organization_id,
                 OrganizationMembership.user_id == target_user_id,
-                OrganizationMembership.is_active == True,
+                OrganizationMembership.is_active,
             )
         )
         membership = db.execute(stmt).scalar_one_or_none()
@@ -408,7 +408,7 @@ class TenantMembershipService:
                     and_(
                         OrganizationMembership.organization_id == organization_id,
                         OrganizationMembership.role == "OWNER",
-                        OrganizationMembership.is_active == True,
+                        OrganizationMembership.is_active,
                     )
                 )
             ).scalar() or 0
@@ -447,7 +447,7 @@ class TenantMembershipService:
             and_(
                 OrganizationMembership.organization_id == organization_id,
                 OrganizationMembership.user_id == new_owner_user_id,
-                OrganizationMembership.is_active == True,
+                OrganizationMembership.is_active,
             )
         )
         target_membership = db.execute(stmt).scalar_one_or_none()
@@ -459,7 +459,7 @@ class TenantMembershipService:
             and_(
                 OrganizationMembership.organization_id == organization_id,
                 OrganizationMembership.user_id == current_owner_user.id,
-                OrganizationMembership.is_active == True,
+                OrganizationMembership.is_active,
             )
         )
         curr_membership = db.execute(curr_stmt).scalar_one_or_none()
@@ -506,7 +506,7 @@ class TenantMembershipService:
                 and_(
                     OrganizationMembership.organization_id == organization_id,
                     OrganizationMembership.user_id == u.id,
-                    OrganizationMembership.is_active == True,
+                    OrganizationMembership.is_active,
                 )
             )
             if db.execute(m_stmt).scalar_one_or_none():

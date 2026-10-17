@@ -6,7 +6,6 @@ Ensures health status is based on verified connectivity/sync runs, not merely ex
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import select
 
 from app.database.models import IntegrationConnectorStatus, utc_now
 from app.integrations.adapter import BaseIntegrationAdapter, SyncResult

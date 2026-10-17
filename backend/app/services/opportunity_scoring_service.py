@@ -1,7 +1,7 @@
 import json
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 from sqlalchemy.orm import Session
-from app.database.models import OpportunityScoreConfig, StateMarketMetric, Entity, EntityLocation, CompetitorDetail, DispensaryDetail, DoctorDetail
+from app.database.models import OpportunityScoreConfig, StateMarketMetric, Entity, EntityLocation
 
 class OpportunityScoringService:
     """Computes transparent, explainable State Opportunity Scores (0-100) using configurable admin weights."""

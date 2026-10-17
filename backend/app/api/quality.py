@@ -10,12 +10,12 @@ Provides REST endpoints for:
 - Operational Reliability Telemetry & Token/Cost Governance
 """
 from datetime import datetime
-from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from typing import Optional
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.auth.deps import get_optional_current_user, get_current_user
+from app.auth.deps import get_optional_current_user
 from app.database.models import User
 from app.database.session import get_db
 from app.services.intelligence_quality_service import IntelligenceQualityService

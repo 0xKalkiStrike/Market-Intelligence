@@ -17,11 +17,10 @@ from sqlalchemy.orm import Session
 from app.auth.api_key_auth import (
     AuthenticatedPrincipal,
     generate_secure_api_key,
-    get_authenticated_principal,
     require_governed_scope,
 )
 from app.auth.rbac import sanitize_internal_business_data
-from app.database.models import ApiKey, Entity, EntityLocation, PriceHistory, StateMarketMetric, utc_now
+from app.database.models import ApiKey, Entity, EntityLocation, PriceHistory, StateMarketMetric
 from app.database.session import get_db
 from app.services.analytics_service import AnalyticsService
 from app.services.case_management_service import CaseManagementService
@@ -31,7 +30,6 @@ from app.services.data_export_service import DataExportService
 from app.services.data_import_service import DataImportService
 from app.services.entity_resolution_service import EntityResolutionService
 from app.services.event_alert_service import EventAlertService
-from app.services.event_dispatcher import EventDispatcher
 from app.services.forecasting_service import ForecastingService
 from app.services.geographic_optimization_service import GeographicOptimizationService
 from app.services.integration_registry_service import IntegrationRegistryService
@@ -40,8 +38,6 @@ from app.services.opportunity_scoring_service import OpportunityScoringService
 from app.services.partnership_service import PartnershipService
 from app.services.regulatory_intelligence_service import RegulatoryIntelligenceService
 from app.services.report_distribution_service import ReportDistributionService
-from app.services.review_intelligence_service import ReviewIntelligenceService
-from app.services.seo_intelligence_service import SeoIntelligenceService
 from app.services.webhook_service import WebhookService
 
 router = APIRouter(prefix="/api/v1/governed", tags=["Governed API Platform"])
@@ -340,7 +336,6 @@ def create_api_key(
     principal: AuthenticatedPrincipal = Depends(require_governed_scope("system:manage")),
     db: Session = Depends(get_db),
 ):
-    from datetime import timedelta
     expires_at = None
     if req.expires_in_days:
         expires_at = datetime.now(timezone.utc) + timedelta(days=req.expires_in_days)

@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 
-from app.database.models import DataConflict, Entity, EntityLocation, EntityContact, EntityAuditTrail, utc_now
+from app.database.models import DataConflict, Entity, EntityAuditTrail
 
 
 SOURCE_AUTHORITY_WEIGHTS = {

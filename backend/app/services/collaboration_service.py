@@ -8,16 +8,13 @@ Enables authorized analysts, researchers, and managers to:
 - Share team and public watchlists with role-aware access
 """
 import json
-from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import select, desc
 
 from app.database.models import (
     CollaborationFinding,
     IntelligenceNote,
     Watchlist,
-    WatchlistItem,
     Entity,
     utc_now,
 )
@@ -193,7 +190,7 @@ class CollaborationService:
         - Team watchlists matching user's team
         - Personal watchlists created by the user
         """
-        query = self.db.query(Watchlist).filter(Watchlist.is_active == True)
+        query = self.db.query(Watchlist).filter(Watchlist.is_active)
         all_lists = query.order_by(Watchlist.created_at.desc()).all()
 
         results = []

@@ -1,5 +1,6 @@
 """Subscription and Entitlement Service - Centralized tier definitions, server-side limits, and quota enforcement."""
-from typing import Dict, Any, List, Tuple, Optional
+import uuid
+from typing import Dict, Any, List, Tuple
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func, and_
@@ -124,7 +125,7 @@ class SubscriptionEntitlementService:
             select(func.count(OrganizationMembership.id)).where(
                 and_(
                     OrganizationMembership.organization_id == organization_id,
-                    OrganizationMembership.is_active == True,
+                    OrganizationMembership.is_active,
                 )
             )
         ).scalar() or 0
@@ -204,7 +205,7 @@ class SubscriptionEntitlementService:
                 select(func.count(OrganizationMembership.id)).where(
                     and_(
                         OrganizationMembership.organization_id == organization_id,
-                        OrganizationMembership.is_active == True,
+                        OrganizationMembership.is_active,
                     )
                 )
             ).scalar() or 0
@@ -270,7 +271,6 @@ class SubscriptionEntitlementService:
             )
             db.add(sub)
         else:
-            old_tier = sub.plan_tier
             sub.plan_tier = new_plan_tier
             sub.billing_cycle = billing_cycle.upper()
             sub.current_period_end = now + timedelta(days=days)

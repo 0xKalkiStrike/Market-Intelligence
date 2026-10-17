@@ -1,8 +1,7 @@
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-from app.database.models import PriceHistory, Entity, CompetitorDetail, EntityLocation, IntelligenceEvent
+from app.database.models import PriceHistory, IntelligenceEvent
 
 class CompetitorPricingService:
     """Manages competitor pricing intelligence, historical trends, promotions, and market averages."""

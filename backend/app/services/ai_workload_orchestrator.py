@@ -1,5 +1,4 @@
 import json
-import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
@@ -39,7 +38,7 @@ class AiWorkloadOrchestrator:
 
         try:
             # Simulate execution of target task type
-            payload = json.loads(task.payload_json or "{}")
+            json.loads(task.payload_json or "{}")
             result = {
                 "task_id": task.id,
                 "task_type": task.task_type,

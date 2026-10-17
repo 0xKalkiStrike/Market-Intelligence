@@ -9,7 +9,6 @@ from app.database.models import (
     MarketSnapshot,
     PriceHistory,
     RegulatoryChange,
-    StateMarketMetric,
 )
 
 

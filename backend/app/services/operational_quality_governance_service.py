@@ -4,11 +4,10 @@ Manages intelligence feedback queues, system operational health metrics,
 database telemetry, background job queue depths, and token/cost budgets with safe fallbacks.
 """
 import os
-import json
 import time
 from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
-from sqlalchemy import desc, func, select, text
+from sqlalchemy import desc, text
 from sqlalchemy.orm import Session
 
 from app.database.models import (
@@ -197,13 +196,13 @@ class OperationalQualityGovernanceService:
         """Measures transparent token consumption, costs, budgets, and safe fallbacks."""
         logs = db.query(AiCostLog).order_by(desc(AiCostLog.created_at)).limit(200).all()
 
-        total_tokens = sum(l.input_tokens + l.output_tokens for l in logs)
-        total_cost_usd = round(sum(l.calculated_cost_usd for l in logs), 4)
+        total_tokens = sum(log.input_tokens + log.output_tokens for log in logs)
+        total_cost_usd = round(sum(log.calculated_cost_usd for log in logs), 4)
 
         # Spend by feature
         by_feature: Dict[str, float] = {}
-        for l in logs:
-            by_feature[l.feature_name] = round(by_feature.get(l.feature_name, 0.0) + l.calculated_cost_usd, 4)
+        for log in logs:
+            by_feature[log.feature_name] = round(by_feature.get(log.feature_name, 0.0) + log.calculated_cost_usd, 4)
 
         budget_utilization_pct = round((total_cost_usd / self.MONTHLY_AI_BUDGET_USD) * 100.0, 1)
 

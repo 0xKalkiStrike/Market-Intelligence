@@ -1,8 +1,8 @@
-from typing import Dict, Any, List
+from typing import Dict, Any
 from sqlalchemy.orm import Session
-from sqlalchemy import select, desc
+from sqlalchemy import select
 
-from app.database.models import PhysicianCoverage, StateMarketMetric, RiskSignal
+from app.database.models import PhysicianCoverage, StateMarketMetric
 
 class CapacityDemandService:
     def __init__(self, db: Session):
@@ -13,7 +13,7 @@ class CapacityDemandService:
             select(PhysicianCoverage).where(PhysicianCoverage.state == state)
         ).all()
 
-        metric = self.db.scalar(
+        self.db.scalar(
             select(StateMarketMetric).where(StateMarketMetric.state == state)
         )
 

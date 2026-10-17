@@ -11,7 +11,7 @@ Tracks:
 import time
 from collections import defaultdict
 from threading import Lock
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
@@ -73,7 +73,7 @@ class MetricsCollector:
             error_requests = sum(count for (m, p, status), count in self._http_requests.items() if status >= 400)
             error_rate_pct = round((error_requests / total_requests * 100), 2) if total_requests > 0 else 0.0
 
-            all_latencies = [l for lat_list in self._http_latencies.values() for l in lat_list]
+            all_latencies = [lat for lat_list in self._http_latencies.values() for lat in lat_list]
             avg_latency_ms = round(sum(all_latencies) / len(all_latencies) * 1000, 2) if all_latencies else 0.0
 
             # Compute p95 latency

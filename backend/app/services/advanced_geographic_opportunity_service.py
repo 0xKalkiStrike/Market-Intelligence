@@ -9,7 +9,6 @@ Extends geographic scoring across multiple administrative levels:
 - Explicit guardrails: Market proxies are not direct demand measurements.
 """
 import json
-from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
@@ -20,8 +19,6 @@ from app.database.models import (
     StateMarketMetric,
     Entity,
     EntityLocation,
-    PhysicianCoverage,
-    PartnershipOpportunity,
     utc_now,
 )
 
@@ -45,7 +42,7 @@ class AdvancedGeographicOpportunityService:
     # =========================================================================
 
     def get_or_create_active_model_version(self, db: Session) -> ScoringModelVersion:
-        version = db.query(ScoringModelVersion).filter(ScoringModelVersion.is_active == True).order_by(desc(ScoringModelVersion.created_at)).first()
+        version = db.query(ScoringModelVersion).filter(ScoringModelVersion.is_active).order_by(desc(ScoringModelVersion.created_at)).first()
         if not version:
             version = ScoringModelVersion(
                 version_tag="v1.0-standard",

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
 from sqlalchemy.orm import Session
 
@@ -85,7 +85,7 @@ def create_product(
     db.refresh(product)
 
     # Automatically monitor against active sources
-    active_sources = db.query(Source).filter(Source.is_active == True).all()
+    active_sources = db.query(Source).filter(Source.is_active).all()
     if active_sources:
         run_monitoring_for_product(db, product, active_sources)
         db.refresh(product)
@@ -206,7 +206,7 @@ def get_product(
     if not product:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Product not found")
     if product.status == "pending" or not product.comparisons:
-        active_sources = db.query(Source).filter(Source.is_active == True).all()
+        active_sources = db.query(Source).filter(Source.is_active).all()
         run_monitoring_for_product(db, product, active_sources)
         db.refresh(product)
     return product
@@ -222,7 +222,7 @@ def trigger_product_monitoring(
     if not product:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Product not found")
 
-    active_sources = db.query(Source).filter(Source.is_active == True).all()
+    active_sources = db.query(Source).filter(Source.is_active).all()
     if not active_sources:
         from app.monitoring.service import ensure_default_sources
         active_sources = ensure_default_sources(db)

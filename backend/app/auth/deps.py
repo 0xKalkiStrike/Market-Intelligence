@@ -1,12 +1,12 @@
-from fastapi import Depends, HTTPException, status
+from typing import Optional
+
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
 from app.auth.security import decode_access_token
-from app.database.models import Project, ProjectUser, User
+from app.database.models import Organization, OrganizationMembership, Project, ProjectUser, User
 from app.database.session import get_db
-
-from typing import Optional
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
@@ -62,10 +62,6 @@ def require_project_member(project_id: str, user: User = Depends(get_current_use
     return project
 
 
-from fastapi import Request
-from app.database.models import Organization, OrganizationMembership
-
-
 def get_current_tenant(
     request: Request,
     user: User = Depends(get_current_user),
@@ -89,7 +85,7 @@ def get_current_tenant(
             membership = db.query(OrganizationMembership).filter(
                 OrganizationMembership.organization_id == org.id,
                 OrganizationMembership.user_id == user.id,
-                OrganizationMembership.is_active == True,
+                OrganizationMembership.is_active,
             ).first()
             if not membership:
                 raise HTTPException(
@@ -100,7 +96,7 @@ def get_current_tenant(
         # Fallback: find user's primary active organization
         membership = db.query(OrganizationMembership).filter(
             OrganizationMembership.user_id == user.id,
-            OrganizationMembership.is_active == True,
+            OrganizationMembership.is_active,
         ).order_by(OrganizationMembership.joined_at.asc()).first()
 
         if membership:
@@ -143,7 +139,7 @@ def require_tenant_role(allowed_roles: list[str]):
         membership = db.query(OrganizationMembership).filter(
             OrganizationMembership.organization_id == org.id,
             OrganizationMembership.user_id == user.id,
-            OrganizationMembership.is_active == True,
+            OrganizationMembership.is_active,
         ).first()
 
         if not membership:

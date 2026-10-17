@@ -1,17 +1,14 @@
 import statistics
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from datetime import datetime, timezone
+from typing import Any, Dict, List
 from sqlalchemy.orm import Session
 
 from app.database.models import (
     Entity,
-    IntelligenceEvent,
     PartnershipOpportunity,
     PhysicianCoverage,
     PriceHistory,
-    ReviewIntelligence,
     SeoRanking,
-    StateMarketMetric,
 )
 
 

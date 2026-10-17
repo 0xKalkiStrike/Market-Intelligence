@@ -20,14 +20,9 @@ import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import select
 
 from app.database.models import (
-    Entity,
-    DoctorDetail,
-    DispensaryDetail,
     StateMarketMetric,
-    PhysicianCoverage,
     utc_now,
 )
 from app.integrations.adapter import (
@@ -98,7 +93,7 @@ class InternalMmjDocsAdapter(BaseIntegrationAdapter):
                 for pat in PROHIBITED_PHI_PATTERNS:
                     if pat.search(obj):
                         raise ValueError(
-                            f"Security Violation: Content matches clinical or patient-identifying keyword. Batch rejected."
+                            "Security Violation: Content matches clinical or patient-identifying keyword. Batch rejected."
                         )
 
         _scan(raw_data)

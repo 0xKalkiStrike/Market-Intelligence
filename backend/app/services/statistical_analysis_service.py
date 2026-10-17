@@ -16,7 +16,7 @@ import json
 from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy.orm import Session
 
-from app.database.models import AnalyticalRun, utc_now
+from app.database.models import AnalyticalRun
 
 
 class StatisticalAnalysisService:

@@ -1,7 +1,7 @@
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
-from app.database.models import PartnershipOpportunity, Entity, EntityLocation, EntityContact, DispensaryDetail
+from app.database.models import PartnershipOpportunity
 
 class PartnershipService:
     """Manages Dispensary Partnership CRM Intelligence & Opportunity Scoring."""

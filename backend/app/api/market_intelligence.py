@@ -2,7 +2,7 @@ import csv
 import io
 import json
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
@@ -12,18 +12,14 @@ from app.database.models import (
     CollectionRun,
     CompetitorDetail,
     DataSource,
-    DispensaryDetail,
-    DoctorDetail,
     DuplicateCandidate,
     Entity,
     EntityContact,
     EntityLocation,
     EntityRelationship,
     EntityService,
-    EntitySourceLink,
     RawRecord,
     User,
-    VerificationResult,
 )
 from app.database.session import get_db
 from app.services.analytics_service import AnalyticsService
@@ -784,7 +780,6 @@ def trigger_collection(
 @router.get("/collection-runs")
 def list_collection_runs(db: Session = Depends(get_db), current_user: Optional[User] = Depends(get_optional_current_user)):
     # Auto-reap stale runs older than 15 minutes that got stuck in RUNNING
-    from datetime import timedelta
     cutoff = datetime.now(timezone.utc) - timedelta(minutes=15)
     stale_runs = db.query(CollectionRun).filter(CollectionRun.status == "RUNNING", CollectionRun.started_at < cutoff).all()
     if stale_runs:
@@ -973,7 +968,7 @@ def seed_demo_data(db: Session = Depends(get_db), current_user: User = Depends(g
     collection_service.execute_collection_run(db, "Surface Web Corporate Registry", entity_type="COMPETITOR", location="CA", max_records=20)
 
     # Seed Phase 2 State Metrics & Opportunity Scores if empty
-    from app.database.models import StateMarketMetric, PriceHistory, PartnershipOpportunity, PhysicianCoverage, SeoKeyword, SeoRanking, ReviewIntelligence, ReviewTheme, RegulatoryRequirement, RegulatoryChange, IntelligenceEvent
+    from app.database.models import StateMarketMetric, PriceHistory, PartnershipOpportunity, RegulatoryRequirement
     
     if db.query(StateMarketMetric).count() == 0:
         demo_states = [
@@ -1120,7 +1115,7 @@ def update_opportunity_config(
 ):
     user_email = current_user.email if current_user else "admin@marketintel.io"
     updates = {k: v for k, v in payload.model_dump().items() if v is not None}
-    config = opportunity_scoring_service.update_config(db, updates, updated_by=user_email)
+    opportunity_scoring_service.update_config(db, updates, updated_by=user_email)
     return {"status": "success", "message": "Opportunity score weights updated successfully."}
 
 

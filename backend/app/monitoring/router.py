@@ -1,12 +1,12 @@
-from typing import List, Optional
-from fastapi import APIRouter, Depends, Query, status
+from typing import Optional
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.auth.deps import get_current_user
 from app.database.models import Product, Source, ProductComparison, User
 from app.database.session import get_db
 from app.products.schemas import ProductComparisonResponse
-from app.monitoring.service import run_monitoring_for_all_products, run_monitoring_for_product
+from app.monitoring.service import run_monitoring_for_all_products
 
 router = APIRouter(prefix="/api/monitoring", tags=["monitoring"])
 
@@ -17,7 +17,7 @@ def list_monitoring_tasks(
     db: Session = Depends(get_db),
 ) -> list[dict]:
     products = db.query(Product).all()
-    sources = db.query(Source).filter(Source.is_active == True).all()
+    sources = db.query(Source).filter(Source.is_active).all()
 
     tasks = []
     for source in sources:

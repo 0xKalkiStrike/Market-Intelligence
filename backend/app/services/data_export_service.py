@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.auth.api_key_auth import AuthenticatedPrincipal
-from app.database.models import Entity, ExportJob, utc_now
+from app.database.models import Entity, ExportJob
 
 
 RESTRICTED_EXPORT_FIELDS = {

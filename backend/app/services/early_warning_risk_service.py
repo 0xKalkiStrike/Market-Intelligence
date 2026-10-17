@@ -1,10 +1,9 @@
 import json
-from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import select, desc
 
-from app.database.models import RiskSignal, EarlyWarningSignal, IntelligenceEvent, PriceHistory
+from app.database.models import RiskSignal, EarlyWarningSignal
 
 class EarlyWarningRiskService:
     def __init__(self, db: Session):

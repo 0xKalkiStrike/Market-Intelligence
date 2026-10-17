@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.auth.deps import get_current_user
-from app.database.models import Product, Source, ProductComparison, User
+from app.database.models import Product, Source, User
 from app.database.session import get_db
 
 router = APIRouter(prefix="/api/pricing", tags=["pricing"])
@@ -14,7 +14,7 @@ def price_matrix(
     db: Session = Depends(get_db),
 ) -> list[dict]:
     products = db.query(Product).all()
-    sources = db.query(Source).all()
+    db.query(Source).all()
     
     matrix = []
     for prod in products:

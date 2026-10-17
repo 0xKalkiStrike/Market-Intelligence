@@ -1,18 +1,16 @@
 import json
-import random
 import hashlib
-from datetime import datetime, timezone
 from typing import List, Optional
 from sqlalchemy.orm import Session
 
-from app.database.models import Product, Source, ProductComparison, AuditLog, utc_now
+from app.database.models import Product, Source, ProductComparison, utc_now
 
 
 def ensure_default_sources(db: Session) -> List[Source]:
     """
     Ensures default active target source sites exist in the database.
     """
-    sources = db.query(Source).filter(Source.is_active == True).all()
+    sources = db.query(Source).filter(Source.is_active).all()
     if not sources:
         default_defs = [
             {"name": "Amazon", "base_url": "https://www.amazon.com", "source_type": "marketplace"},
@@ -31,7 +29,7 @@ def ensure_default_sources(db: Session) -> List[Source]:
             )
             db.add(src)
         db.commit()
-        sources = db.query(Source).filter(Source.is_active == True).all()
+        sources = db.query(Source).filter(Source.is_active).all()
     return sources
 
 
@@ -171,7 +169,7 @@ def run_monitoring_for_all_products(db: Session, project_id: Optional[str] = Non
         query = query.filter(Product.project_id == project_id)
     products = query.all()
 
-    sources = db.query(Source).filter(Source.is_active == True).all()
+    sources = db.query(Source).filter(Source.is_active).all()
     if not sources:
         sources = ensure_default_sources(db)
 

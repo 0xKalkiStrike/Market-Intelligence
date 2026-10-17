@@ -5,7 +5,7 @@ External System -> Adapter -> Auth/Permissions -> Validation -> Normalization ->
 """
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 

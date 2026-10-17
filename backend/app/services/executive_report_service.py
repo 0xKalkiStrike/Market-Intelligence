@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from app.database.models import Entity, PriceHistory, StateMarketMetric, IntelligenceEvent, RegulatoryChange, PartnershipOpportunity

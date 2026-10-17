@@ -2,7 +2,7 @@ import json
 import time
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import select, desc, func
+from sqlalchemy import select, func
 
 from app.database.models import GeographicCluster, StateMarketMetric, Entity, EntityLocation
 

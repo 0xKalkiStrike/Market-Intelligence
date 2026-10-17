@@ -5,16 +5,14 @@ Computes genuine empirical error metrics (MAE, RMSE, MAPE, Directional Accuracy)
 and operational adoption follow-through without fabricating metrics.
 """
 import math
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-from sqlalchemy import desc, func, select
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.database.models import (
-    Forecast,
     ForecastOutcomeRecord,
     RecommendationOutcomeRecord,
-    ResearchFinding,
     StateMarketMetric,
     utc_now,
 )

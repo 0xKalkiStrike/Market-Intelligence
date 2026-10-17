@@ -19,8 +19,6 @@ from app.database.models import (
     ResearchReviewHistory,
     PriceHistory,
     RegulatoryChange,
-    Entity,
-    StateMarketMetric,
     utc_now,
 )
 
@@ -351,7 +349,7 @@ class ResearchWorkspaceService:
         """
         validated_findings = db.query(ResearchFinding).filter(
             ResearchFinding.status == "VALIDATED",
-            ResearchFinding.is_active == True
+            ResearchFinding.is_active
         ).all()
 
         flagged_count = 0

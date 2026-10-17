@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 
-from app.database.models import IncidentRecord, utc_now
+from app.database.models import IncidentRecord
 
 INCIDENT_RUNBOOKS: Dict[str, Dict[str, Any]] = {
     "DATABASE_CONNECTION_LOSS": {

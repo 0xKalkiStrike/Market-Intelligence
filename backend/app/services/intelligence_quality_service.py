@@ -7,12 +7,11 @@ Enforces safe, reversible automated remediation and human-in-the-loop governance
 import json
 from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
-from sqlalchemy import func, select, desc
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.database.models import (
     Entity,
-    EntityLocation,
     EntitySourceLink,
     DuplicateCandidate,
     DataConflict,

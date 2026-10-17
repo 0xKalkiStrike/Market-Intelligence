@@ -106,7 +106,7 @@ class BaseCollector(ABC):
             LAST_NAMES = ["Chen", "Rodriguez", "Patel", "Miller", "Johnson", "Davis", "Martinez", "Taylor", "Anderson", "Thomas", "Jackson", "White", "Harris", "Clark", "Lewis", "Robinson"]
 
             import random
-            rng = random.Random(42 + current_count)
+            random.Random(42 + current_count)
 
             for i in range(1, to_add + 1):
                 idx = current_count + i

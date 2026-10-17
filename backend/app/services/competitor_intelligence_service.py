@@ -1,15 +1,10 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from sqlalchemy.orm import Session
 
 from app.database.models import (
-    CompetitorDetail,
     Entity,
-    EntityContact,
-    EntityLocation,
-    EntitySourceLink,
     IntelligenceEvent,
     PriceHistory,
-    ReviewIntelligence,
 )
 
 
@@ -82,7 +77,7 @@ class CompetitorIntelligenceService:
             "rating": cd.rating if cd else None,
             "review_count": cd.review_count if cd else None,
             "services_offered": cd.products_services if cd else "Medical Marijuana Cards, Recertifications",
-            "business_description": cd.business_description if cd else f"Active market competitor tracking across surface-web directories.",
+            "business_description": cd.business_description if cd else "Active market competitor tracking across surface-web directories.",
             "price_history": price_history_list,
             "movements_timeline": recent_movements,
             "verification_status": comp.verification_status if comp else "VERIFIED",

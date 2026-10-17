@@ -1,5 +1,5 @@
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 

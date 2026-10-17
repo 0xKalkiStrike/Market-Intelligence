@@ -1,5 +1,4 @@
 """Platform Administration API - Protected cross-tenant administration for platform operators."""
-from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -12,7 +11,6 @@ from app.database.models import (
     OrganizationMembership,
     OrganizationSubscription,
     TenantUsageRecord,
-    TenantAuditLog,
 )
 from app.auth.deps import require_platform_admin
 from app.services.subscription_entitlement_service import PLAN_DEFINITIONS
@@ -78,7 +76,7 @@ def list_all_organizations(
         member_count = db.execute(
             select(func.count(OrganizationMembership.id)).where(
                 OrganizationMembership.organization_id == org.id,
-                OrganizationMembership.is_active == True,
+                OrganizationMembership.is_active,
             )
         ).scalar() or 0
 

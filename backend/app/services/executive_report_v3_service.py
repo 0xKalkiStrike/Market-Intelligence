@@ -1,16 +1,13 @@
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any, Dict
 from sqlalchemy.orm import Session
 
 from app.database.models import (
     Entity,
     IntelligenceEvent,
     PartnershipOpportunity,
-    PhysicianCoverage,
     PriceHistory,
     RegulatoryChange,
-    ReviewIntelligence,
-    SeoRanking,
     StateMarketMetric,
 )
 from app.services.anomaly_trend_service import AnomalyTrendService
@@ -71,7 +68,7 @@ class ExecutiveReportV3Service:
         recent_events = db.query(IntelligenceEvent).order_by(IntelligenceEvent.detected_at.desc()).limit(5).all()
         recent_price_changes = db.query(PriceHistory).order_by(PriceHistory.effective_date.desc()).limit(5).all()
         recent_regulatory = db.query(RegulatoryChange).order_by(RegulatoryChange.detected_at.desc()).limit(3).all()
-        top_partnerships = db.query(PartnershipOpportunity).filter(PartnershipOpportunity.partnership_status == "NOT_CONTACTED").order_by(PartnershipOpportunity.partnership_score.desc()).limit(5).all()
+        db.query(PartnershipOpportunity).filter(PartnershipOpportunity.partnership_status == "NOT_CONTACTED").order_by(PartnershipOpportunity.partnership_score.desc()).limit(5).all()
         top_opportunities = db.query(StateMarketMetric).order_by(StateMarketMetric.opportunity_score.desc()).limit(3).all()
 
         anomalies = self.anomaly_service.detect_anomalies(db)

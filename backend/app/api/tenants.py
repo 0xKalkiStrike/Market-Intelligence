@@ -367,15 +367,15 @@ def list_organization_audit_logs(
     logs = TenantAuditService.list_logs(db, org.id, action=action, limit=limit, offset=offset)
     return [
         {
-            "id": l.id,
-            "actor_user_id": l.actor_user_id,
-            "actor_email": l.actor_email,
-            "action": l.action,
-            "target_type": l.target_type,
-            "target_id": l.target_id,
-            "metadata": json.loads(l.metadata_json or "{}"),
-            "ip_address": l.ip_address,
-            "created_at": l.created_at.isoformat(),
+            "id": log.id,
+            "actor_user_id": log.actor_user_id,
+            "actor_email": log.actor_email,
+            "action": log.action,
+            "target_type": log.target_type,
+            "target_id": log.target_id,
+            "metadata": json.loads(log.metadata_json or "{}"),
+            "ip_address": log.ip_address,
+            "created_at": log.created_at.isoformat(),
         }
-        for l in logs
+        for log in logs
     ]

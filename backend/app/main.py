@@ -2,14 +2,27 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
+from app.api.billing import router as billing_router
 from app.api.dashboard import router as dashboard_router
+from app.api.governed import router as governed_router
 from app.api.market_intelligence import router as market_intelligence_router
+from app.api.onboarding import router as onboarding_router
+from app.api.operations import router as operations_router
 from app.api.phase4 import router as phase4_router
+from app.api.platform_admin import router as platform_admin_router
+from app.api.quality import router as quality_router
+from app.api.research import router as research_router
+from app.api.subscriptions import router as subscriptions_router
+from app.api.tenants import router as tenants_router
+from app.api.usage import router as usage_router
 from app.audit.router import router as audit_router
 from app.auth.router import router as auth_router
 from app.core.config import get_settings
+from app.core.observability import ObservabilityMiddleware
+from app.core.rate_limit import RateLimitMiddleware
 from app.credentials.router import router as credentials_router
 from app.database.session import Base, engine
 from app.evidence.router import router as evidence_router
@@ -18,6 +31,7 @@ from app.pricing.router import router as pricing_router
 from app.products.router import router as products_router
 from app.projects.router import router as projects_router
 from app.reports.router import router as reports_router
+from app.services.tenant_membership_service import TenantMembershipService
 from app.sources.router import router as sources_router
 from app.users.router import router as users_router
 from app.verification.router import router as verification_router
@@ -88,7 +102,6 @@ async def lifespan(app_instance: FastAPI):
     from app.database.session import SessionLocal
     from app.services.analytics_service import AnalyticsService
     from app.services.geographic_optimization_service import GeographicOptimizationService
-    from app.services.tenant_membership_service import TenantMembershipService
 
     def warm_startup_cache():
         try:
@@ -105,23 +118,6 @@ async def lifespan(app_instance: FastAPI):
 
     yield
 
-
-
-from fastapi.responses import JSONResponse
-from app.core.observability import ObservabilityMiddleware
-from app.core.rate_limit import RateLimitMiddleware
-from app.api.operations import router as operations_router
-from app.api.governed import router as governed_router
-from app.api.research import router as research_router
-from app.api.quality import router as quality_router
-
-from app.api.tenants import router as tenants_router
-from app.api.onboarding import router as onboarding_router
-from app.api.subscriptions import router as subscriptions_router
-from app.api.billing import router as billing_router
-from app.api.usage import router as usage_router
-from app.api.platform_admin import router as platform_admin_router
-from app.services.tenant_membership_service import TenantMembershipService
 
 app = FastAPI(title=settings.app_name, version="0.9.0", lifespan=lifespan)
 

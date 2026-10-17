@@ -1,11 +1,10 @@
 import math
-import json
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import select, desc
 
-from app.database.models import ForecastModel, Forecast, ForecastEvaluation, StateMarketMetric, PriceHistory, Entity, EntityLocation
+from app.database.models import Forecast, ForecastEvaluation, StateMarketMetric, Entity, EntityLocation
 
 STATE_INCEPTION_DATES: Dict[str, datetime] = {
     "FL": datetime(2016, 11, 8, tzinfo=timezone.utc),   # Florida Amendment 2

@@ -2,15 +2,8 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session, joinedload
 
 from app.database.models import (
-    CompetitorDetail,
     Entity,
-    EntityLocation,
-    EntitySourceLink,
-    IntelligenceEvent,
     PriceHistory,
-    ReviewIntelligence,
-    SeoRanking,
-    SourceDiscovery,
 )
 
 
