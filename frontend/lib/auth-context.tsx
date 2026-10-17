@@ -31,13 +31,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
+    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    if (!token) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
     api
       .get<User>("/api/auth/me")
       .then((me) => {
         if (isMounted) setUser(me);
       })
       .catch(() => {
-        if (isMounted) setUser(null);
+        if (isMounted) {
+          setUser(null);
+          setToken(null);
+        }
       })
       .finally(() => {
         if (isMounted) setLoading(false);

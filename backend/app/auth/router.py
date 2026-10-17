@@ -62,3 +62,43 @@ def _to_response(user: User) -> UserResponse:
         is_superuser=user.is_superuser,
         roles=[r.name for r in user.roles],
     )
+
+
+def ensure_seed_users(db: Session) -> None:
+    roles = {
+        "admin": "Super Administrator with full platform access",
+        "analyst": "Market Analyst with read & research capabilities",
+    }
+    for r_name, r_desc in roles.items():
+        if not db.query(Role).filter(Role.name == r_name).first():
+            db.add(Role(name=r_name, description=r_desc))
+    db.commit()
+
+    admin_role = db.query(Role).filter(Role.name == "admin").first()
+    analyst_role = db.query(Role).filter(Role.name == "analyst").first()
+
+    default_accounts = [
+        ("admin@mmjdocs.com", "Admin123!", "Platform Administrator", True, [admin_role]),
+        ("testuser@mmjdocs.com", "Password123!", "Test User", True, [admin_role]),
+        ("analyst@mmjdocs.com", "Analyst123!", "Lead Market Analyst", False, [analyst_role]),
+    ]
+
+    for email, pwd, name, is_super, r_list in default_accounts:
+        user = db.query(User).filter(User.email == email).first()
+        if not user:
+            new_user = User(
+                email=email,
+                hashed_password=hash_password(pwd),
+                full_name=name,
+                is_active=True,
+                is_superuser=is_super,
+            )
+            for r in r_list:
+                if r:
+                    new_user.roles.append(r)
+            db.add(new_user)
+        else:
+            if not user.is_active:
+                user.is_active = True
+    db.commit()
+
