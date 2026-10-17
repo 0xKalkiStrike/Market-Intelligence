@@ -22,7 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, API_BASE } from "@/lib/api";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -79,7 +79,6 @@ export default function CollectionRunsPage() {
   const [historyPage, setHistoryPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   const fetchStats = async () => {
     try {

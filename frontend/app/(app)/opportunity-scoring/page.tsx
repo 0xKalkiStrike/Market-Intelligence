@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Target, Sliders, RefreshCw, CheckCircle2, TrendingUp } from "lucide-react";
+import { API_BASE } from "@/lib/api";
 
 interface Config {
   patient_pop_weight: number;
@@ -28,7 +29,6 @@ export default function OpportunityScoringPage() {
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   useEffect(() => {
     fetchData();

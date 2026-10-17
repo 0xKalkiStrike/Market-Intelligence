@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MessageSquare, Star, ThumbsUp, ThumbsDown, AlertCircle } from "lucide-react";
+import { API_BASE } from "@/lib/api";
 
 interface ReviewIntel {
   id: string;
@@ -22,7 +23,6 @@ export default function ReviewsPage() {
   const [reviews, setReviews] = useState<ReviewIntel[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   async function fetchReviews() {
     setLoading(true);

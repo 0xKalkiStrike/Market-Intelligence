@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { UserCheck, Stethoscope, AlertTriangle, CheckCircle, Video, MapPin } from "lucide-react";
+import { API_BASE } from "@/lib/api";
 
 interface PhysicianItem {
   id: string;
@@ -31,7 +32,6 @@ export default function PhysiciansPage() {
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<PhysicianCoverageSummary | null>(null);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   async function fetchPhysicians() {
     setLoading(true);

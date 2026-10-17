@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Building2, Download, ChevronLeft, ChevronRight } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, API_BASE } from "@/lib/api";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -45,7 +45,6 @@ export default function EntityIntelligencePage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   const fetchEntities = async () => {
     setLoading(true);

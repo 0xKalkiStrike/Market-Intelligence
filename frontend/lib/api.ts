@@ -1,4 +1,14 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+export function normalizeApiUrl(raw?: string): string {
+  if (!raw) return "http://localhost:8000";
+  const trimmed = raw.trim();
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed.replace(/\/$/, "");
+  }
+  return `https://${trimmed}`.replace(/\/$/, "");
+}
+
+export const API_URL = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
+export const API_BASE = API_URL;
 
 export class ApiError extends Error {
   status: number;

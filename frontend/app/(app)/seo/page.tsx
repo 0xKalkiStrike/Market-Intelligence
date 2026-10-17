@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { BarChart3, Search, TrendingUp, TrendingDown, Minus, ExternalLink } from "lucide-react";
+import { API_BASE } from "@/lib/api";
 
 interface KeywordItem {
   keyword_id: string;
@@ -20,7 +21,6 @@ export default function SeoPage() {
   const [keywords, setKeywords] = useState<KeywordItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   async function fetchSeoData() {
     setLoading(true);

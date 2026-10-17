@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Bell, Filter, Calendar, Tag, ExternalLink } from "lucide-react";
+import { API_BASE } from "@/lib/api";
 
 interface IntelEvent {
   id: string;
@@ -23,7 +24,6 @@ export default function EventsPage() {
   const [importanceFilter, setImportanceFilter] = useState("ALL");
   const [loading, setLoading] = useState(true);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   async function fetchEvents() {
     setLoading(true);

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Settings2, ShieldCheck, Activity, Cpu, Play, CheckCircle2, AlertTriangle, RefreshCw, BarChart3, Database } from "lucide-react";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { API_BASE } from "@/lib/api";
 
 interface AiProviderConfig {
   provider_name: string;
@@ -59,7 +60,6 @@ export default function AiAdminPage() {
   const [maxTokens, setMaxTokens] = useState(2048);
   const [temperature, setTemperature] = useState(0.2);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   async function fetchAdminData() {
     setLoading(true);
