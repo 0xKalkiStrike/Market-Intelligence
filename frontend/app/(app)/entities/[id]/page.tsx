@@ -65,7 +65,7 @@ interface EntityDetail {
     email: string | null;
     website: string | null;
   } | null;
-  specific_detail: Record<string, any>;
+  specific_detail: Record<string, unknown>;
   services: string[];
   sources: Array<{
     id: string;
@@ -127,8 +127,8 @@ export default function EntityDetailPage({ params }: { params: Promise<{ id: str
     try {
       const data = await apiFetch<EntityDetail>(`/api/market-intelligence/entities/${entityId}`);
       setEntity(data);
-    } catch (err: any) {
-      setError(err.message || "Failed to load entity intelligence dossier.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load entity intelligence dossier.");
     } finally {
       setLoading(false);
     }
@@ -361,7 +361,7 @@ export default function EntityDetailPage({ params }: { params: Promise<{ id: str
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`rounded-xl px-4 py-2 text-xs font-bold transition-all ${
                 activeTab === tab.id
                   ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 scale-[1.02]"
@@ -400,7 +400,7 @@ export default function EntityDetailPage({ params }: { params: Promise<{ id: str
                   <DollarSign className="h-3.5 w-3.5 text-emerald-400" />
                 </div>
                 <div className="text-lg font-black text-white">
-                  {entity.estimated_revenue || entity.specific_detail?.estimated_revenue || "Disclosed Upon Formal Audit"}
+                  {entity.estimated_revenue || (entity.specific_detail?.estimated_revenue as string | undefined) || "Disclosed Upon Formal Audit"}
                 </div>
                 <div className="text-[11px] text-slate-400 flex items-center justify-between">
                   <span>Market footprint & capacity model</span>
@@ -449,7 +449,7 @@ export default function EntityDetailPage({ params }: { params: Promise<{ id: str
                   <Users className="h-3.5 w-3.5 text-violet-400" />
                 </div>
                 <div className="text-lg font-black text-white">
-                  {entity.employee_count || entity.specific_detail?.employee_count || "10-50 staff"}
+                  {entity.employee_count || (entity.specific_detail?.employee_count as string | undefined) || "10-50 staff"}
                 </div>
                 <div className="text-[11px] text-slate-400">
                   <span>Operating headcount bracket</span>
@@ -918,7 +918,7 @@ export default function EntityDetailPage({ params }: { params: Promise<{ id: str
                             {rel.target_entity_name} ({rel.target_entity_type})
                           </Link>
                         </div>
-                        <span className="text-[10px] text-slate-500 italic">"{rel.evidence}"</span>
+                        <span className="text-[10px] text-slate-500 italic">&ldquo;{rel.evidence}&rdquo;</span>
                       </div>
                     ))}
                   </div>
@@ -947,7 +947,7 @@ export default function EntityDetailPage({ params }: { params: Promise<{ id: str
                           <span className="mx-2 text-indigo-400 font-bold">→ {rel.relationship_type} →</span>
                           <span className="font-bold text-white">{entity.name}</span>
                         </div>
-                        <span className="text-[10px] text-slate-500 italic">"{rel.evidence}"</span>
+                        <span className="text-[10px] text-slate-500 italic">&ldquo;{rel.evidence}&rdquo;</span>
                       </div>
                     ))}
                   </div>

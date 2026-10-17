@@ -49,7 +49,7 @@ export default function MonitoringPage() {
     setRunning(true);
     setRunSummary(null);
     try {
-      const res: any = await api.post("/api/monitoring/run-all");
+      const res = await api.post<{ products_monitored: number; sources_count: number; total_comparisons_generated: number }>("/api/monitoring/run-all");
       setRunSummary(
         `Successfully monitored ${res.products_monitored} products across ${res.sources_count} target sources (Generated ${res.total_comparisons_generated} comparison records)!`
       );
@@ -125,7 +125,7 @@ export default function MonitoringPage() {
                 <Zap className="h-8 w-8 text-slate-400" />
                 <p className="font-extrabold text-slate-800 dark:text-slate-300">No comparison records generated yet</p>
                 <p className="text-xs text-slate-400">
-                  Click <strong>"Run All Cross-Source Monitoring"</strong> above to monitor your products across target sources.
+                  Click <strong>&ldquo;Run All Cross-Source Monitoring&rdquo;</strong> above to monitor your products across target sources.
                 </p>
               </div>
             </CardBody>

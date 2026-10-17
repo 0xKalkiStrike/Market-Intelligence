@@ -5,12 +5,51 @@ import { Settings2, ShieldCheck, Activity, Cpu, Play, CheckCircle2, AlertTriangl
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
+interface AiProviderConfig {
+  provider_name: string;
+  model_name: string;
+  max_tokens: number;
+  temperature: number;
+}
+
+interface AiAuditLogEntry {
+  id: string;
+  user_email: string;
+  question: string;
+  intent: string;
+  model_used: string;
+  tokens: number;
+  latency_ms: number;
+  confidence: number;
+}
+
+interface AiEvalSummary {
+  pass_rate_percentage: number;
+  average_groundedness_score: number;
+  hallucination_rate_percentage: number;
+}
+
+interface AiBenchmarkResult {
+  id: string;
+  question: string;
+  actual_intent: string;
+  latency_ms: number;
+  score: number;
+  status: string;
+}
+
+interface AiWorkloadStatus {
+  queue_metrics: { queued: number; completed: number };
+  active_worker_pools: unknown[];
+  max_concurrency: number;
+}
+
 export default function AiAdminPage() {
-  const [activeConfig, setActiveConfig] = useState<any>(null);
-  const [auditLogs, setAuditLogs] = useState<any[]>([]);
-  const [evalSummary, setEvalSummary] = useState<any>(null);
-  const [benchmarks, setBenchmarks] = useState<any[]>([]);
-  const [workloadStatus, setWorkloadStatus] = useState<any>(null);
+  const [activeConfig, setActiveConfig] = useState<AiProviderConfig | null>(null);
+  const [auditLogs, setAuditLogs] = useState<AiAuditLogEntry[]>([]);
+  const [evalSummary, setEvalSummary] = useState<AiEvalSummary | null>(null);
+  const [benchmarks, setBenchmarks] = useState<AiBenchmarkResult[]>([]);
+  const [workloadStatus, setWorkloadStatus] = useState<AiWorkloadStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [runningEval, setRunningEval] = useState(false);
 
@@ -210,7 +249,7 @@ export default function AiAdminPage() {
                   {benchmarks.map((b) => (
                     <div key={b.id} className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-[11px]">
                       <div>
-                        <div className="font-bold text-white">"{b.question}"</div>
+                        <div className="font-bold text-white">&ldquo;{b.question}&rdquo;</div>
                         <div className="text-slate-400 text-[10px]">Intent: {b.actual_intent} • Latency: {b.latency_ms}ms</div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -282,7 +321,7 @@ export default function AiAdminPage() {
                 {auditLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-slate-950/40">
                     <td className="py-2.5 px-4">{log.user_email}</td>
-                    <td className="py-2.5 px-4 font-bold text-white max-w-xs truncate">"{log.question}"</td>
+                    <td className="py-2.5 px-4 font-bold text-white max-w-xs truncate">&ldquo;{log.question}&rdquo;</td>
                     <td className="py-2.5 px-4 font-mono text-indigo-300">{log.intent}</td>
                     <td className="py-2.5 px-4 font-mono">{log.model_used}</td>
                     <td className="py-2.5 px-4 font-mono">{log.tokens}</td>

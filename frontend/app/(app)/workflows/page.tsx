@@ -4,17 +4,35 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, XCircle, FileCheck, Layers, Play, ShieldAlert, Sparkles } from "lucide-react";
 import { api } from "@/lib/api";
 
+interface Workflow {
+  id: string;
+  name: string;
+  trigger_type: string;
+  condition: unknown;
+  requires_approval: boolean;
+}
+
+interface ApprovalGate {
+  id: string;
+  action_title: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  description: string;
+  proposed_action: string;
+  reviewed_by?: string;
+  reviewed_at?: string;
+}
+
 export default function WorkflowsPage() {
-  const [workflows, setWorkflows] = useState<any[]>([]);
-  const [approvals, setApprovals] = useState<any[]>([]);
+  const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [approvals, setApprovals] = useState<ApprovalGate[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
     setLoading(true);
     try {
       const [resW, resA] = await Promise.all([
-        api.get<any[]>("/api/phase4/workflows"),
-        api.get<any[]>("/api/phase4/approvals")
+        api.get<Workflow[]>("/api/phase4/workflows"),
+        api.get<ApprovalGate[]>("/api/phase4/approvals")
       ]);
       setWorkflows(resW);
       setApprovals(resA);
@@ -60,7 +78,7 @@ export default function WorkflowsPage() {
           Pending Human Approval Gates ({approvals.filter(a => a.status === "PENDING").length})
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {approvals.map((app: any) => (
+          {approvals.map((app) => (
             <div key={app.id} className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-white">{app.action_title}</span>
@@ -107,7 +125,7 @@ export default function WorkflowsPage() {
           Active Trigger-Condition-Action Workflows ({workflows.length})
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {workflows.map((wf: any) => (
+          {workflows.map((wf) => (
             <div key={wf.id} className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-indigo-300">{wf.name}</span>

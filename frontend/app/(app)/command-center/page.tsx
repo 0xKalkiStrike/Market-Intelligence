@@ -36,12 +36,86 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { ToastContainer, ToastMessage } from "@/components/ui/Toast";
 
+interface CommandCenterForecast {
+  id: string;
+  metric_name: string;
+  horizon_days: number;
+  forecast_value: number | string;
+  expected_range_min?: number | string;
+  expected_range_max?: number | string;
+  confidence: string;
+  explanation: string;
+}
+
+interface EarlyWarningSignal {
+  id: string;
+  signal_title: string;
+  confidence: string;
+  interpretation: string;
+  recommended_review_step: string;
+}
+
+interface ManagementReviewItem {
+  id: string;
+  title: string;
+  item_type: string;
+  evidence: string;
+  suggested_review_step?: string;
+}
+
+interface CompetitorMovement {
+  id?: string;
+  competitor_name: string;
+  price_changes_count: number;
+  locations_added_count: number;
+  activity_score: number;
+  momentum: string;
+}
+
+interface GeoOpportunityCluster {
+  cluster_name?: string;
+  county?: string;
+  rationale?: string;
+  description?: string;
+}
+
+interface CommandCenterData {
+  executive_takeaway?: string;
+  market_status?: {
+    active_watchlists_count?: number;
+    active_rules_count?: number;
+    pending_management_reviews_count?: number;
+  };
+  capacity_and_demand?: {
+    overall_utilization_rate?: number;
+    demand_capacity_status?: string;
+  };
+  risk_signals?: unknown[];
+  recent_forecasts?: CommandCenterForecast[];
+  early_warning_signals?: EarlyWarningSignal[];
+  management_review_queue?: ManagementReviewItem[];
+  competitor_movements?: CompetitorMovement[];
+  geographic_opportunity_clusters?: GeoOpportunityCluster[];
+}
+
+interface SelectedItem {
+  _type: string;
+  id?: string;
+  signal_title?: string;
+  title?: string;
+  metric_name?: string;
+  explanation?: string;
+  interpretation?: string;
+  evidence?: string;
+  recommended_review_step?: string;
+}
+
 export default function CommandCenterPage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<CommandCenterData | null>(null);
   const [loading, setLoading] = useState(true);
   const [stateFilter, setStateFilter] = useState("FL");
   const [activeTab, setActiveTab] = useState<"overview" | "forecasts" | "risks" | "reviews" | "competitors" | "geo">("overview");
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedItem, setSelectedItem] = useState<SelectedItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [autoRefreshInterval, setAutoRefreshInterval] = useState<number>(0);
@@ -59,14 +133,14 @@ export default function CommandCenterPage() {
   const loadData = async (isManual = false) => {
     setLoading(true);
     try {
-      const json = await api.get<any>(`/api/phase4/command-center?state=${stateFilter}`);
+      const json = await api.get<CommandCenterData>(`/api/phase4/command-center?state=${stateFilter}`);
       setData(json);
       if (isManual) {
         addToast("success", "Intelligence Refreshed", `Market data for ${stateFilter} successfully updated.`);
       }
-    } catch (e: any) {
+    } catch (e) {
       console.error(e);
-      addToast("error", "Sync Error", e?.message || "Failed to load command center intelligence.");
+      addToast("error", "Sync Error", e instanceof Error ? e.message : "Failed to load command center intelligence.");
     } finally {
       setLoading(false);
     }
@@ -125,7 +199,7 @@ export default function CommandCenterPage() {
     if (data?.management_review_queue) {
       setData({
         ...data,
-        management_review_queue: data.management_review_queue.filter((item: any) => item.id !== itemId),
+        management_review_queue: data.management_review_queue?.filter((item) => item.id !== itemId),
         market_status: {
           ...data.market_status,
           pending_management_reviews_count: Math.max(0, (data.market_status?.pending_management_reviews_count || 1) - 1),
@@ -135,12 +209,15 @@ export default function CommandCenterPage() {
     setIsModalOpen(false);
   };
 
-  const openDetail = (item: any, type: string) => {
+  const openDetail = (
+    item: CommandCenterForecast | EarlyWarningSignal | ManagementReviewItem,
+    type: string
+  ) => {
     setSelectedItem({ ...item, _type: type });
     setIsModalOpen(true);
   };
 
-  const formatMetricValue = (metricName: string, val: any): string => {
+  const formatMetricValue = (metricName: string, val: unknown): string => {
     if (val === null || val === undefined) return "—";
     if (typeof val === "number") {
       if (metricName?.toUpperCase().includes("REVENUE")) {
@@ -368,7 +445,7 @@ export default function CommandCenterPage() {
           return (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key as any)}
+              onClick={() => setActiveTab(tab.key as typeof activeTab)}
               className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition-all cursor-pointer ${
                 isActive
                   ? "bg-indigo-600 text-white shadow-xs"
@@ -408,7 +485,7 @@ export default function CommandCenterPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                {data?.recent_forecasts?.slice(0, 4).map((fc: any) => (
+                {data?.recent_forecasts?.slice(0, 4).map((fc) => (
                   <div
                     key={fc.id}
                     onClick={() => openDetail(fc, "FORECAST")}
@@ -461,7 +538,7 @@ export default function CommandCenterPage() {
               </div>
 
               <div className="space-y-3">
-                {data?.early_warning_signals?.slice(0, 3).map((ew: any) => (
+                {data?.early_warning_signals?.slice(0, 3).map((ew) => (
                   <div
                     key={ew.id}
                     onClick={() => openDetail(ew, "RISK")}
@@ -505,7 +582,7 @@ export default function CommandCenterPage() {
                 {data?.management_review_queue?.length === 0 ? (
                   <div className="text-center py-6 text-slate-400 text-xs">Queue clean. No pending approvals.</div>
                 ) : (
-                  data?.management_review_queue?.slice(0, 3).map((item: any) => (
+                  data?.management_review_queue?.slice(0, 3).map((item) => (
                     <div
                       key={item.id}
                       onClick={() => openDetail(item, "REVIEW")}
@@ -548,7 +625,7 @@ export default function CommandCenterPage() {
               </div>
 
               <div className="space-y-2.5">
-                {data?.competitor_movements?.slice(0, 4).map((cm: any) => (
+                {data?.competitor_movements?.slice(0, 4).map((cm) => (
                   <div
                     key={cm.id || cm.competitor_name}
                     className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800/70 bg-slate-50/40 dark:bg-slate-950/40 text-xs"
@@ -582,7 +659,7 @@ export default function CommandCenterPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {data?.recent_forecasts?.map((fc: any) => (
+            {data?.recent_forecasts?.map((fc) => (
               <div
                 key={fc.id}
                 onClick={() => openDetail(fc, "FORECAST")}
@@ -625,7 +702,7 @@ export default function CommandCenterPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {data?.early_warning_signals?.map((ew: any) => (
+            {data?.early_warning_signals?.map((ew) => (
               <div
                 key={ew.id}
                 onClick={() => openDetail(ew, "RISK")}
@@ -669,7 +746,7 @@ export default function CommandCenterPage() {
                 <p className="text-xs mt-1">All regulatory and data anomalies are currently reviewed.</p>
               </div>
             ) : (
-              data?.management_review_queue?.map((item: any) => (
+              data?.management_review_queue?.map((item) => (
                 <div
                   key={item.id}
                   className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/80 shadow-2xs hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
@@ -717,7 +794,7 @@ export default function CommandCenterPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {data?.competitor_movements?.map((cm: any) => (
+            {data?.competitor_movements?.map((cm) => (
               <div
                 key={cm.id || cm.competitor_name}
                 className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/80 shadow-2xs"
@@ -754,7 +831,7 @@ export default function CommandCenterPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {data?.geographic_opportunity_clusters?.map((cluster: any, idx: number) => (
+            {data?.geographic_opportunity_clusters?.map((cluster, idx) => (
               <div
                 key={idx}
                 className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/80 shadow-2xs"
@@ -815,19 +892,19 @@ export default function CommandCenterPage() {
             {selectedItem._type === "REVIEW" && (
               <div className="pt-4 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-end gap-2.5">
                 <button
-                  onClick={() => handleReviewAction(selectedItem.id, "DISMISSED")}
+                  onClick={() => handleReviewAction(selectedItem.id ?? "", "DISMISSED")}
                   className="px-4 py-2 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 cursor-pointer"
                 >
                   Dismiss
                 </button>
                 <button
-                  onClick={() => handleReviewAction(selectedItem.id, "AUDIT")}
+                  onClick={() => handleReviewAction(selectedItem.id ?? "", "AUDIT")}
                   className="px-4 py-2 text-xs font-bold rounded-xl bg-amber-600 text-white hover:bg-amber-500 cursor-pointer"
                 >
                   Request Audit
                 </button>
                 <button
-                  onClick={() => handleReviewAction(selectedItem.id, "APPROVED")}
+                  onClick={() => handleReviewAction(selectedItem.id ?? "", "APPROVED")}
                   className="px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 cursor-pointer"
                 >
                   Approve Item

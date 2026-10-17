@@ -249,8 +249,8 @@ export default function ResearchWorkspacePage() {
       setReviewRationale("");
       if (selectedProjectId) loadProjectDetail(selectedProjectId);
       setActiveFinding(null);
-    } catch (err: any) {
-      alert(err.message || "Failed to transition status");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to transition status");
     }
   }
 

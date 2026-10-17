@@ -4,9 +4,28 @@ import { useEffect, useState } from "react";
 import { Eye, Plus, ShieldCheck, Sliders, Trash2, Zap } from "lucide-react";
 import { api } from "@/lib/api";
 
+interface Watchlist {
+  id: string;
+  name: string;
+  category: string;
+  description?: string;
+  items_count: number;
+  created_by?: string;
+}
+
+interface MonitoringRule {
+  id: string;
+  name: string;
+  priority: string;
+  trigger_event: string;
+  condition_operator: string;
+  condition_value: string;
+  action_type: string;
+}
+
 export default function WatchlistsPage() {
-  const [watchlists, setWatchlists] = useState<any[]>([]);
-  const [rules, setRules] = useState<any[]>([]);
+  const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
+  const [rules, setRules] = useState<MonitoringRule[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Form states
@@ -18,8 +37,8 @@ export default function WatchlistsPage() {
     setLoading(true);
     try {
       const [resW, resR] = await Promise.all([
-        api.get<any[]>("/api/phase4/watchlists"),
-        api.get<any[]>("/api/phase4/monitoring-rules")
+        api.get<Watchlist[]>("/api/phase4/watchlists"),
+        api.get<MonitoringRule[]>("/api/phase4/monitoring-rules")
       ]);
       setWatchlists(resW);
       setRules(resR);
@@ -127,7 +146,7 @@ export default function WatchlistsPage() {
               Active Intelligence Watchlists ({watchlists.length})
             </h2>
             <div className="space-y-3">
-              {watchlists.map((w: any) => (
+              {watchlists.map((w) => (
                 <div key={w.id} className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
@@ -161,7 +180,7 @@ export default function WatchlistsPage() {
               Configured Monitoring Rules
             </h2>
             <div className="space-y-3">
-              {rules.map((r: any) => (
+              {rules.map((r) => (
                 <div key={r.id} className="p-3 rounded-lg border border-slate-800 bg-slate-950/60">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-slate-200">{r.name}</span>

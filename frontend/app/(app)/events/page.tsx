@@ -25,10 +25,6 @@ export default function EventsPage() {
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-  useEffect(() => {
-    fetchEvents();
-  }, [importanceFilter]);
-
   async function fetchEvents() {
     setLoading(true);
     try {
@@ -46,6 +42,10 @@ export default function EventsPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    fetchEvents();
+  }, [importanceFilter]);
 
   return (
     <div className="space-y-6">

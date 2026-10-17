@@ -50,7 +50,7 @@ export default function RegisterPage() {
           <CardBody className="p-6 sm:p-8">
             <h2 className="mb-1 text-lg font-bold text-white">Create Account</h2>
             <p className="mb-6 text-xs text-slate-400">
-              Join your organization's market intelligence & analytics workspace.
+              Join your organization&apos;s market intelligence & analytics workspace.
             </p>
 
             <form onSubmit={onSubmit} className="flex flex-col gap-4">

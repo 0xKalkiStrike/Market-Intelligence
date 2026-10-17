@@ -11,9 +11,23 @@ interface Simulation {
   name: string;
   scenario_type: string;
   target_state: string;
-  results: any;
+  results: unknown;
   assumptions: string;
   created_at: string;
+}
+
+interface PriceSimulationResult {
+  projected_volume_change_pct: number;
+  estimated_annual_revenue: number;
+  competitive_position: string;
+  assumptions: string[];
+}
+
+interface ExpansionSimulationResult {
+  addressable_patient_population: number;
+  projected_year1_revenue: number;
+  estimated_payback_period_months: number;
+  assumptions: string[];
 }
 
 export default function ScenariosPage() {
@@ -23,13 +37,13 @@ export default function ScenariosPage() {
   // Price Simulation State
   const [priceState, setPriceState] = useState("FL");
   const [newPrice, setNewPrice] = useState(129.0);
-  const [priceResult, setPriceResult] = useState<any>(null);
+  const [priceResult, setPriceResult] = useState<PriceSimulationResult | null>(null);
   const [priceSimulating, setPriceSimulating] = useState(false);
 
   // Expansion Simulation State
   const [expState, setExpState] = useState("TX");
   const [setupCost, setSetupCost] = useState(45000.0);
-  const [expResult, setExpResult] = useState<any>(null);
+  const [expResult, setExpResult] = useState<ExpansionSimulationResult | null>(null);
   const [expSimulating, setExpSimulating] = useState(false);
 
   async function fetchSimulations() {
@@ -51,7 +65,7 @@ export default function ScenariosPage() {
   async function handlePriceSimulate() {
     setPriceSimulating(true);
     try {
-      const json = await api.post<any>("/api/market-intelligence/ai/scenarios/price-change", {
+      const json = await api.post<PriceSimulationResult>("/api/market-intelligence/ai/scenarios/price-change", {
         state: priceState,
         new_price: Number(newPrice),
       });
@@ -67,7 +81,7 @@ export default function ScenariosPage() {
   async function handleExpSimulate() {
     setExpSimulating(true);
     try {
-      const json = await api.post<any>("/api/market-intelligence/ai/scenarios/state-expansion", {
+      const json = await api.post<ExpansionSimulationResult>("/api/market-intelligence/ai/scenarios/state-expansion", {
         state: expState,
         estimated_setup_cost: Number(setupCost),
       });
@@ -92,7 +106,7 @@ export default function ScenariosPage() {
             <Target className="h-7 w-7 text-indigo-400" /> Scenario Modeling & What-If Simulations
           </h1>
           <p className="text-xs text-slate-400 mt-1 max-w-2xl">
-            Model "What-If" market scenarios for price changes and state expansions with explicit assumptions, elasticity estimates, and payback timelines.
+            Model &ldquo;What-If&rdquo; market scenarios for price changes and state expansions with explicit assumptions, elasticity estimates, and payback timelines.
           </p>
         </div>
 

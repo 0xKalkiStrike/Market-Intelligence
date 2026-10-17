@@ -140,7 +140,7 @@ export default function RelationshipsPage() {
                     </td>
 
                     <td className="py-3.5 px-4 text-slate-400 italic">
-                      "{rel.evidence || "Verified public association"}"
+                      &ldquo;{rel.evidence || "Verified public association"}&rdquo;
                     </td>
 
                     <td className="py-3.5 px-4 text-slate-400 font-mono text-[11px]">

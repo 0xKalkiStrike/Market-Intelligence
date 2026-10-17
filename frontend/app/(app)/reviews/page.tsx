@@ -24,10 +24,6 @@ export default function ReviewsPage() {
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-  useEffect(() => {
-    fetchReviews();
-  }, []);
-
   async function fetchReviews() {
     setLoading(true);
     try {
@@ -42,6 +38,10 @@ export default function ReviewsPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    fetchReviews();
+  }, []);
 
   return (
     <div className="space-y-6">

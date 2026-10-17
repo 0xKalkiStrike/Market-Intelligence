@@ -45,6 +45,141 @@ import {
   Zap,
 } from "lucide-react";
 
+interface Connector {
+  name: string;
+  provider: string;
+  connection_status: string;
+  business_purpose: string;
+  sync_frequency?: string;
+  last_sync_checkpoint?: string;
+  supported_entities?: string;
+  is_enabled: boolean;
+}
+
+interface ApiKeyItem {
+  id: string;
+  name: string;
+  prefix: string;
+  scopes: string[];
+  rate_limit_per_minute: number;
+  requests_count: number;
+  is_active: boolean;
+}
+
+interface GeneratedKeyResult {
+  full_api_key: string;
+}
+
+interface Webhook {
+  id: string;
+  name: string;
+  target_url: string;
+  event_types: string[];
+}
+
+interface WebhookDelivery {
+  id: string;
+  event_type: string;
+  event_payload_id: string;
+  status_code: number | null;
+  execution_duration_ms: number;
+  delivered_at: string;
+}
+
+interface ImportRecord {
+  id: string;
+  filename: string;
+  added_records: number;
+  updated_records: number;
+  duplicate_records: number;
+  status: string;
+}
+
+interface ImportPreview {
+  total_rows_detected: number;
+  headers?: string[];
+}
+
+interface ExportResult {
+  total_records: number;
+  content: string;
+  format: string;
+}
+
+interface EntityLink {
+  id: string;
+}
+
+interface DataConflict {
+  id: string;
+  field_name: string;
+  entity_id: string;
+  resolution_status: string;
+  source_a_name: string;
+  source_a_value: string;
+  source_b_name: string;
+  source_b_value: string;
+}
+
+interface ResolveResult {
+  review_status: string;
+  match_confidence: number;
+  canonical_entity_id: string | null;
+  reasons?: string[];
+}
+
+interface Finding {
+  id: string;
+  title: string;
+  category: string;
+  created_by: string;
+  created_at: string;
+  importance: string;
+  content: string;
+  notes_count?: number;
+  review_status: string;
+}
+
+interface FindingNote {
+  id: string;
+  note_text: string;
+  author_name: string;
+}
+
+interface InvestigationCase {
+  id: string;
+  title: string;
+  status: string;
+  description: string;
+  case_category: string;
+  assigned_lead?: string;
+}
+
+interface SharedWatchlist {
+  id: string;
+  name: string;
+  sharing_scope: string;
+  team_name?: string;
+  items_count: number;
+}
+
+interface RegisteredModule {
+  name: string;
+  version: string;
+  health_status: string;
+  purpose: string;
+  api_routes?: string[];
+}
+
+interface ReportDistribution {
+  id: string;
+  report_type: string;
+  channel: string;
+  recipient_target: string;
+  schedule_cron: string;
+  delivery_status?: string;
+}
+
 export default function IntegrationsCenterPage() {
   const [activeTab, setActiveTab] = useState<
     "registry" | "api_keys" | "webhooks" | "import_export" | "entity_resolution" | "collaboration" | "modules"
@@ -54,60 +189,60 @@ export default function IntegrationsCenterPage() {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   // 1. Integration Registry & Health Data
-  const [connectors, setConnectors] = useState<any[]>([]);
+  const [connectors, setConnectors] = useState<Connector[]>([]);
 
   // 2. API Keys Data
-  const [apiKeys, setApiKeys] = useState<any[]>([]);
+  const [apiKeys, setApiKeys] = useState<ApiKeyItem[]>([]);
   const [newKeyName, setNewKeyName] = useState("");
   const [newKeyScopes, setNewKeyScopes] = useState<string[]>(["intelligence:read"]);
   const [newKeyRateLimit, setNewKeyRateLimit] = useState(60);
-  const [generatedKeyResult, setGeneratedKeyResult] = useState<any | null>(null);
+  const [generatedKeyResult, setGeneratedKeyResult] = useState<GeneratedKeyResult | null>(null);
 
   // 3. Webhooks Data
-  const [webhooks, setWebhooks] = useState<any[]>([]);
-  const [deliveries, setDeliveries] = useState<any[]>([]);
+  const [webhooks, setWebhooks] = useState<Webhook[]>([]);
+  const [deliveries, setDeliveries] = useState<WebhookDelivery[]>([]);
   const [newWhName, setNewWhName] = useState("");
   const [newWhUrl, setNewWhUrl] = useState("");
   const [newWhEvents, setNewWhEvents] = useState<string[]>(["competitor.price_changed", "market.opportunity_detected"]);
 
   // 4. Import / Export Data
-  const [importHistory, setImportHistory] = useState<any[]>([]);
-  const [exportJobs, setExportJobs] = useState<any[]>([]);
+  const [importHistory, setImportHistory] = useState<ImportRecord[]>([]);
+  const [exportJobs, setExportJobs] = useState<unknown[]>([]);
   const [importFile, setImportFile] = useState<File | null>(null);
-  const [importPreview, setImportPreview] = useState<any | null>(null);
+  const [importPreview, setImportPreview] = useState<ImportPreview | null>(null);
   const [importEntityType, setImportEntityType] = useState("DISPENSARY");
   const [importing, setImporting] = useState(false);
   const [exportFormat, setExportFormat] = useState("CSV");
   const [exportEntityType, setExportEntityType] = useState("ALL");
   const [exportStateFilter, setExportStateFilter] = useState("ALL");
-  const [exportResult, setExportResult] = useState<any | null>(null);
+  const [exportResult, setExportResult] = useState<ExportResult | null>(null);
 
   // 5. Entity Resolution & Conflicts
-  const [pendingLinks, setPendingLinks] = useState<any[]>([]);
-  const [conflicts, setConflicts] = useState<any[]>([]);
+  const [pendingLinks, setPendingLinks] = useState<EntityLink[]>([]);
+  const [conflicts, setConflicts] = useState<DataConflict[]>([]);
   const [testSysName, setTestSysName] = useState("STATE_DOH");
   const [testExtId, setTestExtId] = useState("DOH-TEST-001");
   const [testEntityName, setTestEntityName] = useState("Trulieve Dispensary Florida");
   const [testState, setTestState] = useState("FL");
   const [testLicense, setTestLicense] = useState("MMTC-2026-999");
-  const [resolveResult, setResolveResult] = useState<any | null>(null);
+  const [resolveResult, setResolveResult] = useState<ResolveResult | null>(null);
   const [resolving, setResolving] = useState(false);
 
   // 6. Collaboration & Cases
-  const [findings, setFindings] = useState<any[]>([]);
-  const [cases, setCases] = useState<any[]>([]);
-  const [sharedWatchlists, setSharedWatchlists] = useState<any[]>([]);
+  const [findings, setFindings] = useState<Finding[]>([]);
+  const [cases, setCases] = useState<InvestigationCase[]>([]);
+  const [sharedWatchlists, setSharedWatchlists] = useState<SharedWatchlist[]>([]);
   const [newFindingTitle, setNewFindingTitle] = useState("");
   const [newFindingContent, setNewFindingContent] = useState("");
   const [newFindingCategory, setNewFindingCategory] = useState("COMPETITOR");
   const [newFindingImportance, setNewFindingImportance] = useState("HIGH");
   const [newNoteText, setNewNoteText] = useState("");
   const [activeFindingId, setActiveFindingId] = useState<string | null>(null);
-  const [findingNotes, setFindingNotes] = useState<any[]>([]);
+  const [findingNotes, setFindingNotes] = useState<FindingNote[]>([]);
 
   // 7. Module Registry & Report Distributions
-  const [modules, setModules] = useState<any[]>([]);
-  const [distributions, setDistributions] = useState<any[]>([]);
+  const [modules, setModules] = useState<RegisteredModule[]>([]);
+  const [distributions, setDistributions] = useState<ReportDistribution[]>([]);
 
   const addToast = (type: "success" | "error" | "info" | "warning", message: string) => {
     setToasts((prev) => [
@@ -134,36 +269,36 @@ export default function IntegrationsCenterPage() {
         modsRes,
         distsRes,
       ] = await Promise.allSettled([
-        apiFetch<any[]>("/api/v1/governed/integrations"),
-        apiFetch<any[]>("/api/v1/governed/api-keys"),
-        apiFetch<any[]>("/api/v1/governed/webhooks"),
-        apiFetch<any[]>("/api/v1/governed/webhooks/deliveries?limit=20"),
-        apiFetch<any[]>("/api/v1/governed/imports"),
-        apiFetch<any[]>("/api/v1/governed/exports/jobs"),
-        apiFetch<any[]>("/api/v1/governed/entity-resolution/pending"),
-        apiFetch<any[]>("/api/v1/governed/conflicts"),
-        apiFetch<any[]>("/api/v1/governed/collaboration/findings"),
-        apiFetch<any[]>("/api/v1/governed/cases"),
-        apiFetch<any[]>("/api/v1/governed/collaboration/shared-watchlists"),
-        apiFetch<any[]>("/api/v1/governed/modules"),
-        apiFetch<any[]>("/api/v1/governed/report-distributions"),
+        apiFetch<Connector[]>("/api/v1/governed/integrations"),
+        apiFetch<ApiKeyItem[]>("/api/v1/governed/api-keys"),
+        apiFetch<Webhook[]>("/api/v1/governed/webhooks"),
+        apiFetch<WebhookDelivery[]>("/api/v1/governed/webhooks/deliveries?limit=20"),
+        apiFetch<ImportRecord[]>("/api/v1/governed/imports"),
+        apiFetch<unknown[]>("/api/v1/governed/exports/jobs"),
+        apiFetch<EntityLink[]>("/api/v1/governed/entity-resolution/pending"),
+        apiFetch<DataConflict[]>("/api/v1/governed/conflicts"),
+        apiFetch<Finding[]>("/api/v1/governed/collaboration/findings"),
+        apiFetch<InvestigationCase[]>("/api/v1/governed/cases"),
+        apiFetch<SharedWatchlist[]>("/api/v1/governed/collaboration/shared-watchlists"),
+        apiFetch<RegisteredModule[]>("/api/v1/governed/modules"),
+        apiFetch<ReportDistribution[]>("/api/v1/governed/report-distributions"),
       ]);
 
-      if (connRes.status === "fulfilled") setConnectors((connRes.value as any[]) || []);
-      if (keysRes.status === "fulfilled") setApiKeys((keysRes.value as any[]) || []);
-      if (whRes.status === "fulfilled") setWebhooks((whRes.value as any[]) || []);
-      if (delivRes.status === "fulfilled") setDeliveries((delivRes.value as any[]) || []);
-      if (importsRes.status === "fulfilled") setImportHistory((importsRes.value as any[]) || []);
-      if (exportsRes.status === "fulfilled") setExportJobs((exportsRes.value as any[]) || []);
-      if (linksRes.status === "fulfilled") setPendingLinks((linksRes.value as any[]) || []);
-      if (conflictsRes.status === "fulfilled") setConflicts((conflictsRes.value as any[]) || []);
-      if (findingsRes.status === "fulfilled") setFindings((findingsRes.value as any[]) || []);
-      if (casesRes.status === "fulfilled") setCases((casesRes.value as any[]) || []);
-      if (watchlistsRes.status === "fulfilled") setSharedWatchlists((watchlistsRes.value as any[]) || []);
-      if (modsRes.status === "fulfilled") setModules((modsRes.value as any[]) || []);
-      if (distsRes.status === "fulfilled") setDistributions((distsRes.value as any[]) || []);
-    } catch (err: any) {
-      addToast("error", `Failed to load integrations data: ${err.message}`);
+      if (connRes.status === "fulfilled") setConnectors(connRes.value || []);
+      if (keysRes.status === "fulfilled") setApiKeys(keysRes.value || []);
+      if (whRes.status === "fulfilled") setWebhooks(whRes.value || []);
+      if (delivRes.status === "fulfilled") setDeliveries(delivRes.value || []);
+      if (importsRes.status === "fulfilled") setImportHistory(importsRes.value || []);
+      if (exportsRes.status === "fulfilled") setExportJobs(exportsRes.value || []);
+      if (linksRes.status === "fulfilled") setPendingLinks(linksRes.value || []);
+      if (conflictsRes.status === "fulfilled") setConflicts(conflictsRes.value || []);
+      if (findingsRes.status === "fulfilled") setFindings(findingsRes.value || []);
+      if (casesRes.status === "fulfilled") setCases(casesRes.value || []);
+      if (watchlistsRes.status === "fulfilled") setSharedWatchlists(watchlistsRes.value || []);
+      if (modsRes.status === "fulfilled") setModules(modsRes.value || []);
+      if (distsRes.status === "fulfilled") setDistributions(distsRes.value || []);
+    } catch (err) {
+      addToast("error", `Failed to load integrations data: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -177,21 +312,21 @@ export default function IntegrationsCenterPage() {
   // Action Handlers
   const handleProbeConnector = async (name: string) => {
     try {
-      const res = await apiFetch<any>(`/api/v1/governed/integrations/${name}/probe`, { method: "POST" });
+      const res = await apiFetch<{ connection_status: string; message?: string }>(`/api/v1/governed/integrations/${name}/probe`, { method: "POST" });
       addToast("success", `Probe for ${name}: ${res.connection_status} (${res.message || "OK"})`);
       loadData();
-    } catch (err: any) {
-      addToast("error", `Probe failed: ${err.message}`);
+    } catch (err) {
+      addToast("error", `Probe failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
   const handleToggleConnector = async (name: string, enabled: boolean) => {
     try {
-      await apiFetch<any>(`/api/v1/governed/integrations/${name}/toggle?enable=${enabled}`, { method: "POST" });
+      await apiFetch<unknown>(`/api/v1/governed/integrations/${name}/toggle?enable=${enabled}`, { method: "POST" });
       addToast("info", `${name} set to ${enabled ? "ENABLED" : "DISABLED"}`);
       loadData();
-    } catch (err: any) {
-      addToast("error", `Toggle failed: ${err.message}`);
+    } catch (err) {
+      addToast("error", `Toggle failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -201,7 +336,7 @@ export default function IntegrationsCenterPage() {
       return;
     }
     try {
-      const res = await apiFetch<any>("/api/v1/governed/api-keys", {
+      const res = await apiFetch<GeneratedKeyResult>("/api/v1/governed/api-keys", {
         method: "POST",
         body: JSON.stringify({
           name: newKeyName,
@@ -213,19 +348,19 @@ export default function IntegrationsCenterPage() {
       setNewKeyName("");
       addToast("success", "API key generated successfully.");
       loadData();
-    } catch (err: any) {
-      addToast("error", `API Key creation failed: ${err.message}`);
+    } catch (err) {
+      addToast("error", `API Key creation failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
   const handleRevokeApiKey = async (id: string) => {
     if (!confirm("Are you sure you want to revoke this API key? This action is irreversible.")) return;
     try {
-      await apiFetch<any>(`/api/v1/governed/api-keys/${id}`, { method: "DELETE" });
+      await apiFetch<unknown>(`/api/v1/governed/api-keys/${id}`, { method: "DELETE" });
       addToast("info", "API key revoked.");
       loadData();
-    } catch (err: any) {
-      addToast("error", `Revocation failed: ${err.message}`);
+    } catch (err) {
+      addToast("error", `Revocation failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -235,7 +370,7 @@ export default function IntegrationsCenterPage() {
       return;
     }
     try {
-      const res = await apiFetch<any>("/api/v1/governed/webhooks", {
+      const res = await apiFetch<{ secret_key: string }>("/api/v1/governed/webhooks", {
         method: "POST",
         body: JSON.stringify({
           name: newWhName,
@@ -247,28 +382,28 @@ export default function IntegrationsCenterPage() {
       setNewWhName("");
       setNewWhUrl("");
       loadData();
-    } catch (err: any) {
-      addToast("error", `Webhook creation rejected: ${err.message}`);
+    } catch (err) {
+      addToast("error", `Webhook creation rejected: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
   const handleRotateWebhookSecret = async (id: string) => {
     try {
-      const res = await apiFetch<any>(`/api/v1/governed/webhooks/${id}/rotate-secret`, { method: "POST" });
+      const res = await apiFetch<{ secret_key: string }>(`/api/v1/governed/webhooks/${id}/rotate-secret`, { method: "POST" });
       addToast("success", `Secret rotated. New secret: ${res.secret_key.substring(0, 10)}...`);
       loadData();
-    } catch (err: any) {
-      addToast("error", `Rotation failed: ${err.message}`);
+    } catch (err) {
+      addToast("error", `Rotation failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
   const handleReplayWebhook = async (id: string) => {
     try {
-      await apiFetch<any>(`/api/v1/governed/webhooks/deliveries/${id}/replay`, { method: "POST" });
+      await apiFetch<unknown>(`/api/v1/governed/webhooks/deliveries/${id}/replay`, { method: "POST" });
       addToast("info", "Webhook delivery replayed.");
       loadData();
-    } catch (err: any) {
-      addToast("error", `Replay failed: ${err.message}`);
+    } catch (err) {
+      addToast("error", `Replay failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -279,11 +414,11 @@ export default function IntegrationsCenterPage() {
     const formData = new FormData();
     formData.append("file", file);
     try {
-      const res = await apiUpload<any>("/api/v1/governed/imports/preview", formData);
+      const res = await apiUpload<ImportPreview>("/api/v1/governed/imports/preview", formData);
       setImportPreview(res);
       addToast("info", `File scanned: ${res.total_rows_detected} rows detected.`);
-    } catch (err: any) {
-      addToast("error", `File preview failed: ${err.message}`);
+    } catch (err) {
+      addToast("error", `File preview failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -299,7 +434,7 @@ export default function IntegrationsCenterPage() {
     );
 
     try {
-      const res = await apiUpload<any>("/api/v1/governed/imports/execute", formData);
+      const res = await apiUpload<{ added_records: number; updated_records: number; duplicate_records: number }>("/api/v1/governed/imports/execute", formData);
       addToast(
         "success",
         `Import completed: ${res.added_records} added, ${res.updated_records} updated, ${res.duplicate_records} duplicates.`
@@ -307,8 +442,8 @@ export default function IntegrationsCenterPage() {
       setImportFile(null);
       setImportPreview(null);
       loadData();
-    } catch (err: any) {
-      addToast("error", `Import execution failed: ${err.message}`);
+    } catch (err) {
+      addToast("error", `Import execution failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setImporting(false);
     }
@@ -323,21 +458,21 @@ export default function IntegrationsCenterPage() {
       });
       if (exportStateFilter !== "ALL") queryParams.append("state_filter", exportStateFilter);
 
-      const res = await apiFetch<any>(`/api/v1/governed/exports/generate?${queryParams.toString()}`, {
+      const res = await apiFetch<ExportResult>(`/api/v1/governed/exports/generate?${queryParams.toString()}`, {
         method: "POST",
       });
       setExportResult(res);
       addToast("success", `Export generated: ${res.total_records} records processed.`);
       loadData();
-    } catch (err: any) {
-      addToast("error", `Export failed: ${err.message}`);
+    } catch (err) {
+      addToast("error", `Export failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
   const handleTestResolve = async () => {
     setResolving(true);
     try {
-      const res = await apiFetch<any>("/api/v1/governed/entity-resolution/resolve", {
+      const res = await apiFetch<ResolveResult>("/api/v1/governed/entity-resolution/resolve", {
         method: "POST",
         body: JSON.stringify({
           system_name: testSysName,
@@ -350,8 +485,8 @@ export default function IntegrationsCenterPage() {
       setResolveResult(res);
       addToast("info", `Resolution score: ${(res.match_confidence * 100).toFixed(1)}% (${res.review_status})`);
       loadData();
-    } catch (err: any) {
-      addToast("error", `Entity resolution test failed: ${err.message}`);
+    } catch (err) {
+      addToast("error", `Entity resolution test failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setResolving(false);
     }
@@ -361,7 +496,7 @@ export default function IntegrationsCenterPage() {
     const reason = prompt("Enter justification for manual conflict override (e.g. Verified via direct phone confirmation):");
     if (!reason) return;
     try {
-      await apiFetch<any>(`/api/v1/governed/conflicts/${conflictId}/resolve-manually`, {
+      await apiFetch<unknown>(`/api/v1/governed/conflicts/${conflictId}/resolve-manually`, {
         method: "POST",
         body: JSON.stringify({
           chosen_value: chosenValue,
@@ -370,8 +505,8 @@ export default function IntegrationsCenterPage() {
       });
       addToast("success", "Conflict resolved and manual audit entry logged.");
       loadData();
-    } catch (err: any) {
-      addToast("error", `Conflict resolution failed: ${err.message}`);
+    } catch (err) {
+      addToast("error", `Conflict resolution failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -381,7 +516,7 @@ export default function IntegrationsCenterPage() {
       return;
     }
     try {
-      await apiFetch<any>("/api/v1/governed/collaboration/findings", {
+      await apiFetch<unknown>("/api/v1/governed/collaboration/findings", {
         method: "POST",
         body: JSON.stringify({
           title: newFindingTitle,
@@ -394,25 +529,25 @@ export default function IntegrationsCenterPage() {
       setNewFindingTitle("");
       setNewFindingContent("");
       loadData();
-    } catch (err: any) {
-      addToast("error", `Failed to publish finding: ${err.message}`);
+    } catch (err) {
+      addToast("error", `Failed to publish finding: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
   const handleViewNotes = async (findingId: string) => {
     setActiveFindingId(findingId);
     try {
-      const res = await apiFetch<any[]>(`/api/v1/governed/collaboration/findings/${findingId}/notes`);
-      setFindingNotes((res as any[]) || []);
-    } catch (err: any) {
-      addToast("error", `Could not fetch notes: ${err.message}`);
+      const res = await apiFetch<FindingNote[]>(`/api/v1/governed/collaboration/findings/${findingId}/notes`);
+      setFindingNotes(res || []);
+    } catch (err) {
+      addToast("error", `Could not fetch notes: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
   const handleAddNote = async () => {
     if (!activeFindingId || !newNoteText.trim()) return;
     try {
-      await apiFetch<any>(`/api/v1/governed/collaboration/findings/${activeFindingId}/notes`, {
+      await apiFetch<unknown>(`/api/v1/governed/collaboration/findings/${activeFindingId}/notes`, {
         method: "POST",
         body: JSON.stringify({
           note_text: newNoteText,
@@ -422,8 +557,8 @@ export default function IntegrationsCenterPage() {
       setNewNoteText("");
       handleViewNotes(activeFindingId);
       addToast("success", "Private note added.");
-    } catch (err: any) {
-      addToast("error", `Failed to add note: ${err.message}`);
+    } catch (err) {
+      addToast("error", `Failed to add note: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -541,7 +676,7 @@ export default function IntegrationsCenterPage() {
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-t-lg font-medium text-sm whitespace-nowrap transition border-b-2 ${
                 isActive
                   ? "border-emerald-500 text-emerald-400 bg-slate-900/60"
@@ -916,7 +1051,7 @@ export default function IntegrationsCenterPage() {
                       <td className="py-2.5 px-3">
                         <span
                           className={`px-2 py-0.5 rounded font-semibold ${
-                            d.status_code >= 200 && d.status_code < 300
+                            d.status_code != null && d.status_code >= 200 && d.status_code < 300
                               ? "bg-emerald-500/20 text-emerald-400"
                               : "bg-rose-500/20 text-rose-400"
                           }`}

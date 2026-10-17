@@ -40,6 +40,15 @@ interface SensitivityRow {
   outcomes: SensitivityCell[];
 }
 
+interface ScenarioAssumptions {
+  price: number;
+  physician_count: number;
+  monthly_marketing_spend: number;
+  expected_conversion_rate: number;
+  setup_overhead: number;
+  price_elasticity?: number;
+}
+
 interface ScenarioResult {
   scenario_name: string;
   scenario_type: string;
@@ -53,7 +62,7 @@ interface ScenarioResult {
     strategic_recommendation: string;
   };
   baseline: {
-    assumptions: any;
+    assumptions: ScenarioAssumptions;
     annual_certified_patients: number;
     gross_revenue: number;
     operating_costs: number;
@@ -61,7 +70,7 @@ interface ScenarioResult {
     roi_percent: number;
   };
   candidate: {
-    assumptions: any;
+    assumptions: ScenarioAssumptions;
     annual_certified_patients: number;
     capacity_ceiling: number;
     capacity_utilization_pct: number;
@@ -88,9 +97,9 @@ interface SavedScenarioSummary {
   target_state: string;
   created_at: string;
   created_by: string;
-  baseline_assumptions: any;
-  candidate_assumptions: any;
-  results_summary: any;
+  baseline_assumptions: ScenarioAssumptions;
+  candidate_assumptions: ScenarioAssumptions;
+  results_summary: unknown;
 }
 
 export default function ScenarioComparisonPage() {
@@ -150,9 +159,9 @@ export default function ScenarioComparisonPage() {
       const res = await api.post<ScenarioResult>("/api/research/scenarios/compare", payload);
       setScenarioResult(res);
       fetchSavedScenarios();
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setErrorMsg(err.message || "Failed to execute scenario simulation");
+      setErrorMsg(err instanceof Error ? err.message : "Failed to execute scenario simulation");
     } finally {
       setLoading(false);
     }

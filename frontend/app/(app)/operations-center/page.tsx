@@ -29,24 +29,118 @@ import {
   Zap,
 } from "lucide-react";
 
+interface HealthData {
+  status: string;
+  dependencies?: {
+    database?: { latency_ms?: number; status?: string };
+    storage?: { free_gb?: number; used_percentage?: number; status?: string };
+  };
+}
+
+interface SummaryData {
+  avg_response_time_ms?: number;
+  p95_response_time_ms?: number;
+  total_http_requests?: number;
+  error_rate_percentage?: number;
+  uptime_seconds?: number;
+  total_ai_tokens_consumed?: number;
+}
+
+interface OrchestrationMetrics {
+  queued?: number;
+}
+
+interface OrchestrationTask {
+  id: string;
+  task_type: string;
+  priority: number;
+  status: string;
+  worker_id?: string;
+  retry_count: number;
+  created_at?: string;
+}
+
+interface ConnectorStatus {
+  id: string;
+  connector_name: string;
+  connector_type: string;
+  base_url: string;
+  status: string;
+  latency_ms: number;
+  requests_count_24h: number;
+  circuit_breaker_state: string;
+}
+
+interface GovernanceOverview {
+  governance_status_breakdown?: Record<string, number>;
+}
+
+interface GovernanceIssue {
+  severity: string;
+  category: string;
+  entity_name: string;
+  description: string;
+}
+
+interface AiBudgets {
+  daily_spend_usd?: number;
+  daily_budget_limit_usd?: number;
+}
+
+interface BenchmarkQuestion {
+  id: string;
+  question: string;
+  status: string;
+  groundedness_score: number;
+  answer_preview: string;
+  sources_cited: number;
+  latency_ms: number;
+  intent: string;
+}
+
+interface BenchmarkResult {
+  benchmark_suite: string;
+  accuracy_score: number;
+  accuracy_percentage?: number;
+  groundedness_score: number;
+  hallucination_rate: number;
+  questions: BenchmarkQuestion[];
+}
+
+interface Incident {
+  id: string;
+  title: string;
+  severity: string;
+  status: string;
+  description: string;
+  affected_component: string;
+  assigned_owner?: string;
+}
+
+interface Runbook {
+  title: string;
+  immediate_actions?: string[];
+  rollback_procedure?: string;
+}
+
 export default function OperationsCenterPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "orchestrator" | "integrations" | "governance" | "ai" | "incidents">("overview");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   // Data states
-  const [healthData, setHealthData] = useState<any>(null);
-  const [summaryData, setSummaryData] = useState<any>(null);
-  const [orchestrationMetrics, setOrchestrationMetrics] = useState<any>(null);
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [connectors, setConnectors] = useState<any[]>([]);
-  const [govOverview, setGovOverview] = useState<any>(null);
-  const [govIssues, setGovIssues] = useState<any[]>([]);
-  const [aiBudgets, setAiBudgets] = useState<any>(null);
-  const [benchmarkResult, setBenchmarkResult] = useState<any>(null);
+  const [healthData, setHealthData] = useState<HealthData | null>(null);
+  const [summaryData, setSummaryData] = useState<SummaryData | null>(null);
+  const [orchestrationMetrics, setOrchestrationMetrics] = useState<OrchestrationMetrics | null>(null);
+  const [tasks, setTasks] = useState<OrchestrationTask[]>([]);
+  const [connectors, setConnectors] = useState<ConnectorStatus[]>([]);
+  const [govOverview, setGovOverview] = useState<GovernanceOverview | null>(null);
+  const [govIssues, setGovIssues] = useState<GovernanceIssue[]>([]);
+  const [aiBudgets, setAiBudgets] = useState<AiBudgets | null>(null);
+  const [benchmarkResult, setBenchmarkResult] = useState<BenchmarkResult | null>(null);
   const [benchmarkRunning, setBenchmarkRunning] = useState(false);
-  const [incidents, setIncidents] = useState<any[]>([]);
-  const [runbooks, setRunbooks] = useState<any>({});
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [runbooks, setRunbooks] = useState<Record<string, Runbook>>({});
   const [backupLoading, setBackupLoading] = useState(false);
   const [backupMessage, setBackupMessage] = useState<string | null>(null);
 
@@ -59,7 +153,7 @@ export default function OperationsCenterPage() {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   const addToast = (type: "success" | "warning" | "info" | "error", title: string, message?: string) => {
-    const id = Math.random().toString(36).substring(2, 9);
+    const id = crypto.randomUUID();
     setToasts((prev) => [...prev, { id, type, title, message }]);
   };
 
@@ -70,16 +164,16 @@ export default function OperationsCenterPage() {
   const loadData = async () => {
     try {
       const [health, summary, orch, taskList, connList, gov, issues, budgets, incs, rbs] = await Promise.all([
-        apiFetch<any>("/api/health/dependencies").catch(() => null),
-        apiFetch<any>("/api/observability/summary").catch(() => null),
-        apiFetch<any>("/api/orchestration/metrics").catch(() => null),
-        apiFetch<any[]>("/api/orchestration/tasks?limit=15").catch(() => []),
-        apiFetch<any[]>("/api/integrations/status").catch(() => []),
-        apiFetch<any>("/api/governance/overview").catch(() => null),
-        apiFetch<any[]>("/api/governance/quality-issues").catch(() => []),
-        apiFetch<any>("/api/ai-governance/budgets").catch(() => null),
-        apiFetch<any[]>("/api/incidents").catch(() => []),
-        apiFetch<any>("/api/incidents/runbooks").catch(() => ({})),
+        apiFetch<HealthData>("/api/health/dependencies").catch(() => null),
+        apiFetch<SummaryData>("/api/observability/summary").catch(() => null),
+        apiFetch<OrchestrationMetrics>("/api/orchestration/metrics").catch(() => null),
+        apiFetch<OrchestrationTask[]>("/api/orchestration/tasks?limit=15").catch(() => []),
+        apiFetch<ConnectorStatus[]>("/api/integrations/status").catch(() => []),
+        apiFetch<GovernanceOverview>("/api/governance/overview").catch(() => null),
+        apiFetch<GovernanceIssue[]>("/api/governance/quality-issues").catch(() => []),
+        apiFetch<AiBudgets>("/api/ai-governance/budgets").catch(() => null),
+        apiFetch<Incident[]>("/api/incidents").catch(() => []),
+        apiFetch<Record<string, Runbook>>("/api/incidents/runbooks").catch(() => ({})),
       ]);
 
       setHealthData(health);
@@ -116,8 +210,8 @@ export default function OperationsCenterPage() {
       await apiFetch(`/api/integrations/${name}/probe`, { method: "POST" });
       addToast("success", "Probe Dispatched", `Live health probe dispatched to ${name}.`);
       loadData();
-    } catch (e: any) {
-      addToast("error", "Probe Failed", e.message);
+    } catch (e) {
+      addToast("error", "Probe Failed", e instanceof Error ? e.message : String(e));
     }
   };
 
@@ -126,30 +220,30 @@ export default function OperationsCenterPage() {
       await apiFetch(`/api/integrations/${name}/circuit-breaker/reset`, { method: "POST" });
       addToast("success", "Breaker Reset", `Circuit breaker for ${name} reset to CLOSED.`);
       loadData();
-    } catch (e: any) {
-      addToast("error", "Reset Failed", e.message);
+    } catch (e) {
+      addToast("error", "Reset Failed", e instanceof Error ? e.message : String(e));
     }
   };
 
   const handleExecuteNext = async () => {
     try {
-      const res: any = await apiFetch("/api/orchestration/execute-next", { method: "POST" });
+      const res = await apiFetch<{ message?: string; task_id?: string; status?: string }>("/api/orchestration/execute-next", { method: "POST" });
       addToast("info", "Task Executed", res.message || `Dispatched task ${res.task_id} with status ${res.status}`);
       loadData();
-    } catch (e: any) {
-      addToast("error", "Execution Failed", e.message);
+    } catch (e) {
+      addToast("error", "Execution Failed", e instanceof Error ? e.message : String(e));
     }
   };
 
   const handleRunAiBenchmark = async () => {
     setBenchmarkRunning(true);
     try {
-      const res: any = await apiFetch("/api/ai-governance/benchmark?prompt_version=v5.0", { method: "POST" });
+      const res = await apiFetch<BenchmarkResult>("/api/ai-governance/benchmark?prompt_version=v5.0", { method: "POST" });
       setBenchmarkResult(res);
       addToast("success", "AI Benchmark Complete", `Scored ${res?.accuracy_percentage}% across Executive Core 6.`);
       loadData();
-    } catch (e: any) {
-      addToast("error", "AI Benchmark Error", e.message);
+    } catch (e) {
+      addToast("error", "AI Benchmark Error", e instanceof Error ? e.message : String(e));
     } finally {
       setBenchmarkRunning(false);
     }
@@ -159,10 +253,10 @@ export default function OperationsCenterPage() {
     setBackupLoading(true);
     setBackupMessage(null);
     try {
-      const res: any = await apiFetch("/api/backups/create?label=admin_manual", { method: "POST" });
+      const res = await apiFetch<{ backup_filename: string; size_bytes: number; duration_seconds: number }>("/api/backups/create?label=admin_manual", { method: "POST" });
       setBackupMessage(`Verified backup created: ${res.backup_filename} (${(res.size_bytes / (1024 * 1024)).toFixed(1)} MB) in ${res.duration_seconds}s.`);
-    } catch (e: any) {
-      setBackupMessage(`Backup failed: ${e.message}`);
+    } catch (e) {
+      setBackupMessage(`Backup failed: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setBackupLoading(false);
     }
@@ -172,10 +266,10 @@ export default function OperationsCenterPage() {
     setBackupLoading(true);
     setBackupMessage(null);
     try {
-      const res: any = await apiFetch("/api/backups/test-restore", { method: "POST" });
+      const res = await apiFetch<{ table_count: number; restore_duration_seconds: number }>("/api/backups/test-restore", { method: "POST" });
       setBackupMessage(`Disaster Recovery Test Passed: Verified ${res.table_count} tables in ${res.restore_duration_seconds}s (RTO compliant).`);
-    } catch (e: any) {
-      setBackupMessage(`Restore test failed: ${e.message}`);
+    } catch (e) {
+      setBackupMessage(`Restore test failed: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setBackupLoading(false);
     }
@@ -198,8 +292,8 @@ export default function OperationsCenterPage() {
       setNewIncidentDesc("");
       addToast("success", "Incident Created", "New operational ticket opened in SRE queue.");
       loadData();
-    } catch (err: any) {
-      addToast("error", "Incident Creation Failed", err.message);
+    } catch (err) {
+      addToast("error", "Incident Creation Failed", err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -215,8 +309,8 @@ export default function OperationsCenterPage() {
       });
       addToast("success", "Incident Resolved", `Ticket ${id} marked as resolved with RCA.`);
       loadData();
-    } catch (err: any) {
-      addToast("error", "Resolution Failed", err.message);
+    } catch (err) {
+      addToast("error", "Resolution Failed", err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -335,7 +429,7 @@ export default function OperationsCenterPage() {
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`flex items-center gap-2 border-b-2 px-4 py-3 text-xs font-medium transition ${
                 isActive
                   ? "border-emerald-500 text-emerald-400"
@@ -590,7 +684,7 @@ export default function OperationsCenterPage() {
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
             {govOverview?.governance_status_breakdown &&
-              Object.entries(govOverview.governance_status_breakdown).map(([statusKey, count]: any) => (
+              Object.entries(govOverview.governance_status_breakdown).map(([statusKey, count]) => (
                 <div key={statusKey} className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
                   <div className="text-xs text-slate-400 uppercase tracking-wider">{statusKey}</div>
                   <div className="mt-1 text-2xl font-bold text-slate-100">{count}</div>
@@ -680,7 +774,7 @@ export default function OperationsCenterPage() {
               </div>
 
               <div className="space-y-2">
-                {benchmarkResult.questions.map((q: any) => (
+                {benchmarkResult.questions.map((q) => (
                   <div key={q.id} className="rounded-lg border border-slate-800 bg-slate-950/60 p-3 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="font-semibold text-slate-200">{q.question}</span>
@@ -829,7 +923,7 @@ export default function OperationsCenterPage() {
                   SRE Incident Runbooks
                 </h3>
                 <div className="space-y-2">
-                  {Object.entries(runbooks).map(([key, rb]: any) => (
+                  {Object.entries(runbooks).map(([key, rb]) => (
                     <details key={key} className="rounded border border-slate-800 bg-slate-950/40 p-2.5 text-xs">
                       <summary className="cursor-pointer font-semibold text-slate-300 hover:text-emerald-400">
                         {rb.title}

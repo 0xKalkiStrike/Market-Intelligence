@@ -33,7 +33,7 @@ interface EntityItem {
 interface EntityDetail extends EntityItem {
   location: { address: string | null; city: string | null; state: string | null; zip_code: string | null; country: string } | null;
   contact: { phone: string | null; email: string | null; website: string | null } | null;
-  specific_detail: Record<string, any>;
+  specific_detail: Record<string, unknown>;
   sources: { id: string; source_name: string; source_url: string; collected_at: string }[];
   verifications: { status: string; confidence_score: number; evidence: string; verified_at: string }[];
   duplicates: { id: string; matched_entity_name: string; match_score: number; match_reasons: string; status: string }[];

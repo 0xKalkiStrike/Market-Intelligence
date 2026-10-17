@@ -12,6 +12,14 @@ import { Modal } from "@/components/ui/Modal";
 import { Alert } from "@/components/ui/Alert";
 import { PageLoading } from "@/components/ui/Spinner";
 
+interface ExcelUploadResult {
+  filename: string;
+  created_products: number;
+  updated_products: number;
+  sources_monitored: number;
+  comparisons_generated: number;
+}
+
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[] | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -40,7 +48,7 @@ export default function ProductsPage() {
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const [uploadProjectId, setUploadProjectId] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [uploadResult, setUploadResult] = useState<any>(null);
+  const [uploadResult, setUploadResult] = useState<ExcelUploadResult | null>(null);
 
   // Monitoring state
   const [monitoringId, setMonitoringId] = useState<string | null>(null);
@@ -81,7 +89,7 @@ export default function ProductsPage() {
     try {
       await api.post("/api/monitoring/run-all");
       await loadData();
-    } catch (err: any) {
+    } catch (err) {
       alert(err instanceof ApiError ? err.message : "Failed to run bulk monitoring.");
     } finally {
       setRunningBulkSync(false);
@@ -133,12 +141,12 @@ export default function ProductsPage() {
       formData.append("project_id", uploadProjectId);
       formData.append("file", excelFile);
 
-      const result = await api.upload<any>("/api/products/upload-excel", formData);
+      const result = await api.upload<ExcelUploadResult>("/api/products/upload-excel", formData);
       setUploadResult(result);
       setExcelFile(null);
       await loadData();
-    } catch (err: any) {
-      setError(err instanceof ApiError ? err.message : err.message || "Failed to upload Excel sheet");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Failed to upload Excel sheet");
     } finally {
       setUploading(false);
     }
@@ -153,7 +161,7 @@ export default function ProductsPage() {
         const updated = await api.get<Product>(`/api/products/${productId}`);
         setSelectedProduct(updated);
       }
-    } catch (err: any) {
+    } catch (err) {
       alert(err instanceof ApiError ? err.message : "Failed to run monitoring. Make sure active sources exist.");
     } finally {
       setMonitoringId(null);
@@ -171,7 +179,7 @@ export default function ProductsPage() {
     }
   };
 
-  const parseSpecs = (specs: any) => {
+  const parseSpecs = (specs: Record<string, unknown> | string | null): Record<string, unknown> | null => {
     if (!specs) return null;
     if (typeof specs === "object") return specs;
     try {

@@ -28,7 +28,7 @@ interface Citation {
   url?: string;
   observation_date?: string;
   metric_name?: string;
-  value?: any;
+  value?: unknown;
   excerpt?: string;
 }
 
@@ -51,7 +51,7 @@ interface Phase7AiResponse {
 interface Phase4AiResponse {
   question: string;
   answer: string;
-  evidence: any[];
+  evidence: Record<string, unknown>[];
   key_changes: string[];
   sources: string[];
   confidence: "HIGH" | "MEDIUM" | "LOW";
@@ -93,7 +93,7 @@ export default function AiQueryPage() {
 
     try {
       if (engineMode === "phase7") {
-        const payload: any = { query: textToSend };
+        const payload: { query: string; target_state?: string } = { query: textToSend };
         if (targetState) payload.target_state = targetState;
 
         const data = await api.post<Phase7AiResponse>("/api/research/ai/query", payload);
@@ -104,9 +104,9 @@ export default function AiQueryPage() {
         });
         setPhase4History((prev) => [data, ...prev]);
       }
-    } catch (e: any) {
+    } catch (e) {
       console.error(e);
-      setErrorMsg(e.message || "Failed to process query");
+      setErrorMsg(e instanceof Error ? e.message : "Failed to process query");
     } finally {
       setLoading(false);
     }
@@ -238,7 +238,7 @@ export default function AiQueryPage() {
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
                 <div className="flex items-center gap-2 text-xs font-bold text-indigo-300">
                   <User className="h-4 w-4 text-indigo-400" />
-                  <span>"{item.query}"</span>
+                  <span>&ldquo;{item.query}&rdquo;</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span
@@ -436,7 +436,7 @@ export default function AiQueryPage() {
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
                 <div className="flex items-center gap-2 text-xs font-bold text-indigo-300">
                   <User className="h-4 w-4 text-indigo-400" />
-                  <span>"{item.question}"</span>
+                  <span>&ldquo;{item.question}&rdquo;</span>
                 </div>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase border bg-indigo-950 text-indigo-300 border-indigo-800">
                   CONFIDENCE: {item.confidence}
@@ -467,7 +467,7 @@ export default function AiQueryPage() {
                       <tbody className="divide-y divide-slate-800/60 font-medium">
                         {item.evidence.map((row, rIdx) => (
                           <tr key={rIdx} className="hover:bg-slate-900/40">
-                            {Object.values(row).slice(0, 6).map((val: any, cIdx) => (
+                            {Object.values(row).slice(0, 6).map((val, cIdx) => (
                               <td key={cIdx} className="py-2 px-3">{String(val ?? "—")}</td>
                             ))}
                           </tr>

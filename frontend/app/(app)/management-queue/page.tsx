@@ -3,8 +3,17 @@
 import { useEffect, useState } from "react";
 import { FileCheck, CheckCircle2, MessageSquare, ThumbsUp, ThumbsDown } from "lucide-react";
 
+interface QueueItem {
+  id: string;
+  title: string;
+  state: string;
+  item_type: string;
+  evidence: string;
+  suggested_review_step: string;
+}
+
 export default function ManagementQueuePage() {
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
@@ -52,7 +61,7 @@ export default function ManagementQueuePage() {
           Pending Review Items ({items.length})
         </h2>
         <div className="space-y-3">
-          {items.map((item: any) => (
+          {items.map((item) => (
             <div key={item.id} className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold text-white">{item.title} ({item.state})</span>

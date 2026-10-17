@@ -22,10 +22,6 @@ export default function SeoPage() {
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-  useEffect(() => {
-    fetchSeoData();
-  }, []);
-
   async function fetchSeoData() {
     setLoading(true);
     try {
@@ -40,6 +36,10 @@ export default function SeoPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    fetchSeoData();
+  }, []);
 
   return (
     <div className="space-y-6">

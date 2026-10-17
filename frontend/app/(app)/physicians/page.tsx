@@ -18,16 +18,20 @@ interface PhysicianItem {
   mismatch_signal: string;
 }
 
+interface PhysicianCoverageSummary {
+  physicians: PhysicianItem[];
+  total_physicians: number;
+  total_capacity_weekly: number;
+  total_patient_volume: number;
+  overall_utilization_percent: number;
+}
+
 export default function PhysiciansPage() {
   const [physicians, setPhysicians] = useState<PhysicianItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [summary, setSummary] = useState<any>(null);
+  const [summary, setSummary] = useState<PhysicianCoverageSummary | null>(null);
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
-  useEffect(() => {
-    fetchPhysicians();
-  }, []);
 
   async function fetchPhysicians() {
     setLoading(true);
@@ -44,6 +48,10 @@ export default function PhysiciansPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    fetchPhysicians();
+  }, []);
 
   return (
     <div className="space-y-6">

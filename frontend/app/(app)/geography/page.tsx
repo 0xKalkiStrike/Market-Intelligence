@@ -39,7 +39,7 @@ export default function GeographicIntelligencePage() {
 
   // ZIP Code Grid State
   const [selectedState, setSelectedState] = useState("FL");
-  const [gridData, setGridData] = useState<{ zip_grid?: ZipGridItem[]; opportunity_clusters?: any[] } | null>(null);
+  const [gridData, setGridData] = useState<{ zip_grid?: ZipGridItem[]; opportunity_clusters?: unknown[] } | null>(null);
   const [gridLoading, setGridLoading] = useState(false);
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export default function GeographicIntelligencePage() {
   const loadGridData = async (st: string) => {
     setGridLoading(true);
     try {
-      const json = await api.get<any>(`/api/phase4/geo-optimization?state=${st}`);
+      const json = await api.get<{ zip_grid?: ZipGridItem[]; opportunity_clusters?: unknown[] }>(`/api/phase4/geo-optimization?state=${st}`);
       setGridData(json);
     } catch (e) {
       console.error(e);

@@ -4,9 +4,25 @@ import { useEffect, useState } from "react";
 import { TrendingUp, RefreshCw, BarChart2, ShieldCheck, Cpu, Sparkles, Calendar, DollarSign, History } from "lucide-react";
 import { api } from "@/lib/api";
 
+interface ForecastItem {
+  id: string;
+  metric_name: string;
+  state: string;
+  horizon_days: number;
+  forecast_period?: string;
+  forecast_value: number | string;
+  expected_range_min?: number;
+  expected_range_max?: number;
+  historical_period?: string;
+  data_points_used?: number;
+  explanation: string;
+  model_name: string;
+  confidence: string;
+}
+
 export default function ForecastingPage() {
-  const [forecasts, setForecasts] = useState<any[]>([]);
-  const [evaluations, setEvaluations] = useState<any[]>([]);
+  const [forecasts, setForecasts] = useState<ForecastItem[]>([]);
+  const [evaluations, setEvaluations] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [metricName, setMetricName] = useState("APPOINTMENT_VOLUME");
@@ -18,8 +34,8 @@ export default function ForecastingPage() {
     setLoading(true);
     try {
       const [resF, resE] = await Promise.all([
-        api.get<any[]>("/api/phase4/forecasts"),
-        api.get<any[]>("/api/phase4/forecasts/evaluations")
+        api.get<ForecastItem[]>("/api/phase4/forecasts"),
+        api.get<unknown[]>("/api/phase4/forecasts/evaluations")
       ]);
       setForecasts(resF);
       setEvaluations(resE);
@@ -162,7 +178,7 @@ export default function ForecastingPage() {
           Active Forecast Output History
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {forecasts.map((f: any) => {
+          {forecasts.map((f) => {
             const isAllTime = f.horizon_days === 0 || f.forecast_period?.toLowerCase().includes("all time");
             const isRevenue = f.metric_name === "REVENUE";
 

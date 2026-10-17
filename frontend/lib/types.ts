@@ -38,7 +38,7 @@ export interface ProductComparison {
   reviews_count: number | null;
   seller: string;
   match_status: string;
-  specifications: Record<string, any> | string | null;
+  specifications: Record<string, unknown> | string | null;
   last_checked_at: string;
 }
 
@@ -55,7 +55,7 @@ export interface Product {
   current_price: number | null;
   url: string | null;
   image_url: string | null;
-  specifications: Record<string, any> | string | null;
+  specifications: Record<string, unknown> | string | null;
   comparisons?: ProductComparison[];
   created_at: string;
   updated_at: string;

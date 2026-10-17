@@ -16,9 +16,27 @@ interface WhatChangedData {
     total_market_events: number;
     total_new_entities: number;
   };
-  price_changes: any[];
-  regulatory_changes: any[];
-  market_events: any[];
+  price_changes: Array<{
+    competitor_name: string;
+    state: string;
+    service_name: string;
+    promotion?: string;
+    price_diff: number;
+    new_price: number;
+    previous_price: number | null;
+  }>;
+  regulatory_changes: Array<{
+    state: string;
+    rule_title: string;
+    priority: string;
+    new_info: string;
+  }>;
+  market_events: Array<{
+    entity_name: string;
+    state: string;
+    importance: string;
+    description: string;
+  }>;
 }
 
 export default function WhatChangedPage() {
@@ -53,7 +71,7 @@ export default function WhatChangedPage() {
           PERIOD-OVER-PERIOD COMPARISON ENGINE
         </div>
         <h1 className="text-2xl font-extrabold text-white flex items-center gap-2 sm:text-3xl">
-          <TrendingUp className="h-7 w-7 text-emerald-400" /> "What Changed?" Engine
+          <TrendingUp className="h-7 w-7 text-emerald-400" /> &ldquo;What Changed?&rdquo; Engine
         </h1>
         <p className="text-xs text-slate-400 mt-1">
           Compare market conditions across customizable timeframes (Today vs Yesterday, This Week vs Last Week, Month vs Month, Year vs Year) to detect additions, removals, price shifts, and regulatory updates.

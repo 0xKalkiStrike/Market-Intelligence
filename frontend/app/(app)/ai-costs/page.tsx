@@ -3,8 +3,25 @@
 import { useEffect, useState } from "react";
 import { Cpu, DollarSign, Layers, RefreshCw } from "lucide-react";
 
+interface AiCostLogEntry {
+  id: string;
+  feature: string;
+  model: string;
+  provider: string;
+  tokens: number;
+  cost_usd: number;
+}
+
+interface AiCostDashboard {
+  total_cost_usd: number;
+  total_tokens: number;
+  total_requests: number;
+  cost_by_feature: Record<string, number>;
+  recent_logs: AiCostLogEntry[];
+}
+
 export default function AiCostsPage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<AiCostDashboard | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
@@ -93,7 +110,7 @@ export default function AiCostsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60 font-mono">
-              {data?.recent_logs?.map((l: any) => (
+              {data?.recent_logs?.map((l) => (
                 <tr key={l.id} className="hover:bg-slate-800/30">
                   <td className="p-2.5 font-sans font-medium text-white">{l.feature}</td>
                   <td className="p-2.5 text-indigo-300">{l.model}</td>
