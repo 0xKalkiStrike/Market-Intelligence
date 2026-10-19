@@ -7,7 +7,6 @@ Create Date: 2026-10-13 17:18:00
 from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import UUID
 
 # revision identifiers, used by Alembic.
 revision: str = '0001_phase5'

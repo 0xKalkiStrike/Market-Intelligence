@@ -32,6 +32,14 @@ def run_migrations_offline() -> None:
 def run_migrations_online() -> None:
     connectable = engine_from_config(config.get_section(config.config_ini_section, {}), prefix="sqlalchemy.", poolclass=pool.NullPool)
     with connectable.connect() as connection:
+        from sqlalchemy import inspect as sa_inspect, text
+        inspector = sa_inspect(connection)
+        tables = inspector.get_table_names()
+        if "entities" in tables and "alembic_version" not in tables:
+            connection.execute(text("CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(32) NOT NULL, CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num))"))
+            connection.execute(text("INSERT INTO alembic_version (version_num) VALUES ('0005_phase9') ON CONFLICT DO NOTHING"))
+            connection.commit()
+
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():
             context.run_migrations()
