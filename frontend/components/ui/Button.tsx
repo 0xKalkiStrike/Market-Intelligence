@@ -12,10 +12,10 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<Variant, string> = {
-  primary: "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 shadow-sm hover:shadow active:scale-[0.98] disabled:bg-slate-300 dark:disabled:bg-slate-800 disabled:shadow-none",
-  indigo: "bg-indigo-600 dark:bg-indigo-500 text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 shadow-sm hover:shadow-indigo-500/20 active:scale-[0.98] disabled:bg-indigo-300 dark:disabled:bg-indigo-900",
-  gradient: "bg-indigo-600 dark:bg-indigo-500 text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 shadow-sm active:scale-[0.98] disabled:opacity-50",
-  secondary: "bg-white dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-900 dark:hover:text-white shadow-2xs active:scale-[0.98] disabled:opacity-50",
+  primary: "bg-[#4f46e5] text-white hover:bg-[#4338ca] shadow-sm hover:shadow-indigo-500/20 active:scale-[0.98] disabled:bg-slate-300 dark:disabled:bg-slate-800 disabled:shadow-none",
+  indigo: "bg-[#4f46e5] text-white hover:bg-[#4338ca] shadow-sm hover:shadow-indigo-500/20 active:scale-[0.98] disabled:bg-indigo-300 dark:disabled:bg-indigo-900",
+  gradient: "bg-gradient-to-r from-[#4f46e5] to-indigo-600 text-white hover:from-[#4338ca] hover:to-indigo-700 shadow-sm active:scale-[0.98] disabled:opacity-50",
+  secondary: "bg-white dark:bg-[#151e32] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#29354b] hover:bg-slate-50 dark:hover:bg-[#1c2740] hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-900 dark:hover:text-white shadow-2xs active:scale-[0.98] disabled:opacity-50",
   outline: "bg-transparent text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50/60 dark:hover:bg-indigo-950/40 hover:border-indigo-300 dark:hover:border-indigo-700 active:scale-[0.98] disabled:opacity-50",
   danger: "bg-rose-600 text-white hover:bg-rose-700 shadow-sm hover:shadow-rose-500/20 active:scale-[0.98] disabled:bg-rose-300 dark:disabled:bg-rose-900",
   ghost: "bg-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white active:scale-[0.98] disabled:opacity-50",

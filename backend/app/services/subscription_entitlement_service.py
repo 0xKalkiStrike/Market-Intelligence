@@ -159,10 +159,16 @@ class SubscriptionEntitlementService:
 
     @staticmethod
     def check_feature_access(db: Session, organization_id: str, feature_name: str) -> bool:
-        """Check if organization's active plan allows a given feature.
-        All enterprise intelligence capabilities are completely unlocked.
-        """
-        return True
+        """Check if organization's active plan allows a given feature."""
+        org = db.execute(select(Organization).where(Organization.id == organization_id)).scalar_one_or_none()
+        if not org:
+            return False
+        sub = db.execute(select(OrganizationSubscription).where(OrganizationSubscription.organization_id == organization_id)).scalar_one_or_none()
+        plan_tier = (sub.plan_tier if sub else org.plan_tier) or "ENTERPRISE"
+        if plan_tier.upper() == "ENTERPRISE":
+            return True
+        plan_info = SubscriptionEntitlementService.get_plan_details(plan_tier)
+        return feature_name in plan_info.get("features", [])
 
     @staticmethod
     def check_quota(
@@ -172,12 +178,65 @@ class SubscriptionEntitlementService:
         requested_quantity: int = 1,
     ) -> Tuple[bool, str, Dict[str, Any]]:
         """Verify if adding `requested_quantity` to `metric_name` remains within plan limit.
-        Unrestricted in enterprise deployment.
+        Returns: (allowed: bool, reason: str, usage_meta: dict)
         """
+        org = db.execute(select(Organization).where(Organization.id == organization_id)).scalar_one_or_none()
+        if not org:
+            return False, "Organization not found", {}
+
+        sub = db.execute(select(OrganizationSubscription).where(OrganizationSubscription.organization_id == organization_id)).scalar_one_or_none()
+        plan_tier = (sub.plan_tier if sub else org.plan_tier) or "ENTERPRISE"
+        if plan_tier.upper() == "ENTERPRISE":
+            return True, "Enterprise quota unlimited", {"limit": None, "current": 0, "projected": requested_quantity}
+
+        plan_info = SubscriptionEntitlementService.get_plan_details(plan_tier)
+        limits = plan_info.get("limits", {})
+
+        limit_key_map = {
+            "AI_TOKENS": "max_ai_tokens_monthly",
+            "EXPORTS_GENERATED": "max_exports_monthly",
+            "SCENARIOS_RUN": "max_scenarios_monthly",
+            "ACTIVE_USERS": "max_users",
+        }
+        limit_key = limit_key_map.get(metric_name)
+        if not limit_key or limit_key not in limits:
+            return True, "Metric not capped", {"limit": None, "current": 0}
+
+        limit_value = limits[limit_key]
+
+        if metric_name == "ACTIVE_USERS":
+            current_val = db.execute(
+                select(func.count(OrganizationMembership.id)).where(
+                    and_(
+                        OrganizationMembership.organization_id == organization_id,
+                        OrganizationMembership.is_active,
+                    )
+                )
+            ).scalar() or 0
+        else:
+            period_key = datetime.now(timezone.utc).strftime("%Y-%m")
+            current_val = db.execute(
+                select(func.sum(TenantUsageRecord.quantity)).where(
+                    and_(
+                        TenantUsageRecord.organization_id == organization_id,
+                        TenantUsageRecord.metric_name == metric_name,
+                        TenantUsageRecord.period_key == period_key,
+                    )
+                )
+            ).scalar() or 0
+
+        projected = current_val + requested_quantity
+        if projected > limit_value:
+            return False, f"Quota exceeded for {metric_name}. Current: {current_val}, Limit: {limit_value}, Requested: {requested_quantity}", {
+                "limit": limit_value,
+                "current": current_val,
+                "projected": projected,
+            }
+
         return True, "Quota verified", {
-            "limit": None,
-            "current": 0,
-            "projected": requested_quantity,
+            "limit": limit_value,
+            "current": current_val,
+            "projected": projected,
         }
 
     @staticmethod

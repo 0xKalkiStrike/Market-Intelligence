@@ -44,8 +44,8 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def setup_db():
-    TestingSessionLocal.close_all()
-    Base.metadata.drop_all(bind=engine)
+    from sqlalchemy.orm import close_all_sessions
+    close_all_sessions()
     Base.metadata.create_all(bind=engine)
 
 

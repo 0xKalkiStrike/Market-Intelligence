@@ -16,7 +16,7 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 sm:px-6 transition-colors">
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200/80 dark:border-[#29354b] bg-white/90 dark:bg-[#10172a]/95 backdrop-blur-md px-3 sm:px-6 transition-colors">
         <div className="flex items-center gap-2.5">
           {/* Mobile hamburger menu */}
           <button

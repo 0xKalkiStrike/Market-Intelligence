@@ -175,7 +175,7 @@ class CompetitivePatternService:
     ) -> List[Dict[str, Any]]:
         query = db.query(CompetitivePatternRecord)
         if not include_dismissed:
-            query = query.filter(not CompetitivePatternRecord.is_dismissed)
+            query = query.filter(CompetitivePatternRecord.is_dismissed.is_(False))
         if state:
             query = query.filter(CompetitivePatternRecord.state == state)
         if pattern_type:

@@ -9,19 +9,54 @@
  */
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme {
+  --color-brand-primary: #4f46e5;
+  --color-brand-hover: #4338ca;
+  --color-brand-teal: #0d9488;
+  --color-dark-bg: #0b1020;
+  --color-dark-sidebar: #10172a;
+  --color-dark-surface: #151e32;
+  --color-dark-elevated: #1c2740;
+  --color-light-bg: #f5f7fb;
+  --color-light-surface: #ffffff;
+}
+
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #f5f7fb;
+  --foreground: #172033;
   --card-bg: #ffffff;
+  --surface: #ffffff;
+  --elevated-surface: #ffffff;
   --border-color: #e2e8f0;
-  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --text-primary: #172033;
+  --text-secondary: #64748b;
+  --color-primary: #4f46e5;
+  --color-primary-hover: #4338ca;
+  --color-secondary: #0d9488;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+  --color-info: #0284c7;
+  --font-sans: var(--font-inter), var(--font-plus-jakarta), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 html.dark {
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  --card-bg: #1e293b;
-  --border-color: #334155;
+  --background: #0b1020;
+  --foreground: #f1f5f9;
+  --card-bg: #151e32;
+  --surface: #151e32;
+  --elevated-surface: #1c2740;
+  --sidebar-bg: #10172a;
+  --border-color: #29354b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #a8b3c7;
+  --color-primary: #4f46e5;
+  --color-primary-hover: #4338ca;
+  --color-secondary: #0d9488;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+  --color-info: #0284c7;
   color-scheme: dark;
 }
 

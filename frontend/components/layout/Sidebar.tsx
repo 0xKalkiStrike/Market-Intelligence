@@ -137,13 +137,13 @@ export function Sidebar({
       {/* Sidebar Container */}
       <aside
         className={clsx(
-          "fixed inset-y-0 left-0 z-50 shrink-0 border-r border-slate-800 bg-[#0a0f1d] text-slate-300 shadow-2xl transition-all duration-300 ease-in-out lg:static flex flex-col select-none",
+          "fixed inset-y-0 left-0 z-50 shrink-0 border-r border-[#29354b] bg-[#10172a] text-slate-300 shadow-2xl transition-all duration-300 ease-in-out lg:static flex flex-col select-none",
           collapsed ? "lg:w-20" : "lg:w-64",
           open ? "w-64 translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
         {/* Brand Header */}
-        <div className="flex h-16 items-center justify-between border-b border-slate-800/80 px-4 bg-[#080d1a]">
+        <div className="flex h-16 items-center justify-between border-b border-[#29354b] px-4 bg-[#0d1424]">
           <Link href="/command-center" className="flex items-center gap-3 group min-w-0">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 text-white font-black text-xs shadow-md shadow-indigo-600/30 group-hover:scale-105 transition-transform shrink-0">
               MI
