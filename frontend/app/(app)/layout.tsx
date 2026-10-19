@@ -11,6 +11,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/login");
@@ -19,11 +20,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (loading || !user) return <PageLoading />;
 
   return (
-    <div className="flex min-h-screen min-w-0 overflow-x-hidden">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+    <div className="flex min-h-screen min-w-0 overflow-x-hidden bg-slate-50 dark:bg-slate-950">
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
       <div className="flex min-h-screen flex-1 flex-col min-w-0 overflow-x-hidden">
         <Topbar onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 p-3 sm:p-5 lg:p-6 min-w-0">{children}</main>
+        <main className="flex-1 p-3 sm:p-5 lg:p-6 min-w-0 transition-all">{children}</main>
       </div>
     </div>
   );

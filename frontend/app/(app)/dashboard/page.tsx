@@ -120,7 +120,34 @@ export default function DashboardPage() {
 
 
 
-  const { summary, distribution, verification_status, entities_by_state, sources } = data.metrics;
+  const summary = data?.metrics?.summary ?? {
+    total_entities: 0,
+    doctors: 0,
+    dispensaries: 0,
+    competitors: 0,
+    verified_records: 0,
+    data_sources: 0,
+    collection_runs: 0,
+    records_collected: 0,
+    duplicates_detected: 0,
+    needs_review: 0,
+    data_quality_percentage: 0,
+  };
+  const distribution = data?.metrics?.distribution ?? {
+    doctors: 0,
+    dispensaries: 0,
+    competitors: 0,
+    clinics: 0,
+    others: 0,
+  };
+  const verification_status = data?.metrics?.verification_status ?? {
+    verified: 0,
+    partially_verified: 0,
+    unverified: 0,
+    needs_review: 0,
+  };
+  const entities_by_state = data?.metrics?.entities_by_state ?? [];
+  const sources = data?.metrics?.sources ?? [];
 
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-10">

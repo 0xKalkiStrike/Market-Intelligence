@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { CheckCircle2, AlertTriangle, Info, X } from "lucide-react";
 import clsx from "clsx";
 
