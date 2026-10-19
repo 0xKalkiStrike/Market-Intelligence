@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel
-from sqlalchemy import func, or_, distinct
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.auth.deps import get_current_user, get_optional_current_user
@@ -388,7 +388,7 @@ def list_entities(
             "is_demo": e.is_demo,
         })
 
-    from app.utils.geo_resolver import STATE_MAP, CODE_TO_NAME
+    from app.utils.geo_resolver import CODE_TO_NAME
     cached_states = analytics_service.get_dashboard_metrics(db).get("entities_by_state", [])
     available_states = []
     for s_entry in cached_states:
