@@ -51,11 +51,22 @@ export default function MarketExplorerPage() {
   const [verificationStatus, setVerificationStatus] = useState("ALL");
   const [freshnessStatus, setFreshnessStatus] = useState("ALL");
   const [search, setSearch] = useState("");
+  const [availableStates, setAvailableStates] = useState<{ code: string; name: string }[]>([]);
 
   // Detail Modal State
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const [detail, setDetail] = useState<EntityDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+
+  useEffect(() => {
+    api.get<{ states: { code: string; name: string }[] }>("/api/market-intelligence/active-states")
+      .then((res) => {
+        if (res?.states && res.states.length > 0) {
+          setAvailableStates(res.states.map((s) => ({ code: s.code, name: s.name })));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchEntities = async () => {
     setLoading(true);
@@ -68,9 +79,12 @@ export default function MarketExplorerPage() {
       if (freshnessStatus !== "ALL") params.set("freshness_status", freshnessStatus);
       if (search) params.set("search", search);
 
-      const res = await api.get<{ items: EntityItem[]; total: number }>(`/api/market-intelligence/entities?${params.toString()}`);
+      const res = await api.get<{ items: EntityItem[]; total: number; available_states?: { code: string; name: string }[] }>(`/api/market-intelligence/entities?${params.toString()}`);
       setEntities(res.items || []);
       setTotal(res.total || 0);
+      if (res.available_states && res.available_states.length > 0) {
+        setAvailableStates(res.available_states);
+      }
     } catch {
       setEntities([]);
       setTotal(0);
@@ -174,11 +188,11 @@ export default function MarketExplorerPage() {
                 className="w-full rounded-lg border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#18233a] px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
               >
                 <option value="">All States</option>
-                <option value="CA">California (CA)</option>
-                <option value="OH">Ohio (OH)</option>
-                <option value="NY">New York (NY)</option>
-                <option value="TX">Texas (TX)</option>
-                <option value="FL">Florida (FL)</option>
+                {availableStates.map((st) => (
+                  <option key={st.code} value={st.code}>
+                    {st.name} ({st.code})
+                  </option>
+                ))}
               </select>
             </div>
 

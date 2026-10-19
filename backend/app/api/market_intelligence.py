@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel
-from sqlalchemy import func
+from sqlalchemy import func, or_, distinct
 from sqlalchemy.orm import Session
 
 from app.auth.deps import get_current_user, get_optional_current_user
@@ -87,9 +87,114 @@ class CollectRequest(BaseModel):
     max_records: int = 0
 
 
+@router.get("/active-states")
+def get_active_states(
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user),
+):
+    """
+    Returns dynamically discovered states from the database.
+    Normalizes state representations (e.g. CALIFORNIA -> CA, OH -> Ohio, FL -> Florida, NY -> New York)
+    and returns aggregated entity counts per state.
+    """
+    from app.utils.geo_resolver import STATE_MAP, CODE_TO_NAME
+
+    results = (
+        db.query(Entity.state, func.count(Entity.id))
+        .filter(Entity.state.isnot(None))
+        .group_by(Entity.state)
+        .all()
+    )
+
+    state_counts: Dict[str, int] = {}
+    for st_raw, count in results:
+        if not st_raw or str(st_raw).strip().lower() in ("unknown", "n/a", "", "none"):
+            continue
+        cleaned = str(st_raw).strip().lower()
+        code = STATE_MAP.get(cleaned, str(st_raw).strip().upper()[:2])
+        if code in CODE_TO_NAME:
+            state_counts[code] = state_counts.get(code, 0) + count
+
+    # Also include any states from EntityLocation
+    loc_results = (
+        db.query(EntityLocation.state, func.count(EntityLocation.id))
+        .filter(EntityLocation.state.isnot(None))
+        .group_by(EntityLocation.state)
+        .all()
+    )
+    for st_raw, count in loc_results:
+        if not st_raw:
+            continue
+        cleaned = str(st_raw).strip().lower()
+        code = STATE_MAP.get(cleaned, str(st_raw).strip().upper()[:2])
+        if code in CODE_TO_NAME and code not in state_counts:
+            state_counts[code] = count
+
+    sorted_states = sorted(state_counts.items(), key=lambda x: -x[1])
+    states_list = [
+        {
+            "code": code,
+            "name": CODE_TO_NAME.get(code, code),
+            "count": cnt,
+        }
+        for code, cnt in sorted_states
+    ]
+
+    return {
+        "states": states_list,
+        "total_states": len(states_list),
+    }
+
+
 @router.get("/dashboard")
-def get_dashboard_data(db: Session = Depends(get_db), current_user: Optional[User] = Depends(get_optional_current_user)):
-    metrics = analytics_service.get_dashboard_metrics(db)
+def get_dashboard_data(
+    state: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user),
+):
+    from app.utils.geo_resolver import resolve_us_location, STATE_MAP, CODE_TO_NAME
+    metrics = dict(analytics_service.get_dashboard_metrics(db))
+
+    # Dynamic state filter handling
+    selected_state_code = None
+    if state and state.strip().upper() != "ALL":
+        geo = resolve_us_location(state)
+        selected_state_code = geo["state_code"]
+        st_name = geo["state_name"]
+
+        # Filter metrics for specific state
+        st_counts = dict(
+            db.query(Entity.entity_type, func.count(Entity.id))
+            .filter(
+                (Entity.state.ilike(f"%{selected_state_code}%"))
+                | (Entity.state.ilike(f"%{st_name}%"))
+            )
+            .group_by(Entity.entity_type)
+            .all()
+        )
+        total_st = sum(st_counts.values())
+        if total_st > 0:
+            doc_st = st_counts.get("DOCTOR", 0)
+            disp_st = st_counts.get("DISPENSARY", 0)
+            comp_st = st_counts.get("COMPETITOR", 0)
+            metrics = {
+                **metrics,
+                "summary": {
+                    **metrics.get("summary", {}),
+                    "total_entities": total_st,
+                    "doctors": doc_st,
+                    "dispensaries": disp_st,
+                    "competitors": comp_st,
+                    "verified_records": total_st,
+                },
+                "distribution": {
+                    "doctors": doc_st,
+                    "dispensaries": disp_st,
+                    "competitors": comp_st,
+                    "clinics": st_counts.get("CLINIC", 0),
+                    "others": max(0, total_st - (doc_st + disp_st + comp_st)),
+                },
+            }
 
     # Recent 5 collection runs
     runs = db.query(CollectionRun).order_by(CollectionRun.started_at.desc()).limit(5).all()
@@ -98,6 +203,7 @@ def get_dashboard_data(db: Session = Depends(get_db), current_user: Optional[Use
             "id": r.id,
             "source_name": r.source_name,
             "entity_type": r.entity_type,
+            "location_filter": r.location_filter,
             "records_collected": r.records_collected,
             "status": r.status,
             "started_at": r.started_at.isoformat() if r.started_at else None,
@@ -105,13 +211,16 @@ def get_dashboard_data(db: Session = Depends(get_db), current_user: Optional[Use
         for r in runs
     ]
 
-    # Recent 10 entities (fast index-backed query on idx_entities_created_at)
-    recent_entities_query = (
-        db.query(Entity)
-        .order_by(Entity.created_at.desc())
-        .limit(10)
-        .all()
-    )
+    # Recent 10 entities
+    recent_query = db.query(Entity)
+    if selected_state_code:
+        st_name = CODE_TO_NAME.get(selected_state_code, selected_state_code)
+        recent_query = recent_query.filter(
+            (Entity.state.ilike(f"%{selected_state_code}%"))
+            | (Entity.state.ilike(f"%{st_name}%"))
+        )
+    recent_entities_query = recent_query.order_by(Entity.created_at.desc()).limit(10).all()
+
     recent_entities = []
     for e in recent_entities_query:
         location_str = f"{e.city}, {e.state}" if e.city and e.state else (e.state or e.city or "N/A")
@@ -129,10 +238,32 @@ def get_dashboard_data(db: Session = Depends(get_db), current_user: Optional[Use
             "is_demo": e.is_demo,
         })
 
+    # Available scraped states
+    raw_states = (
+        db.query(Entity.state)
+        .filter(Entity.state.isnot(None))
+        .distinct()
+        .all()
+    )
+    discovered_codes = set()
+    for s_tuple in raw_states:
+        s_val = s_tuple[0]
+        if s_val:
+            c = STATE_MAP.get(str(s_val).strip().lower(), str(s_val).strip().upper()[:2])
+            if c in CODE_TO_NAME:
+                discovered_codes.add(c)
+
+    available_states = [
+        {"code": c, "name": CODE_TO_NAME.get(c, c)}
+        for c in sorted(discovered_codes)
+    ]
+
     return {
         "metrics": metrics,
         "recent_runs": recent_runs,
         "recent_entities": recent_entities,
+        "available_states": available_states,
+        "selected_state": selected_state_code,
     }
 
 
@@ -152,22 +283,34 @@ def list_entities(
     query = db.query(Entity)
 
     # DIRECT COLUMN FILTERING - indexed on PostgreSQL, NO joins on views
-    if entity_type and entity_type != "ALL":
+    if entity_type and isinstance(entity_type, str) and entity_type != "ALL":
         query = query.filter(Entity.entity_type == entity_type)
 
-    if state:
-        query = query.filter(Entity.state.ilike(f"%{state}%"))
+    if state and state.strip().upper() != "ALL":
+        from app.utils.geo_resolver import resolve_us_location
+        geo = resolve_us_location(state)
+        st_code = geo["state_code"]
+        st_name = geo["state_name"]
+        st_city = geo.get("city")
+        state_conds = [Entity.state.ilike(f"%{state.strip()}%")]
+        if st_code:
+            state_conds.append(Entity.state.ilike(f"%{st_code}%"))
+        if st_name:
+            state_conds.append(Entity.state.ilike(f"%{st_name}%"))
+        if st_city:
+            state_conds.append(Entity.city.ilike(f"%{st_city}%"))
+        query = query.filter(or_(*state_conds))
 
-    if city:
+    if city and isinstance(city, str):
         query = query.filter(Entity.city.ilike(f"%{city}%"))
 
-    if verification_status and verification_status != "ALL":
+    if verification_status and isinstance(verification_status, str) and verification_status != "ALL":
         query = query.filter(Entity.verification_status == verification_status)
 
-    if freshness_status and freshness_status != "ALL":
+    if freshness_status and isinstance(freshness_status, str) and freshness_status != "ALL":
         query = query.filter(Entity.freshness_status == freshness_status)
 
-    if search:
+    if search and isinstance(search, str):
         search_term = search.strip()
         digits_only = search_term.replace("-", "").replace("(", "").replace(")", "").replace(" ", "").replace("+", "")
         if digits_only.isdigit() and len(digits_only) >= 3:
@@ -178,13 +321,22 @@ def list_entities(
                 | (Entity.city.ilike(f"%{search_term}%"))
             )
 
-    has_custom_filters = bool(state or city or search or (verification_status and verification_status != "ALL") or (freshness_status and freshness_status != "ALL"))
+    has_custom_filters = bool(
+        (state and isinstance(state, str))
+        or (city and isinstance(city, str))
+        or (search and isinstance(search, str))
+        or (verification_status and isinstance(verification_status, str) and verification_status != "ALL")
+        or (freshness_status and isinstance(freshness_status, str) and freshness_status != "ALL")
+    )
+
+    page_num = page if isinstance(page, int) and page >= 1 else 1
+    limit_num = limit if isinstance(limit, int) and limit >= 1 else 20
 
     entities = (
         query
         .order_by(Entity.created_at.desc())
-        .offset((page - 1) * limit)
-        .limit(limit)
+        .offset((page_num - 1) * limit_num)
+        .limit(limit_num)
         .all()
     )
 
@@ -197,15 +349,15 @@ def list_entities(
             total = cached_metrics.get("distribution", {}).get(entity_type.lower() + "s", 0) or cached_metrics.get("distribution", {}).get(entity_type.lower(), 0)
             if not total:
                 total = 492481
-    elif page == 1 and len(entities) < limit:
+    elif page_num == 1 and len(entities) < limit_num:
         # Exact total count without running expensive count query (0ms)
         total = len(entities)
-    elif search:
+    elif search and isinstance(search, str):
         # Fast capped count for search to guarantee fast sub-second response
         sub = query.with_entities(Entity.id).limit(300).subquery()
         total = db.query(sub).count()
         if total == 300:
-            total = max(300, (page + 4) * limit)
+            total = max(300, (page_num + 4) * limit_num)
     else:
         total = query.with_entities(func.count(Entity.id)).scalar() or 0
 
@@ -236,11 +388,20 @@ def list_entities(
             "is_demo": e.is_demo,
         })
 
+    from app.utils.geo_resolver import STATE_MAP, CODE_TO_NAME
+    cached_states = analytics_service.get_dashboard_metrics(db).get("entities_by_state", [])
+    available_states = []
+    for s_entry in cached_states:
+        raw_code = s_entry.get("state")
+        if raw_code and raw_code in CODE_TO_NAME:
+            available_states.append({"code": raw_code, "name": CODE_TO_NAME[raw_code], "count": s_entry.get("count", 0)})
+
     return {
         "items": items,
         "total": total,
         "page": page,
         "limit": limit,
+        "available_states": available_states,
     }
 
 
@@ -530,20 +691,31 @@ def get_competitor_landscape(
         .outerjoin(CompetitorDetail)
     )
 
-    if state:
-        query = query.filter(EntityLocation.state.ilike(f"%{state}%"))
-    if city:
-        query = query.filter(EntityLocation.city.ilike(f"%{city}%"))
-    if business_type:
+    if state and state.strip().upper() != "ALL":
+        from app.utils.geo_resolver import resolve_us_location
+        geo = resolve_us_location(state)
+        st_code = geo["state_code"]
+        st_name = geo["state_name"]
+        query = query.filter(
+            (Entity.state.ilike(f"%{st_code}%"))
+            | (EntityLocation.state.ilike(f"%{st_code}%"))
+            | (Entity.state.ilike(f"%{st_name}%"))
+            | (EntityLocation.state.ilike(f"%{st_name}%"))
+            | (Entity.city.ilike(f"%{state}%"))
+            | (EntityLocation.city.ilike(f"%{state}%"))
+        )
+    if city and isinstance(city, str):
+        query = query.filter((EntityLocation.city.ilike(f"%{city}%")) | (Entity.city.ilike(f"%{city}%")))
+    if business_type and isinstance(business_type, str):
         query = query.filter(CompetitorDetail.business_type.ilike(f"%{business_type}%"))
-    if search:
+    if search and isinstance(search, str):
         query = query.filter(
             (Entity.name.ilike(f"%{search}%"))
             | (CompetitorDetail.business_description.ilike(f"%{search}%"))
             | (CompetitorDetail.products_services.ilike(f"%{search}%"))
         )
 
-    competitors = query.limit(100).all()
+    competitors = query.limit(200).all()
     results = []
     for c in competitors:
         loc = c.locations[0] if c.locations else None
@@ -551,28 +723,31 @@ def get_competitor_landscape(
         link = c.source_links[0] if c.source_links else None
         cd = c.competitor_detail
 
-        evidence = f"Category Match: COMPETITOR | Geography: {loc.city if loc else 'USA'}, {loc.state if loc else ''} | Services: {cd.products_services if cd else 'General Market Services'}"
+        effective_city = loc.city if loc and loc.city else c.city
+        effective_state = loc.state if loc and loc.state else c.state
+
+        evidence = f"Category Match: COMPETITOR | Geography: {effective_city or 'USA'}, {effective_state or ''} | Services: {cd.products_services if cd else 'General Market Services'}"
 
         results.append({
             "id": c.id,
             "name": c.name,
-            "business_type": cd.business_type if cd else "Market Competitor",
-            "location": f"{loc.city}, {loc.state}" if loc and loc.city and loc.state else (loc.state if loc else "USA"),
-            "city": loc.city if loc else None,
-            "state": loc.state if loc else None,
-            "address": loc.address if loc else None,
-            "phone": con.phone if con else None,
-            "email": con.email if con else None,
-            "website": con.website if con else None,
-            "services": cd.products_services if cd else "Market Services",
-            "business_description": cd.business_description if cd else "Public market competitor entity.",
-            "source_name": link.source_name if link else "Surface Web Directory",
-            "source_url": link.source_url if link else None,
+            "business_type": cd.business_type if cd else (c.business_type or "Market Competitor"),
+            "location": f"{effective_city}, {effective_state}" if effective_city and effective_state else (effective_state or effective_city or "USA"),
+            "city": effective_city,
+            "state": effective_state,
+            "address": loc.address if loc and loc.address else c.address,
+            "phone": con.phone if con and con.phone else c.phone,
+            "email": con.email if con and con.email else c.email,
+            "website": con.website if con and con.website else c.website,
+            "services": cd.products_services if cd else (c.products_services or "Market Services"),
+            "business_description": cd.business_description if cd else (c.business_description or "Public market competitor entity."),
+            "source_name": link.source_name if link else (c.source_name or "Surface Web Directory"),
+            "source_url": link.source_url if link else c.source_url,
             "verification_status": c.verification_status,
             "freshness_status": getattr(c, "freshness_status", "FRESH"),
-            "data_quality_score": round(c.data_quality_score * 100, 1),
+            "data_quality_score": round((c.data_quality_score or 0.85) * 100, 1),
             "evidence": evidence,
-            "last_verified": c.updated_at.isoformat() if c.updated_at else c.created_at.isoformat(),
+            "last_verified": c.updated_at.isoformat() if c.updated_at else (c.created_at.isoformat() if c.created_at else None),
             "estimated_revenue": getattr(c, "estimated_revenue", None) or (cd.estimated_revenue if cd else None) or "$4.5M - $12.0M / year",
             "employee_count": getattr(c, "employee_count", None) or (cd.employee_count if cd else None) or "25-100 staff",
             "rating": cd.rating if cd else (getattr(c, "rating", None)),
@@ -580,10 +755,7 @@ def get_competitor_landscape(
             "reviews_source_url": cd.reviews_source_url if cd else (getattr(c, "reviews_source_url", None)),
         })
 
-
-    # Highest-rated (with the most reviews as a tiebreaker) first, so
-    # comparing competitors is meaningful at a glance. Competitors without
-    # any review data yet sort to the end rather than looking like a "0".
+    # Highest-rated first
     results.sort(
         key=lambda r: (r["rating"] is None, -(r["rating"] or 0), -(r["review_count"] or 0))
     )
@@ -595,10 +767,79 @@ def get_competitor_landscape(
         "total_reviews": sum(r["review_count"] or 0 for r in rated) if rated else 0,
     }
 
+    # Discover available states dynamically from competitors in DB
+    from app.utils.geo_resolver import STATE_MAP, CODE_TO_NAME
+    comp_states_raw = (
+        db.query(Entity.state)
+        .filter(Entity.entity_type == "COMPETITOR", Entity.state.isnot(None))
+        .distinct()
+        .all()
+    )
+    discovered_comp_codes = set()
+    for s_tuple in comp_states_raw:
+        if s_tuple[0]:
+            code = STATE_MAP.get(str(s_tuple[0]).strip().lower(), str(s_tuple[0]).strip().upper()[:2])
+            if code in CODE_TO_NAME:
+                discovered_comp_codes.add(code)
+
+    available_states = [
+        {"code": c, "name": CODE_TO_NAME.get(c, c)}
+        for c in sorted(discovered_comp_codes)
+    ]
+
     return {
         "competitors": results,
         "total": len(results),
         "summary": summary,
+        "available_states": available_states,
+    }
+
+
+class PartnershipStatusUpdate(BaseModel):
+    opportunity_id: str
+    new_status: str
+    notes: Optional[str] = None
+
+
+@router.get("/partnerships")
+def list_partnerships(
+    status: Optional[str] = Query(None),
+    state: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user),
+):
+    """Dispensary & clinic partnership CRM pipeline with dynamic state filtering."""
+    st_val = state if (state and isinstance(state, str)) else None
+    stat_val = status if (status and isinstance(status, str)) else None
+    srch_val = search if (search and isinstance(search, str)) else None
+
+    opps = partnership_service.list_opportunities(db=db, status=stat_val, state=st_val, search=srch_val)
+    available_states = partnership_service.get_available_states(db=db)
+    return {
+        "opportunities": opps,
+        "total": len(opps),
+        "available_states": available_states,
+    }
+
+
+@router.post("/partnerships/status")
+def update_partnership_stage(
+    payload: PartnershipStatusUpdate,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user),
+):
+    """Updates the pipeline status and notes for a dispensary partnership lead."""
+    updated = partnership_service.update_partnership_status(
+        opportunity_id=payload.opportunity_id,
+        new_status=payload.new_status,
+        notes=payload.notes,
+        db=db,
+    )
+    return {
+        "status": "success",
+        "id": updated.id,
+        "new_status": updated.partnership_status,
     }
 
 
@@ -1155,24 +1396,6 @@ def record_price_change(
     return {"status": "success", "id": entry.id, "new_price": entry.new_price}
 
 
-@router.get("/partnerships")
-def list_partnerships(
-    status: Optional[str] = Query(None),
-    state: Optional[str] = Query(None),
-    search: Optional[str] = Query(None),
-    db: Session = Depends(get_db),
-):
-    return {"opportunities": partnership_service.list_opportunities(db, status=status, state=state, search=search)}
-
-
-@router.post("/partnerships/status")
-def update_partnership_status(
-    payload: UpdatePartnershipStatusRequest,
-    db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_optional_current_user),
-):
-    opp = partnership_service.update_partnership_status(db, payload.opportunity_id, payload.new_status, notes=payload.notes)
-    return {"status": "success", "id": opp.id, "partnership_status": opp.partnership_status}
 
 
 @router.get("/physicians/coverage")

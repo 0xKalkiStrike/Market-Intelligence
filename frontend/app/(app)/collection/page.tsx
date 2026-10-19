@@ -388,12 +388,34 @@ export default function CollectionRunsPage() {
               </div>
 
               <div>
-                <label className="font-bold text-slate-200 block mb-1">Target Location / Region</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-slate-200 block">Target Location / Region</label>
+                  <span className="text-[10px] text-slate-400">All 50 US States & Cities Supported</span>
+                </div>
                 <Input
-                  placeholder="e.g. California, Pennsylvania, Florida, London UK"
+                  placeholder="e.g. Ohio, Miami, Florida, New York, Texas..."
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                 />
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {["Ohio", "Miami", "Florida", "New York", "California", "Texas", "Pennsylvania"].map((locPreset) => (
+                    <button
+                      key={locPreset}
+                      type="button"
+                      onClick={() => {
+                        setLocation(locPreset);
+                        setQuery(`${entityType === "ALL" ? "Market entities" : entityType.toLowerCase()} in ${locPreset}`);
+                      }}
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border transition-colors ${
+                        location.toLowerCase() === locPreset.toLowerCase()
+                          ? "bg-indigo-600/30 border-indigo-500 text-indigo-300"
+                          : "bg-slate-800/80 border-slate-700/60 text-slate-300 hover:border-slate-600 hover:text-white"
+                      }`}
+                    >
+                      {locPreset}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div>

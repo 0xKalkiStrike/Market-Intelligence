@@ -84,21 +84,10 @@ class BaseCollector(ABC):
             current_count = len(results)
             to_add = needed_target - current_count
 
-            # Major cities and zip codes by state
-            CA_CITIES = [("Los Angeles", "90001", "310"), ("San Francisco", "94102", "415"), ("San Diego", "92101", "619"), ("Sacramento", "95814", "916"), ("San Jose", "95113", "408"), ("Fresno", "93721", "559"), ("Oakland", "94612", "510"), ("Long Beach", "90802", "562")]
-            PA_CITIES = [("Philadelphia", "19102", "215"), ("Pittsburgh", "15222", "412"), ("Allentown", "18101", "610"), ("Erie", "16501", "814"), ("Reading", "19601", "484"), ("Scranton", "18503", "570"), ("Harrisburg", "17101", "717")]
-            FL_CITIES = [("Miami", "33101", "305"), ("Orlando", "32801", "407"), ("Tampa", "33602", "813"), ("Jacksonville", "32099", "904"), ("Fort Lauderdale", "33301", "954"), ("Tallahassee", "32301", "850")]
-            
-            loc_lower = loc_str.lower()
-            if "pa" in loc_lower or "pennsylvania" in loc_lower:
-                city_pool = PA_CITIES
-                state_abbr = "PA"
-            elif "fl" in loc_lower or "florida" in loc_lower:
-                city_pool = FL_CITIES
-                state_abbr = "FL"
-            else:
-                city_pool = CA_CITIES
-                state_abbr = "CA" if ("ca" in loc_lower or "california" in loc_lower) else loc_str[:2].upper()
+            from app.utils.geo_resolver import resolve_us_location
+            geo_info = resolve_us_location(loc_str)
+            state_abbr = geo_info["state_code"]
+            city_pool = geo_info["cities"]
 
             DISP_NAMES = ["Wellness Center", "Green Horizon Collective", "Apothecary", "Botanical Care", "Holistic Remedies", "Herbal Therapeutics", "Pinnacle Relief", "Organic Health Solutions", "Zenith Dispensary", "Pacific Sanctuary"]
             DOC_SPECS = ["Internal Medicine", "General Practice", "Family Medicine", "Preventive Healthcare", "Pain Management", "Neurology", "Physical Therapy & Rehabilitation", "Integrative Medicine", "Cardiovascular Care", "Geriatrics"]

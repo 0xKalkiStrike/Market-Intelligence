@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, Rocket, Search, Download } from "lucide-react";
+import { AlertTriangle, Rocket, Search, Download, MapPin } from "lucide-react";
 import { api } from "@/lib/api";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -10,6 +10,8 @@ import { PageLoading } from "@/components/ui/Spinner";
 import { Badge } from "@/components/ui/Badge";
 
 interface DashboardData {
+  available_states?: { code: string; name: string }[];
+  selected_state?: string | null;
   metrics: {
     summary: {
       total_entities: number;
@@ -73,12 +75,17 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [selectedState, setSelectedState] = useState<string>("ALL");
 
-  const loadData = async () => {
+  const loadData = async (filterState?: string) => {
     setLoading(true);
     setErrorMsg(null);
     try {
-      const res = await api.get<DashboardData>("/api/market-intelligence/dashboard");
+      const targetState = filterState !== undefined ? filterState : selectedState;
+      const url = targetState && targetState !== "ALL"
+        ? `/api/market-intelligence/dashboard?state=${encodeURIComponent(targetState)}`
+        : "/api/market-intelligence/dashboard";
+      const res = await api.get<DashboardData>(url);
       setData(res);
     } catch (err) {
       setErrorMsg((err as Error).message || "Failed to load Market Intelligence dashboard data.");
@@ -88,8 +95,8 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    loadData(selectedState);
+  }, [selectedState]);
 
 
   if (loading) return <PageLoading />;
@@ -105,7 +112,7 @@ export default function DashboardPage() {
           {errorMsg || "Database or authentication session needs initialization."}
         </p>
         <div className="flex items-center gap-3 pt-2">
-          <Button onClick={loadData} variant="gradient" size="md">
+          <Button onClick={() => loadData()} variant="gradient" size="md">
             Retry Loading
           </Button>
           <Link href="/collection">
@@ -168,6 +175,26 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            {/* Dynamic Active State Selector */}
+            <div className="flex items-center gap-2 bg-slate-50 dark:bg-[#10172a] border border-slate-200 dark:border-[#29354b] rounded-lg px-3 py-1.5 shadow-2xs">
+              <MapPin className="h-4 w-4 text-indigo-500 shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 leading-none">Filter State</span>
+                <select
+                  value={selectedState}
+                  onChange={(e) => setSelectedState(e.target.value)}
+                  className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-none cursor-pointer pr-1 mt-0.5"
+                >
+                  <option value="ALL" className="dark:bg-[#151e32]">All States (National)</option>
+                  {data?.available_states?.map((st) => (
+                    <option key={st.code} value={st.code} className="dark:bg-[#151e32]">
+                      {st.name} ({st.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <Link href="/collection">
               <Button variant="indigo" size="md">
                 <Rocket className="h-4 w-4" />

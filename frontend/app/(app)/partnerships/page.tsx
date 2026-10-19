@@ -52,6 +52,17 @@ export default function PartnershipsPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [availableStates, setAvailableStates] = useState<string[]>([]);
+
+  useEffect(() => {
+    api.get<{ states: { code: string; name: string }[] }>("/api/market-intelligence/active-states")
+      .then((res) => {
+        if (res?.states && res.states.length > 0) {
+          setAvailableStates(res.states.map((s) => s.code));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetchPartnerships();
@@ -65,10 +76,13 @@ export default function PartnershipsPage() {
       if (stateFilter !== "ALL") params.append("state", stateFilter);
       if (search.trim()) params.append("search", search.trim());
 
-      const res = await api.get<{ opportunities: PartnershipOpp[] }>(
+      const res = await api.get<{ opportunities: PartnershipOpp[]; available_states?: string[] }>(
         `/api/market-intelligence/partnerships?${params.toString()}`
       );
       setOpportunities(res.opportunities || []);
+      if (res.available_states && res.available_states.length > 0) {
+        setAvailableStates(res.available_states);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -200,10 +214,11 @@ export default function PartnershipsPage() {
               className="rounded-lg bg-slate-50 dark:bg-[#10172a] border border-slate-200 dark:border-[#29354b] px-3 py-2 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500 font-medium"
             >
               <option value="ALL">All States</option>
-              <option value="CA">California (CA)</option>
-              <option value="FL">Florida (FL)</option>
-              <option value="PA">Pennsylvania (PA)</option>
-              <option value="TX">Texas (TX)</option>
+              {availableStates.map((st) => (
+                <option key={st} value={st}>
+                  {st}
+                </option>
+              ))}
             </select>
           </div>
 

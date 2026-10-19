@@ -44,7 +44,17 @@ export default function EntityIntelligencePage() {
   const [stateFilter, setStateFilter] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
+  const [availableStates, setAvailableStates] = useState<{ code: string; name: string }[]>([]);
 
+  useEffect(() => {
+    api.get<{ states: { code: string; name: string }[] }>("/api/market-intelligence/active-states")
+      .then((res) => {
+        if (res?.states && res.states.length > 0) {
+          setAvailableStates(res.states.map((s) => ({ code: s.code, name: s.name })));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchEntities = async () => {
     setLoading(true);
@@ -56,9 +66,12 @@ export default function EntityIntelligencePage() {
       params.set("page", page.toString());
       params.set("limit", limit.toString());
 
-      const res = await api.get<{ items: EntityItem[]; total: number }>(`/api/market-intelligence/entities?${params.toString()}`);
+      const res = await api.get<{ items: EntityItem[]; total: number; available_states?: { code: string; name: string }[] }>(`/api/market-intelligence/entities?${params.toString()}`);
       setEntities(res.items || []);
       setTotal(res.total || 0);
+      if (res.available_states && res.available_states.length > 0) {
+        setAvailableStates(res.available_states);
+      }
     } catch {
       setEntities([]);
       setTotal(0);
@@ -143,13 +156,11 @@ export default function EntityIntelligencePage() {
               className="w-full rounded-xl border border-slate-200 dark:border-slate-800/60 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
             >
               <option value="">All Regions</option>
-              <option value="PA">Pennsylvania</option>
-              <option value="CA">California</option>
-              <option value="FL">Florida</option>
-              <option value="TX">Texas</option>
-              <option value="OH">Ohio</option>
-              <option value="NY">New York</option>
-              <option value="AZ">Arizona</option>
+              {availableStates.map((st) => (
+                <option key={st.code} value={st.code}>
+                  {st.name} ({st.code})
+                </option>
+              ))}
             </select>
           </div>
         </CardBody>

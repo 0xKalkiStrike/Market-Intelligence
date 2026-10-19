@@ -1,7 +1,9 @@
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
+from sqlalchemy import or_, distinct
 from app.database.models import PartnershipOpportunity
+from app.utils.geo_resolver import resolve_us_location
 
 class PartnershipService:
     """Manages Dispensary Partnership CRM Intelligence & Opportunity Scoring."""
@@ -18,20 +20,39 @@ class PartnershipService:
         "NOT_INTERESTED",
     ]
 
+    def __init__(self, db: Optional[Session] = None):
+        self.db = db
+
     def list_opportunities(
         self,
-        db: Session,
+        db: Optional[Session] = None,
         status: Optional[str] = None,
         state: Optional[str] = None,
         search: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
-        query = db.query(PartnershipOpportunity)
+        active_db = db or self.db
+        if not active_db:
+            raise ValueError("Database session required")
 
-        if status and status != "ALL":
-            query = query.filter(PartnershipOpportunity.partnership_status == status)
+        query = active_db.query(PartnershipOpportunity)
 
-        if state:
-            query = query.filter(PartnershipOpportunity.state.ilike(f"%{state}%"))
+        if status and isinstance(status, str) and status != "ALL":
+            # Normalize status check
+            query = query.filter(PartnershipOpportunity.partnership_status.ilike(f"%{status}%"))
+
+        if state and isinstance(state, str) and state != "ALL":
+            loc_info = resolve_us_location(state)
+            m_code = loc_info.get("state_code")
+            m_name = loc_info.get("state_name")
+            m_city = loc_info.get("city")
+            conds = [PartnershipOpportunity.state.ilike(f"%{state}%")]
+            if m_code:
+                conds.append(PartnershipOpportunity.state.ilike(f"%{m_code}%"))
+            if m_name:
+                conds.append(PartnershipOpportunity.state.ilike(f"%{m_name}%"))
+            if m_city:
+                conds.append(PartnershipOpportunity.city.ilike(f"%{m_city}%"))
+            query = query.filter(or_(*conds))
 
         if search:
             query = query.filter(
@@ -67,25 +88,39 @@ class PartnershipService:
             for o in opps
         ]
 
+    def get_available_states(self, db: Optional[Session] = None) -> List[str]:
+        active_db = db or self.db
+        if not active_db:
+            return []
+        rows = active_db.query(distinct(PartnershipOpportunity.state)).filter(PartnershipOpportunity.state.isnot(None)).all()
+        return sorted([r[0].strip().upper() for r in rows if r[0] and r[0].strip()])
+
     def update_partnership_status(
         self,
-        db: Session,
         opportunity_id: str,
         new_status: str,
         notes: Optional[str] = None,
+        db: Optional[Session] = None,
     ) -> PartnershipOpportunity:
-        opp = db.get(PartnershipOpportunity, opportunity_id)
+        active_db = db or self.db
+        if not active_db:
+            raise ValueError("Database session required")
+
+        opp = active_db.get(PartnershipOpportunity, opportunity_id)
         if not opp:
             raise ValueError("Partnership opportunity not found")
 
-        if new_status not in self.VALID_STATUSES:
-            raise ValueError(f"Invalid status: {new_status}")
+        norm_status = new_status.upper().replace(" ", "_")
+        if norm_status not in self.VALID_STATUSES and new_status.upper() not in self.VALID_STATUSES:
+            # Tolerant normalization
+            norm_status = new_status.upper()
 
-        opp.partnership_status = new_status
+        opp.partnership_status = norm_status
         opp.last_contacted_at = datetime.now(timezone.utc)
         if notes:
             opp.internal_notes = f"{opp.internal_notes or ''}\n[{datetime.now().strftime('%Y-%m-%d')}]: {notes}".strip()
 
-        db.commit()
-        db.refresh(opp)
+        active_db.commit()
+        active_db.refresh(opp)
         return opp
+

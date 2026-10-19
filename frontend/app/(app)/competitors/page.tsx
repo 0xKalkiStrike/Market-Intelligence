@@ -43,6 +43,7 @@ export default function CompetitorsPage() {
   const [search, setSearch] = useState("");
   const [stateFilter, setStateFilter] = useState("");
   const [businessTypeFilter, setBusinessTypeFilter] = useState("");
+  const [availableStates, setAvailableStates] = useState<{ code: string; name: string }[]>([]);
 
   const fetchCompetitors = async () => {
     setLoading(true);
@@ -52,11 +53,18 @@ export default function CompetitorsPage() {
       if (stateFilter) query.append("state", stateFilter);
       if (businessTypeFilter) query.append("business_type", businessTypeFilter);
 
-      const data = await apiFetch<{ competitors: Competitor[]; summary: CompetitorSummary }>(
+      const data = await apiFetch<{
+        competitors: Competitor[];
+        summary: CompetitorSummary;
+        available_states?: { code: string; name: string }[];
+      }>(
         `/api/market-intelligence/competitors?${query.toString()}`
       );
       setCompetitors(data.competitors || []);
       setSummary(data.summary || null);
+      if (data.available_states && data.available_states.length > 0) {
+        setAvailableStates(data.available_states);
+      }
     } catch (err) {
       console.error("Failed to load competitor landscape", err);
     } finally {
@@ -65,10 +73,22 @@ export default function CompetitorsPage() {
   };
 
   useEffect(() => {
+    apiFetch<{ states: { code: string; name: string; count: number }[] }>("/api/market-intelligence/active-states")
+      .then((res) => {
+        if (res?.states && res.states.length > 0) {
+          setAvailableStates(res.states.map((s) => ({ code: s.code, name: s.name })));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     fetchCompetitors();
   }, [search, stateFilter, businessTypeFilter]);
 
-  const uniqueStates = Array.from(new Set(competitors.map((c) => c.state).filter(Boolean)));
+  const uniqueStates = availableStates.length > 0
+    ? availableStates.map((s) => s.code)
+    : Array.from(new Set(competitors.map((c) => c.state).filter(Boolean)));
   const uniqueTypes = Array.from(new Set(competitors.map((c) => c.business_type).filter(Boolean)));
 
   const verifiedCount = competitors.filter(
@@ -191,11 +211,19 @@ export default function CompetitorsPage() {
             className="bg-slate-50 dark:bg-[#10172a] border border-slate-200 dark:border-[#29354b] rounded-lg px-3 py-2 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500 font-medium"
           >
             <option value="">All States</option>
-            {uniqueStates.map((st) => (
-              <option key={st} value={st || ""}>
-                {st}
-              </option>
-            ))}
+            {availableStates.length > 0 ? (
+              availableStates.map((st) => (
+                <option key={st.code} value={st.code}>
+                  {st.name} ({st.code})
+                </option>
+              ))
+            ) : (
+              uniqueStates.map((st) => (
+                <option key={st} value={st || ""}>
+                  {st}
+                </option>
+              ))
+            )}
           </select>
 
           <select

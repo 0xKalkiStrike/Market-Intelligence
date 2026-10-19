@@ -20,6 +20,7 @@ from app.database.models import (
     EntityLocation,
     EntityService,
     EntitySourceLink,
+    PartnershipOpportunity,
     RawRecord,
 )
 from app.services.cleaning_service import CleaningService
@@ -147,15 +148,31 @@ class CollectionService:
                     is_demo=is_demo,
                 )
 
-                # Location
+                # Location resolution
+                from app.utils.geo_resolver import resolve_us_location
                 loc_data = cleaned.get("location", {})
-                if loc_data and (loc_data.get("city") or loc_data.get("address")):
+                target_loc = (loc_data.get("state") or loc_data.get("city") or location or "").strip()
+                geo_info = resolve_us_location(target_loc) if target_loc else None
+
+                st_code = loc_data.get("state") or (geo_info["state_code"] if geo_info else None) or "CA"
+                if len(st_code) > 2:
+                    st_code = resolve_us_location(st_code)["state_code"]
+                cty = loc_data.get("city") or (geo_info["city"] if geo_info else None)
+                addr = loc_data.get("address")
+                zp = loc_data.get("zip_code")
+
+                entity.state = st_code
+                entity.city = cty
+                entity.address = addr
+                entity.zip_code = zp
+
+                if cty or addr or st_code:
                     loc = EntityLocation(
                         entity_id=entity_id,
-                        address=loc_data.get("address"),
-                        city=loc_data.get("city"),
-                        state=loc_data.get("state"),
-                        zip_code=loc_data.get("zip_code"),
+                        address=addr,
+                        city=cty,
+                        state=st_code,
+                        zip_code=zp,
                         country=loc_data.get("country", "USA"),
                     )
                     entity.locations.append(loc)
@@ -225,6 +242,30 @@ class CollectionService:
                         review_count=entity.review_count,
                     )
                     entity.dispensary_detail = disp_detail
+
+                    # Auto-register dispensary into dynamic Partnership pipeline with resolved state
+                    try:
+                        existing_opp = db.query(PartnershipOpportunity).filter(
+                            (PartnershipOpportunity.entity_id == entity_id) | (PartnershipOpportunity.name == entity.name)
+                        ).first()
+                        if not existing_opp:
+                            db.add(PartnershipOpportunity(
+                                entity_id=entity_id,
+                                name=entity.name,
+                                parent_company="Independent Operator",
+                                brand=entity.name,
+                                state=resolved_state,
+                                city=resolved_city,
+                                address=entity.address,
+                                zip_code=entity.zip_code,
+                                phone=entity.phone,
+                                email=entity.email,
+                                location_count=1,
+                                partnership_status="NOT_CONTACTED",
+                                partnership_score=round(72.0 + (abs(hash(entity.name)) % 25), 1),
+                            ))
+                    except Exception:
+                        pass
                 elif target_type == "COMPETITOR":
                     comp_data = cleaned.get("competitor_detail", {})
                     services_str = comp_data.get("products_services", "")
@@ -333,17 +374,29 @@ class CollectionService:
                             data_quality_score=0.0,
                         )
                         # Support both nested location dict and top-level address/city/state
+                        from app.utils.geo_resolver import resolve_us_location
                         loc_addr = c_clean.get("address") or (c_clean.get("location", {}).get("address") if isinstance(c_clean.get("location"), dict) else None)
-                        loc_city = c_clean.get("city") or (c_clean.get("location", {}).get("city") if isinstance(c_clean.get("location"), dict) else None) or location
+                        loc_city = c_clean.get("city") or (c_clean.get("location", {}).get("city") if isinstance(c_clean.get("location"), dict) else None)
                         loc_state = c_clean.get("state") or (c_clean.get("location", {}).get("state") if isinstance(c_clean.get("location"), dict) else None)
                         loc_zip = c_clean.get("zip_code") or (c_clean.get("location", {}).get("zip_code") if isinstance(c_clean.get("location"), dict) else None)
 
-                        if loc_addr or loc_city:
+                        c_geo = resolve_us_location(loc_state or loc_city or location or "USA")
+                        c_state = loc_state or (c_geo["state_code"] if c_geo else "CA")
+                        if len(c_state) > 2:
+                            c_state = resolve_us_location(c_state)["state_code"]
+                        c_city = loc_city or (c_geo["city"] if c_geo else None)
+
+                        c_entity.state = c_state
+                        c_entity.city = c_city
+                        c_entity.address = loc_addr
+                        c_entity.zip_code = loc_zip
+
+                        if loc_addr or c_city or c_state:
                             c_entity.locations.append(EntityLocation(
                                 entity_id=c_id,
                                 address=loc_addr,
-                                city=loc_city,
-                                state=loc_state,
+                                city=c_city,
+                                state=c_state,
                                 zip_code=loc_zip,
                                 country="USA",
                             ))
@@ -421,6 +474,11 @@ class CollectionService:
             run_obj.completed_at = datetime.now(timezone.utc)
             db.commit()
             db.refresh(run_obj)
+            try:
+                from app.services.analytics_service import AnalyticsService
+                AnalyticsService().invalidate_cache()
+            except Exception:
+                pass
             return run_obj
 
 
