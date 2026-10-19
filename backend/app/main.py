@@ -46,85 +46,82 @@ async def lifespan(app_instance: FastAPI):
     # Ensure database tables exist & apply automatic schema migration for new columns
     try:
         Base.metadata.create_all(bind=engine)
-        with engine.connect() as conn:
-            try:
-                conn.execute(text("PRAGMA journal_mode=WAL;"))
-                conn.execute(text("PRAGMA busy_timeout=60000;"))
-            except Exception:
-                pass
-
-            migrations = [
-                ("products", "url", "VARCHAR(500)"),
-                ("products", "image_url", "VARCHAR(500)"),
-                ("products", "specifications", "TEXT"),
-                ("entities", "estimated_revenue", "VARCHAR(100)"),
-                ("entities", "rating", "FLOAT"),
-                ("entities", "review_count", "INTEGER"),
-                ("entities", "reviews_source_url", "VARCHAR(500)"),
-                ("entities", "employee_count", "VARCHAR(100)"),
-                ("entities", "address", "VARCHAR(255)"),
-                ("entities", "city", "VARCHAR(100)"),
-                ("entities", "state", "VARCHAR(50)"),
-                ("entities", "zip_code", "VARCHAR(20)"),
-                ("entities", "country", "VARCHAR(50) DEFAULT 'USA'"),
-                ("entities", "latitude", "FLOAT"),
-                ("entities", "longitude", "FLOAT"),
-                ("entities", "phone", "VARCHAR(50)"),
-                ("entities", "email", "VARCHAR(255)"),
-                ("entities", "website", "VARCHAR(500)"),
-                ("entities", "social_links", "TEXT"),
-                ("entities", "source_name", "VARCHAR(100)"),
-                ("entities", "source_url", "VARCHAR(500)"),
-                ("entities", "title", "VARCHAR(100)"),
-                ("entities", "specialty", "VARCHAR(150)"),
-                ("entities", "organization", "VARCHAR(255)"),
-                ("entities", "clinic_name", "VARCHAR(255)"),
-                ("entities", "license_number", "VARCHAR(100)"),
-                ("entities", "services", "TEXT"),
-                ("entities", "business_type", "VARCHAR(100)"),
-                ("entities", "operating_hours", "VARCHAR(255)"),
-                ("entities", "license_info", "VARCHAR(255)"),
-                ("entities", "products_offered", "TEXT"),
-                ("entities", "locations_summary", "VARCHAR(255)"),
-                ("entities", "pricing_info", "TEXT"),
-                ("entities", "business_description", "TEXT"),
-                ("entities", "products_services", "TEXT"),
-                ("entity_contacts", "social_links", "TEXT"),
-                ("doctor_details", "estimated_revenue", "VARCHAR(100)"),
-                ("doctor_details", "rating", "FLOAT"),
-                ("doctor_details", "review_count", "INTEGER"),
-                ("doctor_details", "reviews_source_url", "VARCHAR(500)"),
-                ("dispensary_details", "estimated_revenue", "VARCHAR(100)"),
-                ("dispensary_details", "rating", "FLOAT"),
-                ("dispensary_details", "review_count", "INTEGER"),
-                ("dispensary_details", "reviews_source_url", "VARCHAR(500)"),
-                ("competitor_details", "estimated_revenue", "VARCHAR(100)"),
-                ("competitor_details", "employee_count", "VARCHAR(100)"),
-                ("competitor_details", "rating", "FLOAT"),
-                ("competitor_details", "review_count", "INTEGER"),
-                ("competitor_details", "reviews_source_url", "VARCHAR(500)"),
-                ("watchlists", "sharing_scope", "VARCHAR(50) DEFAULT 'PERSONAL'"),
-                ("watchlists", "team_name", "VARCHAR(100)"),
-                ("integration_connector_statuses", "sync_frequency", "VARCHAR(50) DEFAULT 'HOURLY'"),
-                ("integration_connector_statuses", "supported_entities", "VARCHAR(255) DEFAULT 'DOCTOR,DISPENSARY,COMPETITOR'"),
-                ("integration_connector_statuses", "is_enabled", "BOOLEAN DEFAULT 1"),
-                ("integration_connector_statuses", "last_sync_checkpoint", "VARCHAR(255)"),
-                ("projects", "organization_id", "VARCHAR(36)"),
-                ("research_projects", "organization_id", "VARCHAR(36)"),
-            ]
-            for tbl, col, col_type in migrations:
+        if "sqlite" in str(engine.url):
+            with engine.connect() as conn:
                 try:
-                    if "sqlite" in settings.database_url:
+                    conn.execute(text("PRAGMA journal_mode=WAL;"))
+                    conn.execute(text("PRAGMA busy_timeout=60000;"))
+                except Exception:
+                    pass
+
+                migrations = [
+                    ("products", "url", "VARCHAR(500)"),
+                    ("products", "image_url", "VARCHAR(500)"),
+                    ("products", "specifications", "TEXT"),
+                    ("entities", "estimated_revenue", "VARCHAR(100)"),
+                    ("entities", "rating", "FLOAT"),
+                    ("entities", "review_count", "INTEGER"),
+                    ("entities", "reviews_source_url", "VARCHAR(500)"),
+                    ("entities", "employee_count", "VARCHAR(100)"),
+                    ("entities", "address", "VARCHAR(255)"),
+                    ("entities", "city", "VARCHAR(100)"),
+                    ("entities", "state", "VARCHAR(50)"),
+                    ("entities", "zip_code", "VARCHAR(20)"),
+                    ("entities", "country", "VARCHAR(50) DEFAULT 'USA'"),
+                    ("entities", "latitude", "FLOAT"),
+                    ("entities", "longitude", "FLOAT"),
+                    ("entities", "phone", "VARCHAR(50)"),
+                    ("entities", "email", "VARCHAR(255)"),
+                    ("entities", "website", "VARCHAR(500)"),
+                    ("entities", "social_links", "TEXT"),
+                    ("entities", "source_name", "VARCHAR(100)"),
+                    ("entities", "source_url", "VARCHAR(500)"),
+                    ("entities", "title", "VARCHAR(100)"),
+                    ("entities", "specialty", "VARCHAR(150)"),
+                    ("entities", "organization", "VARCHAR(255)"),
+                    ("entities", "clinic_name", "VARCHAR(255)"),
+                    ("entities", "license_number", "VARCHAR(100)"),
+                    ("entities", "services", "TEXT"),
+                    ("entities", "business_type", "VARCHAR(100)"),
+                    ("entities", "operating_hours", "VARCHAR(255)"),
+                    ("entities", "license_info", "VARCHAR(255)"),
+                    ("entities", "products_offered", "TEXT"),
+                    ("entities", "locations_summary", "VARCHAR(255)"),
+                    ("entities", "pricing_info", "TEXT"),
+                    ("entities", "business_description", "TEXT"),
+                    ("entities", "products_services", "TEXT"),
+                    ("entity_contacts", "social_links", "TEXT"),
+                    ("doctor_details", "estimated_revenue", "VARCHAR(100)"),
+                    ("doctor_details", "rating", "FLOAT"),
+                    ("doctor_details", "review_count", "INTEGER"),
+                    ("doctor_details", "reviews_source_url", "VARCHAR(500)"),
+                    ("dispensary_details", "estimated_revenue", "VARCHAR(100)"),
+                    ("dispensary_details", "rating", "FLOAT"),
+                    ("dispensary_details", "review_count", "INTEGER"),
+                    ("dispensary_details", "reviews_source_url", "VARCHAR(500)"),
+                    ("competitor_details", "estimated_revenue", "VARCHAR(100)"),
+                    ("competitor_details", "employee_count", "VARCHAR(100)"),
+                    ("competitor_details", "rating", "FLOAT"),
+                    ("competitor_details", "review_count", "INTEGER"),
+                    ("competitor_details", "reviews_source_url", "VARCHAR(500)"),
+                    ("watchlists", "sharing_scope", "VARCHAR(50) DEFAULT 'PERSONAL'"),
+                    ("watchlists", "team_name", "VARCHAR(100)"),
+                    ("integration_connector_statuses", "sync_frequency", "VARCHAR(50) DEFAULT 'HOURLY'"),
+                    ("integration_connector_statuses", "supported_entities", "VARCHAR(255) DEFAULT 'DOCTOR,DISPENSARY,COMPETITOR'"),
+                    ("integration_connector_statuses", "is_enabled", "BOOLEAN DEFAULT 1"),
+                    ("integration_connector_statuses", "last_sync_checkpoint", "VARCHAR(255)"),
+                    ("projects", "organization_id", "VARCHAR(36)"),
+                    ("research_projects", "organization_id", "VARCHAR(36)"),
+                ]
+                for tbl, col, col_type in migrations:
+                    try:
                         res = conn.execute(text(f"PRAGMA table_info({tbl});")).fetchall()
                         existing_cols = [r[1] for r in res]
                         if col not in existing_cols:
                             conn.execute(text(f"ALTER TABLE {tbl} ADD COLUMN {col} {col_type};"))
                             conn.commit()
-                    else:
-                        conn.execute(text(f'ALTER TABLE "{tbl}" ADD COLUMN IF NOT EXISTS "{col}" {col_type};'))
-                        conn.commit()
-                except Exception:
-                    pass
+                    except Exception:
+                        pass
     except Exception as e:
         print("Database startup schema migration note:", e)
 
