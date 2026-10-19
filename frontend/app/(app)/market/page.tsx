@@ -109,12 +109,12 @@ export default function MarketExplorerPage() {
   return (
     <div className="flex flex-col gap-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 dark:border-slate-800/60 pb-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200/80 dark:border-[#29354b] pb-5">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-indigo-100 dark:bg-indigo-900/50 px-3 py-0.5 text-xs font-bold text-indigo-700 dark:text-indigo-300 mb-1">
+          <div className="inline-flex items-center gap-1.5 rounded-md bg-indigo-500/10 px-2 py-0.5 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 mb-1">
             PUBLIC MARKET EXPLORER
           </div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-slate-200 tracking-tight sm:text-3xl">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight sm:text-3xl">
             Market Intelligence Explorer
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -137,23 +137,23 @@ export default function MarketExplorerPage() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5 flex-1">
             {/* Search */}
             <div className="sm:col-span-2 lg:col-span-1">
-              <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">Search Entity</label>
+              <label className="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Search Entity</label>
               <Input
                 placeholder="Name, Phone, City, Website..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && fetchEntities()}
-                className="text-xs"
+                className="text-xs rounded-lg border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#18233a]"
               />
             </div>
 
             {/* Entity Type */}
             <div>
-              <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">Entity Type</label>
+              <label className="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Entity Type</label>
               <select
                 value={entityType}
                 onChange={(e) => setEntityType(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-800/60 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                className="w-full rounded-lg border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#18233a] px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
               >
                 <option value="ALL">All Entity Types</option>
                 <option value="DOCTOR">Doctor / Physician</option>
@@ -167,11 +167,11 @@ export default function MarketExplorerPage() {
 
             {/* State */}
             <div>
-              <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">State / Geography</label>
+              <label className="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">State / Geography</label>
               <select
                 value={stateFilter}
                 onChange={(e) => setStateFilter(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-800/60 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                className="w-full rounded-lg border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#18233a] px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
               >
                 <option value="">All States</option>
                 <option value="CA">California (CA)</option>
@@ -184,11 +184,11 @@ export default function MarketExplorerPage() {
 
             {/* Verification Status */}
             <div>
-              <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">Verification</label>
+              <label className="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Verification</label>
               <select
                 value={verificationStatus}
                 onChange={(e) => setVerificationStatus(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-800/60 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                className="w-full rounded-lg border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#18233a] px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
               >
                 <option value="ALL">All Verification Statuses</option>
                 <option value="VERIFIED">Verified Only</option>
@@ -209,9 +209,9 @@ export default function MarketExplorerPage() {
 
       {/* Main Table */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 dark:border-slate-800/60 py-3.5">
+        <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 dark:border-[#29354b] py-3.5">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-900 dark:text-slate-200 text-sm">Discovered Market Entities</span>
+            <span className="font-semibold text-slate-900 dark:text-slate-200 text-xs uppercase tracking-wider">Discovered Market Entities</span>
             <Badge tone="indigo">{total} Records</Badge>
           </div>
         </CardHeader>
@@ -220,17 +220,17 @@ export default function MarketExplorerPage() {
             <PageLoading />
           ) : entities.length === 0 ? (
             <div className="py-16 text-center text-slate-500 dark:text-slate-400">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 text-2xl mx-auto mb-3">
-                <Search className="h-6 w-6" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 dark:bg-[#18233a] text-indigo-500 text-2xl mx-auto mb-3 border border-slate-200/80 dark:border-[#29354b]">
+                <Search className="h-5 w-5" />
               </div>
-              <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-200">No Market Entities Found</h3>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-200">No Market Entities Found</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1">
                 No surface-web market entities match your selected criteria. Trigger a Data Collection run to gather public records!
               </p>
             </div>
           ) : (
             <table className="w-full text-left text-xs text-slate-600 dark:text-slate-400">
-              <thead className="border-b border-slate-200 dark:border-slate-800/60 bg-slate-50/80 dark:bg-slate-900/60 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <thead className="border-b border-slate-200 dark:border-[#29354b] bg-slate-50/80 dark:bg-[#18233a] text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 <tr>
                   <th className="px-4 py-3">Entity Name</th>
                   <th className="px-4 py-3">Category</th>
@@ -242,16 +242,16 @@ export default function MarketExplorerPage() {
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-slate-100 dark:divide-[#29354b]">
                 {entities.map((e) => (
-                  <tr key={e.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/60 transition-colors">
-                    <td className="px-4 py-3 font-bold text-slate-900 dark:text-slate-200">
-                      <button onClick={() => handleOpenDetail(e.id)} className="text-indigo-600 hover:underline text-left">
+                  <tr key={e.id} className="hover:bg-slate-50/80 dark:hover:bg-[#1c2740]/60 transition-colors">
+                    <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-200">
+                      <button onClick={() => handleOpenDetail(e.id)} className="text-indigo-600 dark:text-indigo-400 hover:underline text-left">
                         {e.name}
                       </button>
                     </td>
                     <td className="px-4 py-3">
-                      <Badge tone={e.entity_type === "DOCTOR" ? "info" : e.entity_type === "DISPENSARY" ? "success" : e.entity_type === "COMPETITOR" ? "warning" : "neutral"}>
+                      <Badge tone={e.entity_type === "DOCTOR" ? "indigo" : e.entity_type === "DISPENSARY" ? "cyan" : e.entity_type === "COMPETITOR" ? "warning" : "neutral"}>
                         {e.entity_type}
                       </Badge>
                     </td>
@@ -260,7 +260,7 @@ export default function MarketExplorerPage() {
                     </td>
                     <td className="px-4 py-3 font-mono text-slate-600 dark:text-slate-400">{e.phone || "—"}</td>
                     <td className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400">{e.source_name}</td>
-                    <td className="px-4 py-3 font-bold text-slate-800 dark:text-slate-300">{e.data_quality_score}%</td>
+                    <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-200 tabular-nums">{e.data_quality_score}%</td>
                     <td className="px-4 py-3">
                       <Badge tone={e.verification_status === "VERIFIED" ? "success" : e.verification_status === "NEEDS_REVIEW" ? "warning" : "neutral"}>
                         {e.verification_status}
@@ -273,7 +273,7 @@ export default function MarketExplorerPage() {
                         </Button>
                         <Link
                           href={`/entities/${e.id}`}
-                          className="inline-flex items-center gap-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white px-2.5 py-1 font-bold transition-all text-[11px] border border-indigo-500/30"
+                          className="inline-flex items-center gap-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500 hover:text-indigo-400 px-2 py-1 font-semibold transition-all text-[11px] border border-indigo-500/20"
                         >
                           Dossier ↗
                         </Link>

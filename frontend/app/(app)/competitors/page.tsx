@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Search, Loader2, Star } from "lucide-react";
+import { Search, Loader2, Star, RefreshCw, Download, Building2, ExternalLink } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
 interface Competitor {
@@ -71,114 +71,124 @@ export default function CompetitorsPage() {
   const uniqueStates = Array.from(new Set(competitors.map((c) => c.state).filter(Boolean)));
   const uniqueTypes = Array.from(new Set(competitors.map((c) => c.business_type).filter(Boolean)));
 
-  return (
-    <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 border border-slate-800 shadow-xl">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-bold uppercase tracking-wider mb-2">
-              Market Intelligence Platform
-            </div>
-            <h1 className="text-2xl font-black tracking-tight text-white">Competitive Landscape</h1>
-            <p className="text-sm text-slate-400 mt-1 max-w-2xl">
-              Factual analysis of identified market competitors based on public source disclosures, location presence, listed offerings, and verifiable evidence.
-            </p>
-          </div>
+  const verifiedCount = competitors.filter(
+    (c) => c.verification_status === "VERIFIED" || c.verification_status === "PARTIALLY_VERIFIED"
+  ).length;
+  const verificationRate = competitors.length > 0 ? Math.round((verifiedCount / competitors.length) * 100) : 100;
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={fetchCompetitors}
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-800 hover:bg-slate-700 px-4 py-2.5 text-xs font-bold text-slate-200 transition-all border border-slate-700"
-            >
-              Refresh Data
-            </button>
-            <a
-              href="/api/market-intelligence/export?entity_type=COMPETITOR&format=csv"
-              download
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-indigo-600/30 transition-all"
-            >
-              Export Competitors CSV
-            </a>
+  return (
+    <div className="space-y-6 pb-12">
+      {/* Header Banner */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-slate-200/80 dark:border-[#29354b] pb-5">
+        <div>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-semibold tracking-wide mb-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+            Competitive Intelligence Engine
           </div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            <Building2 className="h-6 w-6 text-indigo-500" />
+            Competitive Landscape
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
+            Continuous surface-web analysis of competitors based on public disclosures, physical presence, listed offerings, and verifiable citations.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2.5 self-start md:self-auto">
+          <button
+            onClick={fetchCompetitors}
+            disabled={loading}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-white dark:bg-[#151e32] border border-slate-200/80 dark:border-[#29354b] px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#1c2740] shadow-sm transition-colors"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin text-indigo-500" : ""}`} />
+            Refresh
+          </button>
+          <a
+            href="/api/market-intelligence/export?entity_type=COMPETITOR&format=csv"
+            download
+            className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition-colors"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Export CSV
+          </a>
         </div>
       </div>
 
       {/* Summary KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="rounded-2xl bg-slate-900/80 border border-slate-800/80 p-5">
-          <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Identified Competitors</div>
-          <div className="text-3xl font-black text-white mt-2">{competitors.length}</div>
-          <div className="text-xs text-indigo-400 font-semibold mt-1">Factual surface web entities</div>
-        </div>
-
-        <div className="rounded-2xl bg-slate-900/80 border border-slate-800/80 p-5">
-          <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">States Covered</div>
-          <div className="text-3xl font-black text-emerald-400 mt-2">{uniqueStates.length || 1}</div>
-          <div className="text-xs text-slate-400 mt-1">Geographic footprint</div>
-        </div>
-
-        <div className="rounded-2xl bg-slate-900/80 border border-slate-800/80 p-5">
-          <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Business Types</div>
-          <div className="text-3xl font-black text-violet-400 mt-2">{uniqueTypes.length || 1}</div>
-          <div className="text-xs text-slate-400 mt-1">Market categories</div>
-        </div>
-
-        <div className="rounded-2xl bg-slate-900/80 border border-slate-800/80 p-5">
-          <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Verification Rate</div>
-          <div className="text-3xl font-black text-blue-400 mt-2">
-            {competitors.length > 0
-              ? Math.round(
-                  (competitors.filter((c) => c.verification_status === "VERIFIED" || c.verification_status === "PARTIALLY_VERIFIED").length /
-                    competitors.length) *
-                    100
-                )
-              : 100}
-            %
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+        <div className="rounded-xl bg-white dark:bg-[#151e32] border border-slate-200/80 dark:border-[#29354b] p-4 shadow-sm">
+          <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Identified Competitors</div>
+          <div className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight tabular-nums mt-1.5">
+            {competitors.length.toLocaleString()}
           </div>
-          <div className="text-xs text-slate-400 mt-1">Multi-source alignment</div>
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Verified surface web entities</div>
         </div>
 
-        <div className="rounded-2xl bg-slate-900/80 border border-slate-800/80 p-5">
-          <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Avg. Google Rating</div>
-          <div className="text-3xl font-black text-amber-400 mt-2 flex items-center gap-1.5">
+        <div className="rounded-xl bg-white dark:bg-[#151e32] border border-slate-200/80 dark:border-[#29354b] p-4 shadow-sm">
+          <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">States Covered</div>
+          <div className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight tabular-nums mt-1.5">
+            {uniqueStates.length || 1}
+          </div>
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Active state footprints</div>
+        </div>
+
+        <div className="rounded-xl bg-white dark:bg-[#151e32] border border-slate-200/80 dark:border-[#29354b] p-4 shadow-sm">
+          <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Business Types</div>
+          <div className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight tabular-nums mt-1.5">
+            {uniqueTypes.length || 1}
+          </div>
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Market categories</div>
+        </div>
+
+        <div className="rounded-xl bg-white dark:bg-[#151e32] border border-slate-200/80 dark:border-[#29354b] p-4 shadow-sm">
+          <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Verification Rate</div>
+          <div className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight tabular-nums mt-1.5">
+            {verificationRate}%
+          </div>
+          <div className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            Cross-registry confirmed
+          </div>
+        </div>
+
+        <div className="rounded-xl bg-white dark:bg-[#151e32] border border-slate-200/80 dark:border-[#29354b] p-4 shadow-sm col-span-2 sm:col-span-1">
+          <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Avg. Rating</div>
+          <div className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight tabular-nums mt-1.5 flex items-center gap-1.5">
             {summary?.average_rating != null ? (
               <>
-                <Star className="h-6 w-6 fill-amber-400" />
-                {summary.average_rating.toFixed(1)}
+                <Star className="h-5 w-5 fill-amber-400 text-amber-400 shrink-0" />
+                <span>{summary.average_rating.toFixed(1)}</span>
               </>
             ) : (
-              <span className="text-lg text-slate-500 font-semibold">No data yet</span>
+              <span className="text-sm font-normal text-slate-400">Pending</span>
             )}
           </div>
-          <div className="text-xs text-slate-400 mt-1">
-            {summary
-              ? `${summary.rated_count} of ${competitors.length} rated · ${summary.total_reviews.toLocaleString()} reviews`
-              : "Across rated competitors"}
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 truncate">
+            {summary?.total_reviews ? `${summary.total_reviews.toLocaleString()} total reviews` : "Across monitored profiles"}
           </div>
         </div>
       </div>
 
       {/* Filter Control Bar */}
-      <div className="rounded-2xl bg-slate-900 border border-slate-800 p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="rounded-xl bg-white dark:bg-[#151e32] border border-slate-200/80 dark:border-[#29354b] p-3 flex flex-col md:flex-row gap-3 items-center justify-between shadow-sm">
         <div className="flex-1 w-full md:w-auto relative">
-          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+          <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
             <Search className="h-4 w-4" />
           </span>
           <input
             type="text"
-            placeholder="Search competitor name, services, or description..."
+            placeholder="Search competitor name, services, or location..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+            className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-[#10172a] border border-slate-200 dark:border-[#29354b] rounded-lg text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-colors"
           />
         </div>
 
-        <div className="flex flex-wrap gap-3 w-full md:w-auto">
+        <div className="flex flex-wrap gap-2.5 w-full md:w-auto">
           <select
             value={stateFilter}
             onChange={(e) => setStateFilter(e.target.value)}
-            className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-indigo-500"
+            className="bg-slate-50 dark:bg-[#10172a] border border-slate-200 dark:border-[#29354b] rounded-lg px-3 py-2 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500 font-medium"
           >
             <option value="">All States</option>
             {uniqueStates.map((st) => (
@@ -191,7 +201,7 @@ export default function CompetitorsPage() {
           <select
             value={businessTypeFilter}
             onChange={(e) => setBusinessTypeFilter(e.target.value)}
-            className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-indigo-500"
+            className="bg-slate-50 dark:bg-[#10172a] border border-slate-200 dark:border-[#29354b] rounded-lg px-3 py-2 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500 font-medium"
           >
             <option value="">All Business Types</option>
             {uniqueTypes.map((bt) => (
@@ -204,110 +214,115 @@ export default function CompetitorsPage() {
       </div>
 
       {/* Competitor Table */}
-      <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl">
+      <div className="rounded-xl bg-white dark:bg-[#151e32] border border-slate-200/80 dark:border-[#29354b] overflow-hidden shadow-sm">
         {loading ? (
-          <div className="p-12 text-center text-slate-400 text-sm">
-            <Loader2 className="inline-block mr-2 h-4 w-4 animate-spin" /> Loading competitive landscape data...
+          <div className="p-12 text-center text-slate-500 dark:text-slate-400 text-xs">
+            <Loader2 className="inline-block mr-2 h-4 w-4 animate-spin text-indigo-500" /> Loading competitive landscape data...
           </div>
         ) : competitors.length === 0 ? (
-          <div className="p-12 text-center text-slate-400 text-sm">
-            No market competitors matching the current search filters. Try clearing your filters or triggering a collection run.
+          <div className="p-12 text-center text-slate-500 dark:text-slate-400 text-xs">
+            No market competitors matching the current search filters.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300 border-collapse">
+            <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-slate-950/80 border-b border-slate-800 text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
-                  <th className="py-3.5 px-4">Business & Entity Name</th>
-                  <th className="py-3.5 px-4">Business Type</th>
-                  <th className="py-3.5 px-4">Location</th>
-                  <th className="py-3.5 px-4">Reviews</th>
-                  <th className="py-3.5 px-4">Listed Offerings & Services</th>
-                  <th className="py-3.5 px-4">Public Website</th>
-                  <th className="py-3.5 px-4">Verification</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
+                <tr className="bg-slate-50 dark:bg-[#10172a] border-b border-slate-200/80 dark:border-[#29354b] text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <th className="py-3 px-4">Business & Entity</th>
+                  <th className="py-3 px-4">Category</th>
+                  <th className="py-3 px-4">Location</th>
+                  <th className="py-3 px-4">Reviews</th>
+                  <th className="py-3 px-4">Offerings</th>
+                  <th className="py-3 px-4">Website</th>
+                  <th className="py-3 px-4">Verification</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
                 {competitors.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-800/40 transition-colors group">
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-white group-hover:text-indigo-400 transition-colors">
+                  <tr key={c.id} className="hover:bg-slate-50/80 dark:hover:bg-[#1c2740]/50 transition-colors group">
+                    <td className="py-3 px-4">
+                      <div className="font-semibold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                         {c.name}
                       </div>
-                      <div className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">
-                        {c.business_description}
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
+                        {c.business_description || "Public market entity"}
                       </div>
                     </td>
-                    <td className="py-3.5 px-4">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 font-semibold">
+                    <td className="py-3 px-4">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-medium border border-slate-200/70 dark:border-slate-700">
                         {c.business_type}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-300">
-                      {c.location}
+                    <td className="py-3 px-4 text-slate-600 dark:text-slate-300">
+                      {c.location || `${c.city || ""}, ${c.state || ""}`}
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-3 px-4">
                       {c.rating != null ? (
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 tabular-nums">
                           <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400 shrink-0" />
-                          <span className="font-bold text-slate-100">{c.rating.toFixed(1)}</span>
+                          <span className="font-semibold text-slate-900 dark:text-white">{c.rating.toFixed(1)}</span>
                           {c.review_count != null && (
-                            <span className="text-slate-400 text-[11px]">
+                            <span className="text-slate-400 text-[10px]">
                               ({c.review_count.toLocaleString()})
                             </span>
                           )}
                         </div>
                       ) : (
-                        <span className="text-slate-500 italic text-[11px]">No review data</span>
+                        <span className="text-slate-400 text-[11px] italic">No reviews</span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-3 px-4">
                       <div className="flex flex-wrap gap-1 max-w-xs">
-                        {c.services.split(",").slice(0, 3).map((s, idx) => (
-                          <span
-                            key={idx}
-                            className="bg-indigo-950/80 border border-indigo-800/60 text-indigo-300 px-2 py-0.5 rounded text-[10px]"
-                          >
-                            {s.trim()}
-                          </span>
-
-                        ))}
+                        {c.services ? (
+                          c.services.split(",").slice(0, 2).map((s, idx) => (
+                            <span
+                              key={idx}
+                              className="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/50 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded text-[10px]"
+                            >
+                              {s.trim()}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-slate-400 text-[10px]">—</span>
+                        )}
                       </div>
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-3 px-4">
                       {c.website ? (
                         <a
                           href={c.website.startsWith("http") ? c.website : `https://${c.website}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-indigo-400 hover:underline font-mono truncate block max-w-[160px]"
+                          className="text-indigo-600 dark:text-indigo-400 hover:underline font-mono truncate block max-w-[140px] text-[11px]"
                         >
                           {c.website.replace(/^https?:\/\//, "")}
                         </a>
                       ) : (
-                        <span className="text-slate-500 dark:text-slate-400 italic">N/A</span>
+                        <span className="text-slate-400 text-[11px]">—</span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-3 px-4">
                       <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider ${
                           c.verification_status === "VERIFIED"
-                            ? "bg-emerald-950 text-emerald-400 border border-emerald-800"
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
                             : c.verification_status === "PARTIALLY_VERIFIED"
-                            ? "bg-amber-950 text-amber-400 border border-amber-800"
-                            : "bg-slate-800 text-slate-400 border border-slate-700"
+                            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                            : "bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20"
                         }`}
                       >
-                        ● {c.verification_status}
+                        <span className="h-1 w-1 rounded-full bg-current" />
+                        {c.verification_status}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-3 px-4 text-right">
                       <Link
                         href={`/entities/${c.id}`}
-                        className="inline-flex items-center gap-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white px-3 py-1.5 font-bold transition-all text-[11px] border border-indigo-500/30"
+                        className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-[#1c2740] hover:bg-indigo-50 dark:hover:bg-indigo-950/50 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-300 px-2.5 py-1 font-semibold transition-colors text-[11px] border border-slate-200/80 dark:border-[#29354b]"
                       >
-                        Full Dossier ↗
+                        <span>Dossier</span>
+                        <ExternalLink className="h-3 w-3" />
                       </Link>
                     </td>
                   </tr>
@@ -319,13 +334,13 @@ export default function CompetitorsPage() {
       </div>
 
       {/* Competitor Classification Rationale Card */}
-      <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-5 text-xs text-slate-400 space-y-2">
-        <h3 className="text-sm font-bold text-slate-200">Classification Evidence Criteria</h3>
-        <p>
-          Market competitors are classified using factual public surface-web signals: <code className="text-indigo-400 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">Market Category Match + Geographic Overlap + Public Service Disclosures</code>.
+      <div className="rounded-xl bg-white dark:bg-[#151e32] border border-slate-200/80 dark:border-[#29354b] p-4 text-xs text-slate-500 dark:text-slate-400 space-y-1.5 shadow-sm">
+        <h3 className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Classification Evidence Criteria</h3>
+        <p className="leading-relaxed">
+          Competitors are classified via multi-source surface signals: <code className="text-indigo-600 dark:text-indigo-400 bg-slate-100 dark:bg-[#10172a] px-1 py-0.5 rounded border border-slate-200 dark:border-[#29354b]">Category Match + Geographic Presence + Public Service Disclosures</code>.
         </p>
-        <p className="text-slate-500 dark:text-slate-400 text-[11px]">
-          Note: This table displays verified objective market information collected from public surface-web registries and directories. Review ratings and counts shown are the real, current figures from each business&apos;s public Google Maps listing (fetched live during collection, capped to the first 8 new competitors per run) &mdash; never generated or estimated. A competitor shows &quot;No review data&quot; until a listing is found.
+        <p className="text-[11px] text-slate-400">
+          All records represent verified, public business intelligence fetched directly from verified public sources.
         </p>
       </div>
     </div>

@@ -115,37 +115,37 @@ export default function AiQueryPage() {
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
       {/* Page Header */}
-      <div className="border-b border-slate-800 pb-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="border-b border-slate-200/80 dark:border-[#29354b] pb-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-indigo-950/80 px-3 py-0.5 text-xs font-bold text-indigo-300 border border-indigo-800/50 mb-1.5">
-            <ShieldCheck className="h-3.5 w-3.5 text-indigo-400" /> EVIDENCE-GROUNDED RESEARCH COPILOT (PHASE 7)
+          <div className="inline-flex items-center gap-1.5 rounded-md bg-indigo-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 mb-1.5">
+            <ShieldCheck className="h-3.5 w-3.5 text-indigo-500" /> EVIDENCE-GROUNDED RESEARCH COPILOT
           </div>
-          <h1 className="text-2xl font-extrabold text-white flex items-center gap-2.5 sm:text-3xl">
-            <Sparkles className="h-7 w-7 text-indigo-400" /> AI Market Intelligence & Research Assistant
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5 sm:text-3xl">
+            <Sparkles className="h-6 w-6 text-indigo-500" /> AI Market Intelligence & Research Assistant
           </h1>
-          <p className="text-xs text-slate-400 mt-1 max-w-2xl">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
             Ask rigorous market intelligence questions. In Phase 7 mode, every answer enforces strict ontological separation between Facts, Calculations, Estimates, Hypotheses, and Recommendations, complete with structured database citations and data gap disclosures.
           </p>
         </div>
 
         {/* Engine Switcher */}
-        <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 p-1 rounded-xl self-start md:self-auto">
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#10172a] border border-slate-200/80 dark:border-[#29354b] p-1 rounded-lg self-start md:self-auto">
           <button
             onClick={() => setEngineMode("phase7")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
               engineMode === "phase7"
-                ? "bg-indigo-600 text-white shadow-md"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-[#4f46e5] text-white shadow-xs"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
             }`}
           >
             Phase 7 Grounded AI
           </button>
           <button
             onClick={() => setEngineMode("phase4")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
               engineMode === "phase4"
-                ? "bg-indigo-600 text-white shadow-md"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-[#4f46e5] text-white shadow-xs"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-200"
             }`}
           >
             Phase 4 Quick Copilot
@@ -154,15 +154,15 @@ export default function AiQueryPage() {
       </div>
 
       {errorMsg && (
-        <div className="p-4 rounded-xl bg-rose-950/60 border border-rose-800/80 text-rose-300 text-xs flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+        <div className="p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
 
       {/* Preset Research Questions */}
       <div className="space-y-2">
-        <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+        <h3 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           Executive Research Inquiries
         </h3>
         <div className="flex flex-wrap gap-2">
@@ -171,9 +171,9 @@ export default function AiQueryPage() {
               key={idx}
               onClick={() => handleSend(sq)}
               disabled={loading}
-              className="rounded-xl bg-slate-900 border border-slate-800 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-700 transition-colors text-left font-medium disabled:opacity-50"
+              className="rounded-lg bg-white dark:bg-[#151e32] border border-slate-200/80 dark:border-[#29354b] px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-[#384865] transition-colors text-left font-medium disabled:opacity-50 shadow-2xs cursor-pointer"
             >
-              💬 {sq}
+              {sq}
             </button>
           ))}
         </div>
@@ -184,7 +184,7 @@ export default function AiQueryPage() {
         <select
           value={targetState}
           onChange={(e) => setTargetState(e.target.value)}
-          className="sm:w-36 rounded-2xl bg-slate-900 border border-slate-700 px-3 py-3 text-xs text-white focus:outline-none focus:border-indigo-500 font-semibold"
+          className="sm:w-36 rounded-lg bg-white dark:bg-[#151e32] border border-slate-200/80 dark:border-[#29354b] px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 font-medium"
         >
           <option value="">All States</option>
           <option value="FL">Florida (FL)</option>
@@ -200,21 +200,21 @@ export default function AiQueryPage() {
             type="text"
             placeholder={
               engineMode === "phase7"
-                ? "Ask an evidence-backed market research question (e.g. Why did Florida's opportunity score change?)..."
+                ? "Ask an evidence-backed market research question..."
                 : "Ask a general market query..."
             }
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             disabled={loading}
-            className="w-full rounded-2xl bg-slate-900 border border-slate-700 pl-4 pr-12 py-3.5 text-xs text-white placeholder-slate-500 shadow-xl focus:border-indigo-500 focus:outline-none font-medium"
+            className="w-full rounded-lg bg-white dark:bg-[#151e32] border border-slate-200/80 dark:border-[#29354b] pl-3.5 pr-11 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 font-medium"
           />
           <button
             onClick={() => handleSend()}
             disabled={loading || !query.trim()}
-            className="absolute right-2.5 top-2.5 rounded-xl bg-indigo-600 p-2 text-white hover:bg-indigo-500 disabled:opacity-40 shadow-md transition-colors"
+            className="absolute right-1.5 top-1.5 rounded-md bg-[#4f46e5] p-1.5 text-white hover:bg-[#4338ca] disabled:opacity-40 transition-colors cursor-pointer"
           >
-            {loading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {loading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
           </button>
         </div>
       </div>
@@ -223,9 +223,9 @@ export default function AiQueryPage() {
       {engineMode === "phase7" && (
         <div className="space-y-6">
           {phase7History.length === 0 && !loading && (
-            <div className="rounded-2xl border border-dashed border-slate-800 p-10 text-center space-y-2">
-              <Bot className="h-8 w-8 text-indigo-400 mx-auto" />
-              <p className="text-xs font-semibold text-slate-300">Evidence-Grounded Assistant Ready</p>
+            <div className="rounded-xl border border-dashed border-slate-200 dark:border-[#29354b] p-10 text-center space-y-2 bg-slate-50/50 dark:bg-[#151e32]/40">
+              <Bot className="h-6 w-6 text-indigo-400 mx-auto" />
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">Evidence-Grounded Assistant Ready</p>
               <p className="text-[11px] text-slate-500 max-w-md mx-auto">
                 Submit an inquiry above or select a preset prompt. The engine performs live database aggregations, statistical checks, and generates auditable citations.
               </p>
@@ -233,24 +233,24 @@ export default function AiQueryPage() {
           )}
 
           {phase7History.map((item, idx) => (
-            <div key={idx} className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 space-y-5 shadow-xl">
+            <div key={idx} className="rounded-xl border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32] p-5 space-y-4 shadow-2xs">
               {/* Question & Intent Bar */}
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
-                <div className="flex items-center gap-2 text-xs font-bold text-indigo-300">
-                  <User className="h-4 w-4 text-indigo-400" />
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-[#29354b] pb-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-slate-900 dark:text-slate-100">
+                  <User className="h-3.5 w-3.5 text-indigo-400" />
                   <span>&ldquo;{item.query}&rdquo;</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span
-                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase border ${
+                    className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase border ${
                       item.status === "ANSWERED"
-                        ? "bg-emerald-950 text-emerald-300 border-emerald-800"
-                        : "bg-amber-950 text-amber-300 border-amber-800"
+                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                        : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
                     }`}
                   >
                     STATUS: {item.status}
                   </span>
-                  <span className="bg-slate-800 px-2 py-0.5 rounded text-[10px] font-mono text-slate-400 border border-slate-700">
+                  <span className="bg-slate-100 dark:bg-[#18233a] px-2 py-0.5 rounded text-[10px] font-mono text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#29354b]">
                     INTENT: {item.intent}
                   </span>
                   {item.analytical_run_id && (
@@ -263,25 +263,25 @@ export default function AiQueryPage() {
 
               {/* Narrative Synthesis */}
               <div className="space-y-1.5">
-                <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                <h4 className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Executive Research Synthesis
                 </h4>
-                <div className="text-xs text-slate-200 leading-relaxed whitespace-pre-line bg-slate-950/80 p-4 rounded-xl border border-slate-800/80">
+                <div className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-line bg-slate-50 dark:bg-[#18233a] p-4 rounded-lg border border-slate-200/80 dark:border-[#29354b]">
                   {item.narrative_synthesis}
                 </div>
               </div>
 
               {/* Five-Fold Ontological Breakdown */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 {/* 1. Verified Facts */}
-                <div className="rounded-xl border border-emerald-900/50 bg-emerald-950/20 p-3.5 space-y-2">
-                  <span className="text-[11px] font-extrabold text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Verified Observations & Facts ({item.facts.length})
+                <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 dark:bg-emerald-950/15 p-3.5 space-y-2">
+                  <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Verified Observations & Facts ({item.facts.length})
                   </span>
                   {item.facts.length === 0 ? (
                     <p className="text-[11px] text-slate-500 italic">No direct factual observations.</p>
                   ) : (
-                    <ul className="list-disc list-inside space-y-1 text-xs text-emerald-200/90 font-medium">
+                    <ul className="list-disc list-inside space-y-1 text-xs text-slate-700 dark:text-slate-300 font-medium">
                       {item.facts.map((f, fIdx) => (
                         <li key={fIdx}>{f}</li>
                       ))}
@@ -290,14 +290,14 @@ export default function AiQueryPage() {
                 </div>
 
                 {/* 2. Statistical Calculations */}
-                <div className="rounded-xl border border-cyan-900/50 bg-cyan-950/20 p-3.5 space-y-2">
-                  <span className="text-[11px] font-extrabold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <BarChart2 className="h-3.5 w-3.5" /> Quantitative Calculations ({item.calculations.length})
+                <div className="rounded-lg border border-sky-500/20 bg-sky-500/5 dark:bg-sky-950/15 p-3.5 space-y-2">
+                  <span className="text-[11px] font-semibold text-sky-700 dark:text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <BarChart2 className="h-3.5 w-3.5 text-sky-500" /> Quantitative Calculations ({item.calculations.length})
                   </span>
                   {item.calculations.length === 0 ? (
                     <p className="text-[11px] text-slate-500 italic">No quantitative calculations generated.</p>
                   ) : (
-                    <ul className="list-disc list-inside space-y-1 text-xs text-cyan-200/90 font-medium font-mono">
+                    <ul className="list-disc list-inside space-y-1 text-xs text-slate-700 dark:text-slate-300 font-medium font-mono">
                       {item.calculations.map((c, cIdx) => (
                         <li key={cIdx}>{c}</li>
                       ))}
@@ -306,14 +306,14 @@ export default function AiQueryPage() {
                 </div>
 
                 {/* 3. Estimates & Proxies */}
-                <div className="rounded-xl border border-amber-900/50 bg-amber-950/20 p-3.5 space-y-2">
-                  <span className="text-[11px] font-extrabold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <HelpCircle className="h-3.5 w-3.5" /> Modeled Estimates & Proxies ({item.estimates.length})
+                <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 dark:bg-amber-950/15 p-3.5 space-y-2">
+                  <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <HelpCircle className="h-3.5 w-3.5 text-amber-500" /> Modeled Estimates & Proxies ({item.estimates.length})
                   </span>
                   {item.estimates.length === 0 ? (
                     <p className="text-[11px] text-slate-500 italic">No synthetic estimates generated.</p>
                   ) : (
-                    <ul className="list-disc list-inside space-y-1 text-xs text-amber-200/90 font-medium">
+                    <ul className="list-disc list-inside space-y-1 text-xs text-slate-700 dark:text-slate-300 font-medium">
                       {item.estimates.map((e, eIdx) => (
                         <li key={eIdx}>{e}</li>
                       ))}
@@ -322,14 +322,14 @@ export default function AiQueryPage() {
                 </div>
 
                 {/* 4. Strategic Hypotheses */}
-                <div className="rounded-xl border border-purple-900/50 bg-purple-950/20 p-3.5 space-y-2">
-                  <span className="text-[11px] font-extrabold text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <Layers className="h-3.5 w-3.5" /> Hypotheses & Inferences ({item.hypotheses.length})
+                <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 dark:bg-indigo-950/15 p-3.5 space-y-2">
+                  <span className="text-[11px] font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Layers className="h-3.5 w-3.5 text-indigo-500" /> Hypotheses & Inferences ({item.hypotheses.length})
                   </span>
                   {item.hypotheses.length === 0 ? (
                     <p className="text-[11px] text-slate-500 italic">No untested hypotheses declared.</p>
                   ) : (
-                    <ul className="list-disc list-inside space-y-1 text-xs text-purple-200/90 font-medium">
+                    <ul className="list-disc list-inside space-y-1 text-xs text-slate-700 dark:text-slate-300 font-medium">
                       {item.hypotheses.map((h, hIdx) => (
                         <li key={hIdx}>{h}</li>
                       ))}
@@ -338,14 +338,14 @@ export default function AiQueryPage() {
                 </div>
 
                 {/* 5. Recommended Next Investigations */}
-                <div className="md:col-span-2 rounded-xl border border-indigo-900/50 bg-indigo-950/20 p-3.5 space-y-2">
-                  <span className="text-[11px] font-extrabold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <ArrowRight className="h-3.5 w-3.5" /> Recommended Investigations ({item.recommendations.length})
+                <div className="md:col-span-2 rounded-lg border border-slate-200/80 dark:border-[#29354b] bg-slate-50/50 dark:bg-[#18233a]/50 p-3.5 space-y-2">
+                  <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <ArrowRight className="h-3.5 w-3.5 text-indigo-400" /> Recommended Investigations ({item.recommendations.length})
                   </span>
                   {item.recommendations.length === 0 ? (
                     <p className="text-[11px] text-slate-500 italic">No further investigation recommended.</p>
                   ) : (
-                    <ul className="list-disc list-inside space-y-1 text-xs text-indigo-200 font-medium">
+                    <ul className="list-disc list-inside space-y-1 text-xs text-slate-600 dark:text-slate-300 font-medium">
                       {item.recommendations.map((r, rIdx) => (
                         <li key={rIdx}>{r}</li>
                       ))}
@@ -357,28 +357,28 @@ export default function AiQueryPage() {
               {/* Citations & Evidence Records */}
               {item.citations && item.citations.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <h4 className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                     <Database className="h-3.5 w-3.5 text-indigo-400" /> Audited Database Citations ({item.citations.length})
                   </h4>
-                  <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/80">
-                    <table className="w-full text-left text-xs text-slate-300">
-                      <thead className="bg-slate-900 uppercase text-[9px] font-bold text-slate-400 border-b border-slate-800">
+                  <div className="overflow-x-auto rounded-lg border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32]">
+                    <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+                      <thead className="bg-slate-50/80 dark:bg-[#18233a] uppercase text-[9px] font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200/80 dark:border-[#29354b]">
                         <tr>
-                          <th className="py-2 px-3">Source Table</th>
-                          <th className="py-2 px-3">Metric Name</th>
-                          <th className="py-2 px-3">Value</th>
-                          <th className="py-2 px-3">Observation Date</th>
-                          <th className="py-2 px-3">Excerpt / Context</th>
+                          <th className="py-2.5 px-3">Source Table</th>
+                          <th className="py-2.5 px-3">Metric Name</th>
+                          <th className="py-2.5 px-3">Value</th>
+                          <th className="py-2.5 px-3">Observation Date</th>
+                          <th className="py-2.5 px-3">Excerpt / Context</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/60 font-mono text-[11px]">
+                      <tbody className="divide-y divide-slate-100 dark:divide-[#29354b] font-mono text-[11px]">
                         {item.citations.map((c, cIdx) => (
-                          <tr key={cIdx} className="hover:bg-slate-900/40">
-                            <td className="py-2 px-3 text-indigo-300 font-bold">{c.source_table}</td>
-                            <td className="py-2 px-3 font-sans text-slate-200">{c.metric_name || "—"}</td>
-                            <td className="py-2 px-3 text-emerald-400 font-bold">{String(c.value ?? "—")}</td>
-                            <td className="py-2 px-3 text-slate-400">{c.observation_date ? new Date(c.observation_date).toLocaleDateString() : "Live Snapshot"}</td>
-                            <td className="py-2 px-3 font-sans text-slate-400 text-[10px] truncate max-w-xs">{c.excerpt || "Database record"}</td>
+                          <tr key={cIdx} className="hover:bg-slate-50 dark:hover:bg-[#1c2740]/60 transition-colors">
+                            <td className="py-2 px-3 text-indigo-600 dark:text-indigo-400 font-semibold">{c.source_table}</td>
+                            <td className="py-2 px-3 font-sans text-slate-700 dark:text-slate-200">{c.metric_name || "—"}</td>
+                            <td className="py-2 px-3 text-emerald-600 dark:text-emerald-400 font-semibold">{String(c.value ?? "—")}</td>
+                            <td className="py-2 px-3 text-slate-500 dark:text-slate-400">{c.observation_date ? new Date(c.observation_date).toLocaleDateString() : "Live Snapshot"}</td>
+                            <td className="py-2 px-3 font-sans text-slate-500 dark:text-slate-400 text-[10px] truncate max-w-xs">{c.excerpt || "Database record"}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -422,9 +422,9 @@ export default function AiQueryPage() {
       {engineMode === "phase4" && (
         <div className="space-y-6">
           {phase4History.length === 0 && !loading && (
-            <div className="rounded-2xl border border-dashed border-slate-800 p-10 text-center space-y-2">
-              <Bot className="h-8 w-8 text-indigo-400 mx-auto" />
-              <p className="text-xs font-semibold text-slate-300">Phase 4 Quick Copilot Ready</p>
+            <div className="rounded-xl border border-dashed border-slate-200 dark:border-[#29354b] p-10 text-center space-y-2 bg-slate-50/50 dark:bg-[#151e32]/40">
+              <Bot className="h-6 w-6 text-indigo-400 mx-auto" />
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">Phase 4 Quick Copilot Ready</p>
               <p className="text-[11px] text-slate-500 max-w-md mx-auto">
                 Ask broad questions to inspect tabular records across pricing and dispensaries.
               </p>
@@ -432,41 +432,41 @@ export default function AiQueryPage() {
           )}
 
           {phase4History.map((item, idx) => (
-            <div key={idx} className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 space-y-4 shadow-xl">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
-                <div className="flex items-center gap-2 text-xs font-bold text-indigo-300">
-                  <User className="h-4 w-4 text-indigo-400" />
+            <div key={idx} className="rounded-xl border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32] p-5 space-y-4 shadow-2xs">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-[#29354b] pb-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-slate-900 dark:text-slate-100">
+                  <User className="h-3.5 w-3.5 text-indigo-400" />
                   <span>&ldquo;{item.question}&rdquo;</span>
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase border bg-indigo-950 text-indigo-300 border-indigo-800">
+                <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase border bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20">
                   CONFIDENCE: {item.confidence}
                 </span>
               </div>
 
               <div className="space-y-1.5">
-                <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Answer</h4>
-                <p className="text-xs text-slate-200 leading-relaxed whitespace-pre-line bg-slate-950/70 p-4 rounded-xl border border-slate-800/80">
+                <h4 className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Answer</h4>
+                <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-line bg-slate-50 dark:bg-[#18233a] p-4 rounded-lg border border-slate-200/80 dark:border-[#29354b]">
                   {item.answer}
                 </p>
               </div>
 
               {item.evidence && item.evidence.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  <h4 className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     Retrieved Evidence ({item.evidence.length} records)
                   </h4>
-                  <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/80">
-                    <table className="w-full text-left text-[11px] text-slate-300">
-                      <thead className="bg-slate-900 uppercase text-[9px] font-bold text-slate-400 border-b border-slate-800">
+                  <div className="overflow-x-auto rounded-lg border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32]">
+                    <table className="w-full text-left text-[11px] text-slate-600 dark:text-slate-300">
+                      <thead className="bg-slate-50/80 dark:bg-[#18233a] uppercase text-[9px] font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200/80 dark:border-[#29354b]">
                         <tr>
                           {Object.keys(item.evidence[0]).slice(0, 6).map((k) => (
                             <th key={k} className="py-2.5 px-3">{k.replace("_", " ")}</th>
                           ))}
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/60 font-medium">
+                      <tbody className="divide-y divide-slate-100 dark:divide-[#29354b] font-medium">
                         {item.evidence.map((row, rIdx) => (
-                          <tr key={rIdx} className="hover:bg-slate-900/40">
+                          <tr key={rIdx} className="hover:bg-slate-50 dark:hover:bg-[#1c2740]/60 transition-colors">
                             {Object.values(row).slice(0, 6).map((val, cIdx) => (
                               <td key={cIdx} className="py-2 px-3">{String(val ?? "—")}</td>
                             ))}

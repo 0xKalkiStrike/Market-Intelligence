@@ -5,7 +5,7 @@ export function Card({ className, children, ...rest }: HTMLAttributes<HTMLDivEle
   return (
     <div
       className={clsx(
-        "rounded-2xl border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32] shadow-2xs hover:shadow-md transition-all duration-200 overflow-hidden",
+        "rounded-xl border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32] shadow-2xs hover:border-slate-300 dark:hover:border-[#384865] transition-all duration-200 overflow-hidden",
         className
       )}
       {...rest}
@@ -18,7 +18,7 @@ export function Card({ className, children, ...rest }: HTMLAttributes<HTMLDivEle
 export function CardHeader({ className, children, ...rest }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={clsx("border-b border-slate-100 dark:border-[#29354b] bg-slate-50/50 dark:bg-[#1c2740]/60 px-5 py-4 flex items-center justify-between", className)}
+      className={clsx("border-b border-slate-100 dark:border-[#29354b] bg-slate-50/60 dark:bg-[#18233a]/60 px-5 py-3.5 flex items-center justify-between", className)}
       {...rest}
     >
       {children}
@@ -36,7 +36,7 @@ export function CardBody({ className, children, ...rest }: HTMLAttributes<HTMLDi
 
 export function CardFooter({ className, children, ...rest }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={clsx("border-t border-slate-100 dark:border-[#29354b] bg-slate-50/50 dark:bg-[#1c2740]/60 px-5 py-3.5", className)} {...rest}>
+    <div className={clsx("border-t border-slate-100 dark:border-[#29354b] bg-slate-50/60 dark:bg-[#18233a]/60 px-5 py-3", className)} {...rest}>
       {children}
     </div>
   );

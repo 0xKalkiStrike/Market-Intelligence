@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TrendingUp, RefreshCw, Filter, Calendar, Zap, AlertTriangle, ArrowUpRight, ArrowDownRight } from "lucide-react";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
+import { TrendingUp, RefreshCw, Calendar, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { api } from "@/lib/api";
 
 interface WhatChangedData {
@@ -66,28 +64,41 @@ export default function WhatChangedPage() {
   return (
     <div className="space-y-6 pb-12">
       {/* Page Header */}
-      <div className="border-b border-slate-800 pb-5">
-        <div className="inline-flex items-center gap-2 rounded-full bg-emerald-950/80 px-3 py-0.5 text-xs font-bold text-emerald-300 border border-emerald-800/50 mb-1">
-          PERIOD-OVER-PERIOD COMPARISON ENGINE
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-slate-200/80 dark:border-[#29354b] pb-5">
+        <div>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-semibold tracking-wide mb-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+            Period-Over-Period Comparison Engine
+          </div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            <TrendingUp className="h-6 w-6 text-indigo-500" />
+            &ldquo;What Changed?&rdquo; Market Delta
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
+            Compare market conditions across customizable timeframes to detect additions, removals, price shifts, and regulatory updates.
+          </p>
         </div>
-        <h1 className="text-2xl font-extrabold text-white flex items-center gap-2 sm:text-3xl">
-          <TrendingUp className="h-7 w-7 text-emerald-400" /> &ldquo;What Changed?&rdquo; Engine
-        </h1>
-        <p className="text-xs text-slate-400 mt-1">
-          Compare market conditions across customizable timeframes (Today vs Yesterday, This Week vs Last Week, Month vs Month, Year vs Year) to detect additions, removals, price shifts, and regulatory updates.
-        </p>
+
+        <button
+          onClick={fetchChanges}
+          disabled={loading}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-white dark:bg-[#151e32] border border-slate-200/80 dark:border-[#29354b] px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#1c2740] shadow-sm transition-colors self-start md:self-auto"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin text-indigo-500" : ""}`} />
+          Refresh Delta
+        </button>
       </div>
 
       {/* Filter Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-            <Calendar className="h-4 w-4 text-emerald-400" /> Compare Period:
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-[#151e32] border border-slate-200/80 dark:border-[#29354b] p-3 rounded-xl shadow-sm">
+        <div className="flex items-center gap-2.5">
+          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
+            <Calendar className="h-3.5 w-3.5 text-indigo-500" /> Period:
           </span>
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs font-bold text-slate-200 focus:border-emerald-500 focus:outline-none"
+            className="rounded-lg border border-slate-200 dark:border-[#29354b] bg-slate-50 dark:bg-[#10172a] px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 focus:border-indigo-500 focus:outline-none"
           >
             <option value="today">Today vs Yesterday</option>
             <option value="this_week">This Week vs Last Week</option>
@@ -97,123 +108,120 @@ export default function WhatChangedPage() {
           </select>
         </div>
 
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">State Filter:</span>
+        <div className="flex items-center gap-2.5">
+          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">State:</span>
           <input
             type="text"
             placeholder="e.g. FL, TX, CA"
             value={stateFilter}
-            onChange={(e) => setStateFilter(e.target.value)}
-            className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none w-32 font-bold"
+            onChange={(e) => setStateFilter(e.target.value.toUpperCase())}
+            className="rounded-lg border border-slate-200 dark:border-[#29354b] bg-slate-50 dark:bg-[#10172a] px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:border-indigo-500 focus:outline-none w-28 uppercase font-mono"
           />
-          <Button size="sm" variant="secondary" onClick={fetchChanges}>
-            <RefreshCw className="h-3.5 w-3.5 mr-1" /> Refresh
-          </Button>
         </div>
       </div>
 
       {/* Metric Cards */}
       {data && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-slate-900 border border-slate-800">
-            <CardBody className="p-4">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Price Changes</span>
-              <div className="text-2xl font-extrabold text-amber-400 mt-1">{data.summary.total_price_changes}</div>
-              <span className="text-[11px] text-slate-500 mt-0.5 block">Compared to {data.summary.compared_to}</span>
-            </CardBody>
-          </Card>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <div className="rounded-xl bg-white dark:bg-[#151e32] border border-slate-200/80 dark:border-[#29354b] p-4 shadow-sm">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">Price Changes</span>
+            <div className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight tabular-nums mt-1.5">
+              {data.summary.total_price_changes}
+            </div>
+            <span className="text-[11px] text-slate-400 mt-1 block">vs {data.summary.compared_to}</span>
+          </div>
 
-          <Card className="bg-slate-900 border border-slate-800">
-            <CardBody className="p-4">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Regulatory Rule Updates</span>
-              <div className="text-2xl font-extrabold text-indigo-400 mt-1">{data.summary.total_regulatory_changes}</div>
-              <span className="text-[11px] text-slate-500 mt-0.5 block">State gazette notifications</span>
-            </CardBody>
-          </Card>
+          <div className="rounded-xl bg-white dark:bg-[#151e32] border border-slate-200/80 dark:border-[#29354b] p-4 shadow-sm">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">Regulatory Updates</span>
+            <div className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight tabular-nums mt-1.5">
+              {data.summary.total_regulatory_changes}
+            </div>
+            <span className="text-[11px] text-slate-400 mt-1 block">Gazette updates</span>
+          </div>
 
-          <Card className="bg-slate-900 border border-slate-800">
-            <CardBody className="p-4">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Intelligence Events</span>
-              <div className="text-2xl font-extrabold text-emerald-400 mt-1">{data.summary.total_market_events}</div>
-              <span className="text-[11px] text-slate-500 mt-0.5 block">Competitor movements & signals</span>
-            </CardBody>
-          </Card>
+          <div className="rounded-xl bg-white dark:bg-[#151e32] border border-slate-200/80 dark:border-[#29354b] p-4 shadow-sm">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">Intelligence Events</span>
+            <div className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight tabular-nums mt-1.5">
+              {data.summary.total_market_events}
+            </div>
+            <span className="text-[11px] text-slate-400 mt-1 block">Competitor movements</span>
+          </div>
 
-          <Card className="bg-slate-900 border border-slate-800">
-            <CardBody className="p-4">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">New Tracked Entities</span>
-              <div className="text-2xl font-extrabold text-blue-400 mt-1">{data.summary.total_new_entities}</div>
-              <span className="text-[11px] text-slate-500 mt-0.5 block">Newly added surface web entities</span>
-            </CardBody>
-          </Card>
+          <div className="rounded-xl bg-white dark:bg-[#151e32] border border-slate-200/80 dark:border-[#29354b] p-4 shadow-sm">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">New Tracked Entities</span>
+            <div className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight tabular-nums mt-1.5">
+              {data.summary.total_new_entities}
+            </div>
+            <span className="text-[11px] text-slate-400 mt-1 block">Newly indexed entities</span>
+          </div>
         </div>
       )}
 
-      {/* Changes Detail Tabs / Sections */}
+      {/* Changes Detail Sections */}
       {loading ? (
-        <div className="py-12 text-center text-slate-500 text-xs flex items-center justify-center gap-2">
-          <RefreshCw className="h-4 w-4 animate-spin text-emerald-400" /> Computing period-over-period market delta...
+        <div className="py-12 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
+          <RefreshCw className="h-4 w-4 animate-spin text-indigo-500" /> Computing period delta...
         </div>
       ) : data ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Price Changes List */}
-          <Card className="border border-slate-800 bg-slate-900">
-            <CardHeader className="border-b border-slate-800 bg-slate-950/60">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">Competitor Price Changes</h2>
-            </CardHeader>
-            <CardBody className="p-4 space-y-3">
+          <div className="rounded-xl border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32] overflow-hidden shadow-sm">
+            <div className="px-4 py-3 border-b border-slate-200/80 dark:border-[#29354b] bg-slate-50 dark:bg-[#10172a]">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">Competitor Price Changes</h2>
+            </div>
+            <div className="p-4 space-y-2.5">
               {data.price_changes.length === 0 ? (
-                <p className="text-xs text-slate-500">No price changes recorded in this period.</p>
+                <p className="text-xs text-slate-400">No price changes recorded in this period.</p>
               ) : (
                 data.price_changes.map((pc, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+                  <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-[#10172a] border border-slate-200/70 dark:border-slate-800">
                     <div>
-                      <div className="font-bold text-xs text-white">{pc.competitor_name} ({pc.state})</div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">{pc.service_name} {pc.promotion && `• ${pc.promotion}`}</div>
+                      <div className="font-semibold text-xs text-slate-900 dark:text-white">{pc.competitor_name} ({pc.state})</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{pc.service_name} {pc.promotion && `• ${pc.promotion}`}</div>
                     </div>
                     <div className="text-right">
-                      <div className="flex items-center gap-1 font-mono font-bold text-xs">
+                      <div className="flex items-center gap-1 font-mono tabular-nums font-semibold text-xs justify-end">
                         {pc.price_diff < 0 ? (
-                          <span className="text-emerald-400 flex items-center"><ArrowDownRight className="h-3.5 w-3.5" /> ${pc.new_price.toFixed(2)}</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 flex items-center"><ArrowDownRight className="h-3.5 w-3.5" /> ${pc.new_price.toFixed(2)}</span>
                         ) : (
-                          <span className="text-rose-400 flex items-center"><ArrowUpRight className="h-3.5 w-3.5" /> ${pc.new_price.toFixed(2)}</span>
+                          <span className="text-rose-600 dark:text-rose-400 flex items-center"><ArrowUpRight className="h-3.5 w-3.5" /> ${pc.new_price.toFixed(2)}</span>
                         )}
                       </div>
-                      <span className="text-[10px] text-slate-500 font-mono">Prev: ${pc.previous_price || 0}</span>
+                      <span className="text-[10px] text-slate-400 font-mono tabular-nums">Prev: ${pc.previous_price || 0}</span>
                     </div>
                   </div>
                 ))
               )}
-            </CardBody>
-          </Card>
+            </div>
+          </div>
 
           {/* Regulatory & Market Events */}
-          <Card className="border border-slate-800 bg-slate-900">
-            <CardHeader className="border-b border-slate-800 bg-slate-950/60">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">Regulatory Updates & Market Events</h2>
-            </CardHeader>
-            <CardBody className="p-4 space-y-3">
+          <div className="rounded-xl border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32] overflow-hidden shadow-sm">
+            <div className="px-4 py-3 border-b border-slate-200/80 dark:border-[#29354b] bg-slate-50 dark:bg-[#10172a]">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">Regulatory Updates & Market Events</h2>
+            </div>
+            <div className="p-4 space-y-2.5">
               {data.regulatory_changes.map((rc, idx) => (
-                <div key={idx} className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                  <div className="flex items-center justify-between text-xs font-bold text-indigo-300">
+                <div key={idx} className="p-3 rounded-lg bg-slate-50 dark:bg-[#10172a] border border-slate-200/70 dark:border-slate-800 space-y-1">
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-900 dark:text-white">
                     <span>[{rc.state}] {rc.rule_title}</span>
-                    <span className="bg-indigo-950 text-indigo-300 text-[10px] px-2 py-0.5 rounded border border-indigo-800">{rc.priority}</span>
+                    <span className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] px-2 py-0.5 rounded border border-indigo-500/20 font-medium">{rc.priority}</span>
                   </div>
-                  <p className="text-[11px] text-slate-300">{rc.new_info}</p>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">{rc.new_info}</p>
                 </div>
               ))}
 
               {data.market_events.map((me, idx) => (
-                <div key={idx} className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                  <div className="flex items-center justify-between text-xs font-bold text-emerald-300">
+                <div key={idx} className="p-3 rounded-lg bg-slate-50 dark:bg-[#10172a] border border-slate-200/70 dark:border-slate-800 space-y-1">
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-900 dark:text-white">
                     <span>{me.entity_name} ({me.state})</span>
-                    <span className="bg-emerald-950 text-emerald-300 text-[10px] px-2 py-0.5 rounded border border-emerald-800">{me.importance}</span>
+                    <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] px-2 py-0.5 rounded border border-emerald-500/20 font-medium">{me.importance}</span>
                   </div>
-                  <p className="text-[11px] text-slate-300">{me.description}</p>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">{me.description}</p>
                 </div>
               ))}
-            </CardBody>
-          </Card>
+            </div>
+          </div>
         </div>
       ) : null}
     </div>

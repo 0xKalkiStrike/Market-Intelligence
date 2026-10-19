@@ -308,18 +308,18 @@ export default function ResearchWorkspacePage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Top Header & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200/80 dark:border-[#29354b] pb-5">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-indigo-50 dark:bg-indigo-950/60 rounded-lg text-indigo-600 dark:text-indigo-400">
-              <FlaskConical className="h-6 w-6" />
+            <div className="p-2 bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 rounded-lg">
+              <FlaskConical className="h-5 w-5" />
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                 Market Research Workspace
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                Phase 7: Evidence-grounded hypothesis testing, audit-backed findings, and lifecycle governance.
+                Evidence-grounded hypothesis testing, audit-backed findings, and lifecycle governance.
               </p>
             </div>
           </div>
@@ -333,7 +333,7 @@ export default function ResearchWorkspacePage() {
             disabled={scanning}
             className="flex items-center gap-1.5"
           >
-            <RefreshCw className={`h-4 w-4 ${scanning ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-3.5 w-3.5 ${scanning ? "animate-spin" : ""}`} />
             {scanning ? "Scanning Feeds..." : "Scan Reassessment"}
           </Button>
 
@@ -344,7 +344,7 @@ export default function ResearchWorkspacePage() {
             disabled={!selectedProjectId}
             className="flex items-center gap-1.5"
           >
-            <FileDown className="h-4 w-4" />
+            <FileDown className="h-3.5 w-3.5" />
             Export Dossier
           </Button>
 
@@ -353,7 +353,7 @@ export default function ResearchWorkspacePage() {
             onClick={() => setNewProjectModal(true)}
             className="flex items-center gap-1.5"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3.5 w-3.5" />
             New Research Project
           </Button>
         </div>
@@ -361,12 +361,12 @@ export default function ResearchWorkspacePage() {
 
       {/* Alert Banner for Reassessment Scan */}
       {reassessmentMsg && (
-        <div className="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl flex items-center justify-between gap-3 text-xs sm:text-sm text-amber-900 dark:text-amber-200">
+        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-center justify-between gap-3 text-xs sm:text-sm text-amber-900 dark:text-amber-200">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
             <span>{reassessmentMsg}</span>
           </div>
-          <button onClick={() => setReassessmentMsg(null)} className="text-amber-700 hover:underline text-xs">
+          <button onClick={() => setReassessmentMsg(null)} className="text-amber-600 dark:text-amber-400 hover:underline text-xs cursor-pointer">
             Dismiss
           </button>
         </div>
@@ -374,25 +374,25 @@ export default function ResearchWorkspacePage() {
 
       {/* Workspace Overview Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="p-4 bg-white/70 dark:bg-slate-900/60 backdrop-blur">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Active Projects</p>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{projects.length}</p>
+        <Card className="p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Active Projects</p>
+          <p className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white mt-1 tabular-nums">{projects.length}</p>
         </Card>
-        <Card className="p-4 bg-white/70 dark:bg-slate-900/60 backdrop-blur">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Formulated Hypotheses</p>
-          <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">
+        <Card className="p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Formulated Hypotheses</p>
+          <p className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white mt-1 tabular-nums">
             {projects.reduce((sum, p) => sum + p.hypothesis_count, 0)}
           </p>
         </Card>
-        <Card className="p-4 bg-white/70 dark:bg-slate-900/60 backdrop-blur">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total Findings</p>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+        <Card className="p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Findings</p>
+          <p className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white mt-1 tabular-nums">
             {projects.reduce((sum, p) => sum + p.finding_count, 0)}
           </p>
         </Card>
-        <Card className="p-4 bg-white/70 dark:bg-slate-900/60 backdrop-blur">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Validated Evidence</p>
-          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+        <Card className="p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Validated Evidence</p>
+          <p className="text-2xl font-semibold tracking-tight text-emerald-600 dark:text-emerald-400 mt-1 tabular-nums">
             {projects.reduce((sum, p) => sum + p.validated_finding_count, 0)}
           </p>
         </Card>
@@ -403,16 +403,16 @@ export default function ResearchWorkspacePage() {
         {/* Left Column: Project Navigation */}
         <div className="lg:col-span-4 space-y-3">
           <div className="flex items-center justify-between px-1">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
-              <Layers className="h-4 w-4 text-indigo-500" />
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
+              <Layers className="h-4 w-4 text-indigo-400" />
               Research Projects
             </h2>
-            <span className="text-xs text-slate-400">{projects.length} recorded</span>
+            <span className="text-[11px] text-slate-400">{projects.length} recorded</span>
           </div>
 
           <div className="space-y-2">
             {projects.length === 0 ? (
-              <Card className="p-6 text-center text-slate-500 text-sm">
+              <Card className="p-6 text-center text-slate-500 text-xs">
                 No research projects created yet. Formulate your first project above.
               </Card>
             ) : (
@@ -422,14 +422,14 @@ export default function ResearchWorkspacePage() {
                   <div
                     key={p.id}
                     onClick={() => setSelectedProjectId(p.id)}
-                    className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
+                    className={`p-3.5 rounded-lg border transition-all cursor-pointer ${
                       isSelected
-                        ? "bg-indigo-50/80 dark:bg-indigo-950/40 border-indigo-300 dark:border-indigo-700 shadow-sm"
-                        : "bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                        ? "bg-indigo-500/10 border-indigo-500/40 shadow-xs"
+                        : "bg-white dark:bg-[#151e32] border-slate-200/80 dark:border-[#29354b] hover:border-slate-300 dark:hover:border-[#384865]"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-1">
+                      <h3 className="text-xs font-semibold text-slate-900 dark:text-white line-clamp-1">
                         {p.title}
                       </h3>
                       <Badge tone={p.status === "ACTIVE" ? "success" : "neutral"} className="shrink-0 text-[10px]">

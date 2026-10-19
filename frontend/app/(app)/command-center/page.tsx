@@ -319,21 +319,22 @@ export default function CommandCenterPage() {
         </div>
       </div>
 
-      {/* Executive Takeaway Banner (Glassmorphism + Subtle Gradient) */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-900/10 via-purple-900/5 to-slate-900/10 dark:from-indigo-950/60 dark:via-purple-950/40 dark:to-slate-900/80 border border-indigo-200/60 dark:border-indigo-500/30 p-4 sm:p-5 shadow-sm backdrop-blur-md">
+      {/* Executive Takeaway Banner (Enterprise Synthesis Panel) */}
+      <div className="rounded-xl border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32] p-5 shadow-2xs transition-all">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="flex items-start gap-3.5">
-            <div className="p-2.5 rounded-xl bg-indigo-600 text-white shadow-xs shrink-0 mt-0.5">
-              <Sparkles className="h-5 w-5" />
+            <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 shrink-0 mt-0.5">
+              <Sparkles className="h-4 w-4" />
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-indigo-950 dark:text-indigo-200">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-slate-200">
                   Grounded Intelligence Synthesis ({stateFilter} Market)
                 </h2>
                 <Badge tone="indigo">Evidence Grounded</Badge>
               </div>
-              <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
                 {loading && !data ? "Synthesizing cross-source signals and calculating predictive horizon..." : data?.executive_takeaway || "No synthesis available for the selected state."}
               </p>
             </div>
@@ -342,7 +343,7 @@ export default function CommandCenterPage() {
           <div className="flex items-center gap-2 self-end sm:self-start shrink-0">
             <button
               onClick={copyExecutiveSummary}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors shadow-2xs"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-[#18233a] border border-slate-200/80 dark:border-[#29354b] text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors shadow-2xs"
             >
               <Copy className="h-3.5 w-3.5" />
               <span>{copiedSummary ? "Copied" : "Copy"}</span>
@@ -352,86 +353,77 @@ export default function CommandCenterPage() {
       </div>
 
       {/* KPI Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Watchlists Card */}
-        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all overflow-hidden">
+        <div className="rounded-xl border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32] p-5 shadow-2xs hover:border-slate-300 dark:hover:border-[#384865] transition-all overflow-hidden">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider">Active Watchlists</span>
-            <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
-              <Eye className="h-4 w-4" />
-            </div>
+            <span className="text-[11px] font-semibold uppercase tracking-wider">Active Watchlists</span>
+            <Eye className="h-4 w-4 text-slate-400 dark:text-slate-500" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-2">
+          <div className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white mt-2 tabular-nums">
             {data?.market_status?.active_watchlists_count || 0}
-            <span className="text-sm font-semibold text-slate-400 ml-1.5">
+            <span className="text-xs font-medium text-slate-400 ml-1.5">
               / {data?.market_status?.active_rules_count || 0} Rules
             </span>
           </div>
-          <div className="mt-2 flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 overflow-hidden">
-            <Activity className="h-3 w-3 shrink-0" />
+          <div className="mt-3 pt-3 border-t border-slate-100 dark:border-[#29354b] flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             <span className="truncate">Continuous evaluation</span>
           </div>
         </div>
 
         {/* Capacity Utilization Card */}
-        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all overflow-hidden">
+        <div className="rounded-xl border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32] p-5 shadow-2xs hover:border-slate-300 dark:hover:border-[#384865] transition-all overflow-hidden">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider">Capacity Utilization</span>
-            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
-              <UserCheck className="h-4 w-4" />
-            </div>
+            <span className="text-[11px] font-semibold uppercase tracking-wider">Capacity Utilization</span>
+            <UserCheck className="h-4 w-4 text-slate-400 dark:text-slate-500" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-2">
+          <div className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white mt-2 tabular-nums">
             {data?.capacity_and_demand?.overall_utilization_rate || 0}%
           </div>
-          <div className="mt-2 flex items-center gap-1.5 text-[11px] overflow-hidden">
-            <span className="text-slate-500 dark:text-slate-400 shrink-0">Status:</span>
-            <span
-              className="font-bold text-emerald-600 dark:text-emerald-400 truncate"
-              title={data?.capacity_and_demand?.demand_capacity_status || "BALANCED"}
-            >
+          <div className="mt-3 pt-3 border-t border-slate-100 dark:border-[#29354b] flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-400">
+            <span>Status:</span>
+            <span className="font-semibold text-emerald-600 dark:text-emerald-400 truncate">
               {formatStatusLabel(data?.capacity_and_demand?.demand_capacity_status || "BALANCED")}
             </span>
           </div>
         </div>
 
         {/* Risk & Early Warnings Card */}
-        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all overflow-hidden">
+        <div className="rounded-xl border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32] p-5 shadow-2xs hover:border-slate-300 dark:hover:border-[#384865] transition-all overflow-hidden">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider">Risk Signals</span>
-            <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
-              <ShieldAlert className="h-4 w-4" />
-            </div>
+            <span className="text-[11px] font-semibold uppercase tracking-wider">Risk Signals</span>
+            <ShieldAlert className="h-4 w-4 text-slate-400 dark:text-slate-500" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-2">
+          <div className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white mt-2 tabular-nums">
             {data?.risk_signals?.length || 0}
-            <span className="text-xs font-semibold text-slate-400 ml-1.5">Active</span>
+            <span className="text-xs font-medium text-slate-400 ml-1.5">Active</span>
           </div>
-          <div className="mt-2 text-[11px] font-semibold text-amber-600 dark:text-amber-400 truncate">
-            {data?.early_warning_signals?.length || 0} Correlated Early Warnings
+          <div className="mt-3 pt-3 border-t border-slate-100 dark:border-[#29354b] flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+            <span className="truncate">{data?.early_warning_signals?.length || 0} Correlated Early Warnings</span>
           </div>
         </div>
 
         {/* Management Review Queue Card */}
-        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all overflow-hidden">
+        <div className="rounded-xl border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32] p-5 shadow-2xs hover:border-slate-300 dark:hover:border-[#384865] transition-all overflow-hidden">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider">Human Governance</span>
-            <div className="p-2 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400">
-              <FileCheck className="h-4 w-4" />
-            </div>
+            <span className="text-[11px] font-semibold uppercase tracking-wider">Human Governance</span>
+            <FileCheck className="h-4 w-4 text-slate-400 dark:text-slate-500" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-2">
+          <div className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white mt-2 tabular-nums">
             {data?.market_status?.pending_management_reviews_count || 0}
-            <span className="text-xs font-semibold text-slate-400 ml-1.5">Pending</span>
+            <span className="text-xs font-medium text-slate-400 ml-1.5">Pending</span>
           </div>
-          <div className="mt-2 text-[11px] text-purple-600 dark:text-purple-400 font-medium">
-            Requires management approval
+          <div className="mt-3 pt-3 border-t border-slate-100 dark:border-[#29354b] flex items-center gap-1.5 text-[11px] text-indigo-600 dark:text-indigo-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+            <span className="truncate">Requires management review</span>
           </div>
         </div>
       </div>
 
       {/* Navigation Sub-Tabs */}
-      <div className="flex items-center gap-1 sm:gap-2 border-b border-slate-200/80 dark:border-slate-800 overflow-x-auto pb-1 custom-scrollbar">
+      <div className="flex items-center gap-6 border-b border-slate-200/80 dark:border-[#29354b] overflow-x-auto pb-0 custom-scrollbar">
         {[
           { key: "overview", label: "Executive Overview", icon: Layers },
           { key: "forecasts", label: `Forecasts (${data?.recent_forecasts?.length || 0})`, icon: TrendingUp },
@@ -446,10 +438,10 @@ export default function CommandCenterPage() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as typeof activeTab)}
-              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition-all cursor-pointer ${
+              className={`flex items-center gap-2 pb-3 pt-1 text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer border-b-2 -mb-px ${
                 isActive
-                  ? "bg-indigo-600 text-white shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                  ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
+                  : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -465,20 +457,19 @@ export default function CommandCenterPage() {
           {/* Main 2-column pane */}
           <div className="lg:col-span-2 space-y-6">
             {/* Multi-Horizon Forecasts Section */}
-            <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-5 shadow-2xs">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3 mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
-                    <TrendingUp className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">Multi-Horizon Mathematical Forecasts</h3>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Empirical time-series projection with expected range boundaries</p>
-                  </div>
+            <div className="rounded-xl border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32] p-5 shadow-2xs">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#29354b] pb-3 mb-4">
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-slate-200">
+                    Multi-Horizon Mathematical Forecasts
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    Empirical time-series projection with expected range boundaries
+                  </p>
                 </div>
                 <button
                   onClick={() => setActiveTab("forecasts")}
-                  className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1"
+                  className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
                 >
                   View All <ArrowUpRight className="h-3.5 w-3.5" />
                 </button>
@@ -489,19 +480,19 @@ export default function CommandCenterPage() {
                   <div
                     key={fc.id}
                     onClick={() => openDetail(fc, "FORECAST")}
-                    className="group p-4 rounded-xl border border-slate-200/70 dark:border-slate-800/70 bg-slate-50/50 dark:bg-slate-950/40 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 hover:shadow-md transition-all cursor-pointer"
+                    className="group p-4 rounded-lg border border-slate-200/80 dark:border-[#29354b] bg-slate-50/50 dark:bg-[#18233a]/50 hover:border-slate-300 dark:hover:border-[#384865] transition-all cursor-pointer"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-500">
+                      <span className="text-xs font-semibold text-slate-900 dark:text-slate-200 group-hover:text-indigo-400 transition-colors">
                         {fc.metric_name}
                       </span>
-                      <span className="text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-md font-mono">
+                      <span className="text-[10px] bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded font-mono">
                         {fc.horizon_days === 0 ? "All Time" : `${fc.horizon_days}d`}
                       </span>
                     </div>
 
                     <div className="mt-2.5 flex items-baseline justify-between">
-                      <div className="text-xl font-extrabold text-slate-900 dark:text-white">
+                      <div className="text-xl font-semibold text-slate-900 dark:text-white tabular-nums">
                         {formatMetricValue(fc.metric_name, fc.forecast_value)}
                       </div>
                       <Badge tone={fc.confidence === "HIGH" ? "success" : "warning"}>
@@ -518,20 +509,19 @@ export default function CommandCenterPage() {
             </div>
 
             {/* Risk & Early Warnings Section */}
-            <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-5 shadow-2xs">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3 mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
-                    <ShieldAlert className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">Early Warnings & Correlated Risks</h3>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Multi-source correlation engine flagging anomalies</p>
-                  </div>
+            <div className="rounded-xl border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32] p-5 shadow-2xs">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#29354b] pb-3 mb-4">
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-slate-200">
+                    Early Warnings & Correlated Risks
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    Multi-source correlation engine flagging anomalies
+                  </p>
                 </div>
                 <button
                   onClick={() => setActiveTab("risks")}
-                  className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline inline-flex items-center gap-1"
+                  className="text-xs font-semibold text-amber-600 dark:text-amber-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
                 >
                   View All <ArrowUpRight className="h-3.5 w-3.5" />
                 </button>
@@ -542,15 +532,15 @@ export default function CommandCenterPage() {
                   <div
                     key={ew.id}
                     onClick={() => openDetail(ew, "RISK")}
-                    className="p-3.5 rounded-xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-950/20 hover:border-amber-500/40 transition-all cursor-pointer"
+                    className="p-3.5 rounded-lg border border-amber-500/20 bg-amber-500/5 dark:bg-amber-950/15 hover:border-amber-500/40 transition-all cursor-pointer"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-amber-900 dark:text-amber-200">{ew.signal_title}</span>
+                      <span className="text-xs font-semibold text-amber-900 dark:text-amber-200">{ew.signal_title}</span>
                       <Badge tone="warning">{ew.confidence} Confidence</Badge>
                     </div>
-                    <p className="text-xs text-slate-700 dark:text-slate-300 mt-1.5 leading-relaxed">{ew.interpretation}</p>
-                    <div className="mt-2.5 pt-2 border-t border-amber-200/60 dark:border-amber-900/40 flex items-center justify-between text-[11px] text-amber-800 dark:text-amber-300">
-                      <span className="font-semibold">Action: {ew.recommended_review_step}</span>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed">{ew.interpretation}</p>
+                    <div className="mt-2.5 pt-2 border-t border-amber-200/40 dark:border-amber-900/30 flex items-center justify-between text-[11px] text-amber-800 dark:text-amber-300">
+                      <span className="font-medium">Action: {ew.recommended_review_step}</span>
                       <span className="text-slate-400 flex items-center gap-1">Details <ArrowUpRight className="h-3 w-3" /></span>
                     </div>
                   </div>
@@ -562,17 +552,14 @@ export default function CommandCenterPage() {
           {/* Right 1-column pane */}
           <div className="space-y-6">
             {/* Management Review Queue */}
-            <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-5 shadow-2xs">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3 mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400">
-                    <FileCheck className="h-4 w-4" />
-                  </div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Review Queue</h3>
-                </div>
+            <div className="rounded-xl border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32] p-5 shadow-2xs">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#29354b] pb-3 mb-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-slate-200">
+                  Review Queue
+                </h3>
                 <button
                   onClick={() => setActiveTab("reviews")}
-                  className="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline inline-flex items-center gap-1"
+                  className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
                 >
                   Manage <ArrowUpRight className="h-3.5 w-3.5" />
                 </button>
@@ -586,17 +573,17 @@ export default function CommandCenterPage() {
                     <div
                       key={item.id}
                       onClick={() => openDetail(item, "REVIEW")}
-                      className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 hover:border-purple-500/40 transition-all cursor-pointer"
+                      className="p-3.5 rounded-lg border border-slate-200/80 dark:border-[#29354b] bg-slate-50/50 dark:bg-[#18233a]/50 hover:border-slate-300 dark:hover:border-[#384865] transition-all cursor-pointer"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{item.title}</span>
-                        <span className="text-[10px] bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-mono px-2 py-0.5 rounded">
+                        <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">{item.title}</span>
+                        <span className="text-[10px] bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono px-1.5 py-0.5 rounded">
                           {item.item_type}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">{item.evidence}</p>
-                      <div className="mt-2.5 pt-2 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{item.evidence}</p>
+                      <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-[#29354b] flex items-center justify-between">
+                        <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
                           Review & Act <ArrowUpRight className="h-3 w-3" />
                         </span>
                         <span className="text-[10px] text-slate-400">Governance</span>
@@ -608,17 +595,14 @@ export default function CommandCenterPage() {
             </div>
 
             {/* Competitor Movements Mini */}
-            <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-5 shadow-2xs">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3 mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
-                    <Zap className="h-4 w-4" />
-                  </div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Competitor Velocity</h3>
-                </div>
+            <div className="rounded-xl border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32] p-5 shadow-2xs">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#29354b] pb-3 mb-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-slate-200">
+                  Competitor Velocity
+                </h3>
                 <button
                   onClick={() => setActiveTab("competitors")}
-                  className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                  className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
                 >
                   All
                 </button>
@@ -628,17 +612,17 @@ export default function CommandCenterPage() {
                 {data?.competitor_movements?.slice(0, 4).map((cm) => (
                   <div
                     key={cm.id || cm.competitor_name}
-                    className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800/70 bg-slate-50/40 dark:bg-slate-950/40 text-xs"
+                    className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200/70 dark:border-[#29354b] bg-slate-50/40 dark:bg-[#18233a]/40 text-xs"
                   >
                     <div>
-                      <div className="font-bold text-slate-900 dark:text-white">{cm.competitor_name}</div>
+                      <div className="font-semibold text-slate-900 dark:text-white">{cm.competitor_name}</div>
                       <div className="text-[10px] text-slate-500 dark:text-slate-400">
                         {cm.price_changes_count} cuts • {cm.locations_added_count} new locs
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-black text-indigo-600 dark:text-indigo-400">{cm.activity_score}</div>
-                      <span className={`text-[10px] font-semibold ${cm.momentum === "INCREASING" ? "text-amber-500" : "text-slate-400"}`}>
+                      <div className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 tabular-nums">{cm.activity_score}</div>
+                      <span className={`text-[10px] font-medium ${cm.momentum === "INCREASING" ? "text-amber-500" : "text-slate-400"}`}>
                         {cm.momentum}
                       </span>
                     </div>
@@ -654,8 +638,10 @@ export default function CommandCenterPage() {
       {activeTab === "forecasts" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">Empirical Multi-Horizon Time Series Forecasts</h3>
-            <span className="text-xs text-slate-500 font-mono">Mathematical Engine • Grounded Historical Bounded</span>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900 dark:text-slate-200">
+              Empirical Multi-Horizon Time Series Forecasts
+            </h3>
+            <span className="text-xs text-slate-500 font-mono">Mathematical Engine • Grounded Bounded Projections</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -663,29 +649,29 @@ export default function CommandCenterPage() {
               <div
                 key={fc.id}
                 onClick={() => openDetail(fc, "FORECAST")}
-                className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/80 shadow-2xs hover:shadow-md hover:border-indigo-500/50 transition-all cursor-pointer flex flex-col justify-between"
+                className="p-5 rounded-xl border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32] shadow-2xs hover:border-slate-300 dark:hover:border-[#384865] transition-all cursor-pointer flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">{fc.metric_name}</span>
+                    <span className="text-xs font-semibold text-slate-900 dark:text-slate-200">{fc.metric_name}</span>
                     <Badge tone={fc.confidence === "HIGH" ? "success" : "warning"}>{fc.confidence}</Badge>
                   </div>
 
                   <div className="mt-3">
-                    <div className="text-2xl font-black text-slate-900 dark:text-white">
+                    <div className="text-2xl font-semibold text-slate-900 dark:text-white tabular-nums">
                       {formatMetricValue(fc.metric_name, fc.forecast_value)}
                     </div>
                     <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      Expected Range: <span className="font-mono text-slate-800 dark:text-slate-200 font-bold">{formatMetricValue(fc.metric_name, fc.expected_range_min)} - {formatMetricValue(fc.metric_name, fc.expected_range_max)}</span>
+                      Expected Range: <span className="font-mono text-slate-800 dark:text-slate-200 font-semibold">{formatMetricValue(fc.metric_name, fc.expected_range_min)} - {formatMetricValue(fc.metric_name, fc.expected_range_max)}</span>
                     </div>
                   </div>
 
                   <p className="text-xs text-slate-600 dark:text-slate-400 mt-3 leading-relaxed">{fc.explanation}</p>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
-                  <span>Horizon: {fc.horizon_days === 0 ? "All Time (Inception to Present)" : `${fc.horizon_days} Days`}</span>
-                  <span className="text-indigo-500 font-bold flex items-center gap-1">Deep Dive <ArrowUpRight className="h-3 w-3" /></span>
+                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-[#29354b] flex items-center justify-between text-[11px] text-slate-400">
+                  <span>Horizon: {fc.horizon_days === 0 ? "All Time" : `${fc.horizon_days} Days`}</span>
+                  <span className="text-indigo-500 font-medium flex items-center gap-1">Deep Dive <ArrowUpRight className="h-3 w-3" /></span>
                 </div>
               </div>
             ))}
@@ -697,7 +683,9 @@ export default function CommandCenterPage() {
       {activeTab === "risks" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">Autonomous Early Warning & Risk Correlation</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900 dark:text-slate-200">
+              Autonomous Early Warning & Risk Correlation
+            </h3>
             <Badge tone="warning">{data?.early_warning_signals?.length || 0} Critical Signals</Badge>
           </div>
 
@@ -706,23 +694,23 @@ export default function CommandCenterPage() {
               <div
                 key={ew.id}
                 onClick={() => openDetail(ew, "RISK")}
-                className="p-5 rounded-2xl border border-amber-500/30 bg-amber-50/40 dark:bg-amber-950/20 shadow-2xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between"
+                className="p-5 rounded-xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-950/15 shadow-2xs hover:border-amber-500/40 transition-all cursor-pointer flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-amber-950 dark:text-amber-200">{ew.signal_title}</h4>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-amber-900 dark:text-amber-200">{ew.signal_title}</h4>
                     <Badge tone="warning">{ew.confidence} Confidence</Badge>
                   </div>
                   <p className="text-xs text-slate-700 dark:text-slate-300 mt-2 leading-relaxed">{ew.interpretation}</p>
-                  <div className="mt-3 p-3 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-amber-200 dark:border-amber-900/40 text-xs">
-                    <span className="font-bold text-amber-800 dark:text-amber-300">Recommended Review:</span>
+                  <div className="mt-3 p-3 rounded-lg bg-white/80 dark:bg-[#18233a] border border-amber-200/60 dark:border-amber-900/40 text-xs">
+                    <span className="font-semibold text-amber-800 dark:text-amber-300">Recommended Action:</span>
                     <p className="text-slate-600 dark:text-slate-400 mt-0.5">{ew.recommended_review_step}</p>
                   </div>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-amber-200/60 dark:border-amber-900/40 flex items-center justify-between text-xs text-amber-700 dark:text-amber-400">
+                <div className="mt-4 pt-3 border-t border-amber-200/40 dark:border-amber-900/30 flex items-center justify-between text-xs text-amber-700 dark:text-amber-400">
                   <span>State: {stateFilter}</span>
-                  <span className="font-bold flex items-center gap-1">Investigate <ArrowUpRight className="h-3 w-3" /></span>
+                  <span className="font-medium flex items-center gap-1">Investigate <ArrowUpRight className="h-3 w-3" /></span>
                 </div>
               </div>
             ))}
@@ -734,31 +722,33 @@ export default function CommandCenterPage() {
       {activeTab === "reviews" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">Human-in-the-Loop Management Governance</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900 dark:text-slate-200">
+              Human-in-the-Loop Management Governance
+            </h3>
             <span className="text-xs text-slate-500">Every decision produces an immutable audit record</span>
           </div>
 
           <div className="space-y-3">
             {data?.management_review_queue?.length === 0 ? (
-              <div className="text-center py-12 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-400">
+              <div className="text-center py-12 rounded-xl border border-slate-200 dark:border-[#29354b] bg-white dark:bg-[#151e32] text-slate-400">
                 <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
-                <p className="font-bold">No items pending management approval.</p>
-                <p className="text-xs mt-1">All regulatory and data anomalies are currently reviewed.</p>
+                <p className="font-semibold text-slate-800 dark:text-slate-200">No items pending management approval</p>
+                <p className="text-xs mt-1 text-slate-500">All regulatory and data anomalies are currently reviewed.</p>
               </div>
             ) : (
               data?.management_review_queue?.map((item) => (
                 <div
                   key={item.id}
-                  className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/80 shadow-2xs hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  className="p-5 rounded-xl border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32] shadow-2xs hover:border-slate-300 dark:hover:border-[#384865] transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
                 >
                   <div className="space-y-1 max-w-2xl">
                     <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">{item.title}</h4>
-                      <span className="text-[10px] bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-mono px-2 py-0.5 rounded font-bold">
+                      <h4 className="text-xs font-semibold text-slate-900 dark:text-white">{item.title}</h4>
+                      <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono px-1.5 py-0.5 rounded font-medium">
                         {item.item_type}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{item.evidence}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{item.evidence}</p>
                     <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
                       <strong>Suggested Action:</strong> {item.suggested_review_step}
                     </p>
@@ -767,13 +757,13 @@ export default function CommandCenterPage() {
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => handleReviewAction(item.id, "AUDIT")}
-                      className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                      className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-[#18233a] border border-slate-200/80 dark:border-[#29354b] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                     >
                       Audit
                     </button>
                     <button
                       onClick={() => handleReviewAction(item.id, "APPROVED")}
-                      className="px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 transition-colors shadow-2xs cursor-pointer"
+                      className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition-colors shadow-2xs cursor-pointer"
                     >
                       Approve
                     </button>
@@ -789,7 +779,9 @@ export default function CommandCenterPage() {
       {activeTab === "competitors" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">Competitor Velocity & Price Action Index</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900 dark:text-slate-200">
+              Competitor Velocity & Price Action Index
+            </h3>
             <span className="text-xs text-slate-500">Surface-Web Verified Price Movements</span>
           </div>
 
@@ -797,10 +789,10 @@ export default function CommandCenterPage() {
             {data?.competitor_movements?.map((cm) => (
               <div
                 key={cm.id || cm.competitor_name}
-                className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/80 shadow-2xs"
+                className="p-5 rounded-xl border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32] shadow-2xs hover:border-slate-300 dark:hover:border-[#384865] transition-all"
               >
                 <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">{cm.competitor_name}</h4>
+                  <h4 className="text-xs font-semibold text-slate-900 dark:text-white">{cm.competitor_name}</h4>
                   <Badge tone={cm.momentum === "INCREASING" ? "warning" : "neutral"}>
                     {cm.momentum}
                   </Badge>
@@ -809,10 +801,10 @@ export default function CommandCenterPage() {
                 <div className="mt-4 flex items-baseline justify-between">
                   <div>
                     <span className="text-[10px] text-slate-400 uppercase tracking-wider">Activity Score</span>
-                    <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5">{cm.activity_score}</div>
+                    <div className="text-2xl font-semibold text-indigo-600 dark:text-indigo-400 mt-0.5 tabular-nums">{cm.activity_score}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs font-bold text-slate-700 dark:text-slate-300">{cm.price_changes_count} Price Changes</div>
+                    <div className="text-xs font-medium text-slate-700 dark:text-slate-300">{cm.price_changes_count} Price Changes</div>
                     <div className="text-[11px] text-slate-500">{cm.locations_added_count} New Dispensaries</div>
                   </div>
                 </div>
@@ -826,7 +818,9 @@ export default function CommandCenterPage() {
       {activeTab === "geo" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">Geographic Opportunity Density ({stateFilter})</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900 dark:text-slate-200">
+              Geographic Opportunity Density ({stateFilter})
+            </h3>
             <span className="text-xs text-slate-500">Target Expansion Zones</span>
           </div>
 
@@ -834,12 +828,12 @@ export default function CommandCenterPage() {
             {data?.geographic_opportunity_clusters?.map((cluster, idx) => (
               <div
                 key={idx}
-                className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/80 shadow-2xs"
+                className="p-5 rounded-xl border border-slate-200/80 dark:border-[#29354b] bg-white dark:bg-[#151e32] shadow-2xs hover:border-slate-300 dark:hover:border-[#384865] transition-all"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-indigo-500" />
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">{cluster.cluster_name || cluster.county || `Zone ${idx + 1}`}</h4>
+                    <MapPin className="h-4 w-4 text-indigo-400" />
+                    <h4 className="text-xs font-semibold text-slate-900 dark:text-white">{cluster.cluster_name || cluster.county || `Zone ${idx + 1}`}</h4>
                   </div>
                   <Badge tone="success">High Signal</Badge>
                 </div>
@@ -848,9 +842,9 @@ export default function CommandCenterPage() {
                   {cluster.rationale || cluster.description || "Unmet patient demand detected relative to licensed dispensary density."}
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-[#29354b] flex items-center justify-between text-xs">
                   <span className="text-slate-500">Priority Rank</span>
-                  <span className="font-extrabold text-indigo-600 dark:text-indigo-400">P{idx + 1} Target</span>
+                  <span className="font-semibold text-indigo-600 dark:text-indigo-400">P{idx + 1} Target</span>
                 </div>
               </div>
             ))}
@@ -867,45 +861,45 @@ export default function CommandCenterPage() {
       >
         {selectedItem && (
           <div className="space-y-4 text-xs sm:text-sm">
-            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-[#18233a] border border-slate-200/80 dark:border-[#29354b]">
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Classification</span>
-                <div className="font-extrabold text-indigo-600 dark:text-indigo-400">{selectedItem._type}</div>
+                <span className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Classification</span>
+                <div className="font-semibold text-indigo-600 dark:text-indigo-400">{selectedItem._type}</div>
               </div>
               <Badge tone="success">Verified Provenance</Badge>
             </div>
 
             <div className="space-y-2">
-              <span className="font-bold text-slate-900 dark:text-white">Explanation & Context:</span>
-              <p className="text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50/50 dark:bg-slate-950/40 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800">
+              <span className="font-semibold text-slate-900 dark:text-white">Explanation & Context:</span>
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50/50 dark:bg-[#18233a]/50 p-3.5 rounded-lg border border-slate-100 dark:border-[#29354b]">
                 {selectedItem.explanation || selectedItem.interpretation || selectedItem.evidence || "No extended narrative."}
               </p>
             </div>
 
             {selectedItem.recommended_review_step && (
-              <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200">
-                <span className="font-bold">Recommended Step:</span>
+              <div className="p-3.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200">
+                <span className="font-semibold">Recommended Step:</span>
                 <p className="mt-0.5">{selectedItem.recommended_review_step}</p>
               </div>
             )}
 
             {selectedItem._type === "REVIEW" && (
-              <div className="pt-4 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-end gap-2.5">
+              <div className="pt-4 border-t border-slate-200/80 dark:border-[#29354b] flex items-center justify-end gap-2.5">
                 <button
                   onClick={() => handleReviewAction(selectedItem.id ?? "", "DISMISSED")}
-                  className="px-4 py-2 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 cursor-pointer"
+                  className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-[#18233a] border border-slate-200/80 dark:border-[#29354b] text-slate-700 dark:text-slate-300 hover:bg-slate-200 cursor-pointer"
                 >
                   Dismiss
                 </button>
                 <button
                   onClick={() => handleReviewAction(selectedItem.id ?? "", "AUDIT")}
-                  className="px-4 py-2 text-xs font-bold rounded-xl bg-amber-600 text-white hover:bg-amber-500 cursor-pointer"
+                  className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-amber-600 text-white hover:bg-amber-500 cursor-pointer"
                 >
                   Request Audit
                 </button>
                 <button
                   onClick={() => handleReviewAction(selectedItem.id ?? "", "APPROVED")}
-                  className="px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 cursor-pointer"
+                  className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 cursor-pointer"
                 >
                   Approve Item
                 </button>

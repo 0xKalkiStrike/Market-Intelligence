@@ -20,7 +20,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (loading || !user) return <PageLoading />;
 
   return (
-    <div className="flex min-h-screen min-w-0 overflow-x-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="flex min-h-screen min-w-0 overflow-x-hidden bg-[#f5f7fb] dark:bg-[#0b1020] text-slate-900 dark:text-slate-100 font-sans transition-colors duration-150">
       <Sidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -29,7 +29,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       />
       <div className="flex min-h-screen flex-1 flex-col min-w-0 overflow-x-hidden">
         <Topbar onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 p-3 sm:p-5 lg:p-6 min-w-0 transition-all">{children}</main>
+        <main className="flex-1 p-4 sm:p-5 lg:p-6 min-w-0">{children}</main>
       </div>
     </div>
   );

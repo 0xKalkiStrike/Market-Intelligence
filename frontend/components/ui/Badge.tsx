@@ -5,36 +5,36 @@ type Tone = "neutral" | "success" | "warning" | "danger" | "info" | "indigo" | "
 
 const toneClasses: Record<Tone, { badge: string; dot: string }> = {
   neutral: {
-    badge: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700",
+    badge: "bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700/70",
     dot: "bg-slate-400 dark:bg-slate-500",
   },
   success: {
-    badge: "bg-emerald-50/90 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/60",
+    badge: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
     dot: "bg-emerald-500",
   },
   warning: {
-    badge: "bg-amber-50/90 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/60",
+    badge: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
     dot: "bg-amber-500",
   },
   danger: {
-    badge: "bg-rose-50/90 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border-rose-200/80 dark:border-rose-800/60",
+    badge: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20",
     dot: "bg-rose-500",
   },
   info: {
-    badge: "bg-indigo-50/90 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 border-indigo-200/80 dark:border-indigo-800/60",
+    badge: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20",
     dot: "bg-indigo-500",
   },
   indigo: {
-    badge: "bg-indigo-100 dark:bg-indigo-950/80 text-indigo-900 dark:text-indigo-200 border-indigo-300 dark:border-indigo-800",
-    dot: "bg-indigo-600",
+    badge: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20",
+    dot: "bg-indigo-500",
   },
   purple: {
-    badge: "bg-purple-50/90 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 border-purple-200/80 dark:border-purple-800/60",
+    badge: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20",
     dot: "bg-purple-500",
   },
   cyan: {
-    badge: "bg-cyan-50/90 dark:bg-cyan-950/80 text-cyan-800 dark:text-cyan-300 border-cyan-200/80 dark:border-cyan-800/60",
-    dot: "bg-cyan-500",
+    badge: "bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-500/20",
+    dot: "bg-teal-500",
   },
 };
 
@@ -54,7 +54,7 @@ export function Badge({
   return (
     <span
       className={clsx(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-tight",
+        "inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[10.5px] font-medium tracking-wide",
         styles.badge,
         className
       )}
