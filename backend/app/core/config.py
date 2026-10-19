@@ -9,7 +9,9 @@ class Settings(BaseSettings):
     environment: str = "development"
 
 
-    database_url: str = "sqlite:///./market_intelligence.db"
+    database_url: str = (
+        "postgresql://postgres.vvhbdpvugskmeaavrmci:Brainbean!123@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
+    )
     redis_url: str = "redis://localhost:6379/0"
 
     jwt_secret: str = "CHANGE_ME_IN_PRODUCTION"
