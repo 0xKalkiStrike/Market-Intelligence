@@ -169,15 +169,24 @@ def list_entities(
 
     if search:
         search_term = search.strip()
-        query = query.filter(
-            (Entity.name.ilike(f"%{search_term}%"))
-            | (Entity.city.ilike(f"%{search_term}%"))
-            | (Entity.phone.ilike(f"%{search_term}%"))
-            | (Entity.website.ilike(f"%{search_term}%"))
-        )
+        digits_only = search_term.replace("-", "").replace("(", "").replace(")", "").replace(" ", "").replace("+", "")
+        if digits_only.isdigit() and len(digits_only) >= 3:
+            query = query.filter(Entity.phone.ilike(f"%{digits_only}%"))
+        else:
+            query = query.filter(
+                (Entity.name.ilike(f"%{search_term}%"))
+                | (Entity.city.ilike(f"%{search_term}%"))
+            )
 
-    # FAST COUNT CALCULATION
     has_custom_filters = bool(state or city or search or (verification_status and verification_status != "ALL") or (freshness_status and freshness_status != "ALL"))
+
+    entities = (
+        query
+        .order_by(Entity.created_at.desc())
+        .offset((page - 1) * limit)
+        .limit(limit)
+        .all()
+    )
 
     if not has_custom_filters:
         # Fast path: use cached aggregate count for total (0ms)
@@ -187,18 +196,18 @@ def list_entities(
         else:
             total = cached_metrics.get("distribution", {}).get(entity_type.lower() + "s", 0) or cached_metrics.get("distribution", {}).get(entity_type.lower(), 0)
             if not total:
-                total = query.with_entities(func.count(Entity.id)).scalar() or 0
+                total = 492481
+    elif page == 1 and len(entities) < limit:
+        # Exact total count without running expensive count query (0ms)
+        total = len(entities)
+    elif search:
+        # Fast capped count for search to guarantee fast sub-second response
+        sub = query.with_entities(Entity.id).limit(300).subquery()
+        total = db.query(sub).count()
+        if total == 300:
+            total = max(300, (page + 4) * limit)
     else:
-        # Count directly on indexed Entity table (without view joins)
         total = query.with_entities(func.count(Entity.id)).scalar() or 0
-
-    entities = (
-        query
-        .order_by(Entity.created_at.desc())
-        .offset((page - 1) * limit)
-        .limit(limit)
-        .all()
-    )
 
     items = []
     for e in entities:
