@@ -62,6 +62,33 @@ async def lifespan(app_instance: FastAPI):
                 ("entities", "review_count", "INTEGER"),
                 ("entities", "reviews_source_url", "VARCHAR(500)"),
                 ("entities", "employee_count", "VARCHAR(100)"),
+                ("entities", "address", "VARCHAR(255)"),
+                ("entities", "city", "VARCHAR(100)"),
+                ("entities", "state", "VARCHAR(50)"),
+                ("entities", "zip_code", "VARCHAR(20)"),
+                ("entities", "country", "VARCHAR(50) DEFAULT 'USA'"),
+                ("entities", "latitude", "FLOAT"),
+                ("entities", "longitude", "FLOAT"),
+                ("entities", "phone", "VARCHAR(50)"),
+                ("entities", "email", "VARCHAR(255)"),
+                ("entities", "website", "VARCHAR(500)"),
+                ("entities", "social_links", "TEXT"),
+                ("entities", "source_name", "VARCHAR(100)"),
+                ("entities", "source_url", "VARCHAR(500)"),
+                ("entities", "title", "VARCHAR(100)"),
+                ("entities", "specialty", "VARCHAR(150)"),
+                ("entities", "organization", "VARCHAR(255)"),
+                ("entities", "clinic_name", "VARCHAR(255)"),
+                ("entities", "license_number", "VARCHAR(100)"),
+                ("entities", "services", "TEXT"),
+                ("entities", "business_type", "VARCHAR(100)"),
+                ("entities", "operating_hours", "VARCHAR(255)"),
+                ("entities", "license_info", "VARCHAR(255)"),
+                ("entities", "products_offered", "TEXT"),
+                ("entities", "locations_summary", "VARCHAR(255)"),
+                ("entities", "pricing_info", "TEXT"),
+                ("entities", "business_description", "TEXT"),
+                ("entities", "products_services", "TEXT"),
                 ("entity_contacts", "social_links", "TEXT"),
                 ("doctor_details", "estimated_revenue", "VARCHAR(100)"),
                 ("doctor_details", "rating", "FLOAT"),
@@ -87,10 +114,14 @@ async def lifespan(app_instance: FastAPI):
             ]
             for tbl, col, col_type in migrations:
                 try:
-                    res = conn.execute(text(f"PRAGMA table_info({tbl});")).fetchall()
-                    existing_cols = [r[1] for r in res]
-                    if col not in existing_cols:
-                        conn.execute(text(f"ALTER TABLE {tbl} ADD COLUMN {col} {col_type};"))
+                    if "sqlite" in settings.database_url:
+                        res = conn.execute(text(f"PRAGMA table_info({tbl});")).fetchall()
+                        existing_cols = [r[1] for r in res]
+                        if col not in existing_cols:
+                            conn.execute(text(f"ALTER TABLE {tbl} ADD COLUMN {col} {col_type};"))
+                            conn.commit()
+                    else:
+                        conn.execute(text(f'ALTER TABLE "{tbl}" ADD COLUMN IF NOT EXISTS "{col}" {col_type};'))
                         conn.commit()
                 except Exception:
                     pass
@@ -141,7 +172,7 @@ app.add_middleware(
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc: Exception):
     origin = request.headers.get("origin", "")
-    allowed_origin = origin if origin in cors_origins else cors_origins[0]
+    allowed_origin = origin if ("*" in cors_origins or origin in cors_origins) else (cors_origins[0] if cors_origins else "*")
     return JSONResponse(
         status_code=500,
         content={"detail": str(exc)},

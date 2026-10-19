@@ -8,9 +8,15 @@ from app.core.config import get_settings
 settings = get_settings()
 
 is_sqlite = settings.database_url.startswith("sqlite")
+db_url = settings.database_url
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql+psycopg://", 1)
+elif db_url.startswith("postgresql://"):
+    db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
+
 connect_args = {"check_same_thread": False, "timeout": 60.0} if is_sqlite else {}
 
-engine = create_engine(settings.database_url, connect_args=connect_args, pool_pre_ping=True, pool_recycle=300, future=True)
+engine = create_engine(db_url, connect_args=connect_args, pool_pre_ping=True, pool_recycle=300, future=True)
 
 if is_sqlite:
     @event.listens_for(engine, "connect")
