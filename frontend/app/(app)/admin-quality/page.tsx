@@ -96,6 +96,7 @@ interface AiBenchmarkRun {
     phi_leakage_cases: number;
     overall_score: number;
     regression_detected: boolean;
+    is_regression_detected?: boolean;
     regression_notes: string;
   };
   details: Array<{
@@ -208,6 +209,82 @@ interface CostGovernanceReport {
   measurement_period: string;
 }
 
+interface RawBenchmarkRun {
+  run_id?: string;
+  id?: string;
+  suite_name?: string;
+  model_name?: string;
+  prompt_version?: string;
+  summary?: Partial<AiBenchmarkRun["summary"]>;
+  details?: AiBenchmarkRun["details"];
+  cases?: AiBenchmarkRun["details"];
+  results_json?: string | unknown;
+  total_cases?: number;
+  passed_cases?: number;
+  failed_cases?: number;
+  pass_rate_pct?: number;
+  citation_accuracy_pct?: number;
+  numerical_accuracy_pct?: number;
+  injection_resistance_pct?: number;
+  phi_leakage_cases?: number;
+  overall_score?: number;
+  regression_detected?: boolean;
+  is_regression_detected?: boolean;
+  regression_notes?: string;
+}
+
+function normalizeBenchmarkRun(raw: RawBenchmarkRun | null | undefined): AiBenchmarkRun | null {
+  if (!raw || typeof raw !== "object") return null;
+  const passRate =
+    raw.summary?.pass_rate_pct ??
+    raw.pass_rate_pct ??
+    (raw.overall_score != null ? Math.round(raw.overall_score * 100) : 0);
+  const totalCases = raw.summary?.total_cases ?? raw.total_cases ?? 0;
+  const passedCases = raw.summary?.passed_cases ?? raw.passed_cases ?? 0;
+  const failedCases = raw.summary?.failed_cases ?? raw.failed_cases ?? Math.max(0, totalCases - passedCases);
+  const citationAcc = raw.summary?.citation_accuracy_pct ?? raw.citation_accuracy_pct ?? 100;
+  const numericalAcc = raw.summary?.numerical_accuracy_pct ?? raw.numerical_accuracy_pct ?? 100;
+  const injectionRes = raw.summary?.injection_resistance_pct ?? raw.injection_resistance_pct ?? 100;
+  const phiLeakage = raw.summary?.phi_leakage_cases ?? raw.phi_leakage_cases ?? 0;
+  const isRegression = Boolean(
+    raw.summary?.regression_detected ??
+    raw.summary?.is_regression_detected ??
+    raw.regression_detected ??
+    raw.is_regression_detected ??
+    false
+  );
+
+  let detailsList = raw.details || raw.cases;
+  if (!detailsList && raw.results_json) {
+    try {
+      detailsList = typeof raw.results_json === "string" ? JSON.parse(raw.results_json) : (raw.results_json as AiBenchmarkRun["details"]);
+    } catch {
+      detailsList = [];
+    }
+  }
+
+  return {
+    run_id: raw.run_id || raw.id || "latest",
+    suite_name: raw.suite_name || "CORE_REGRESSION_v8.0",
+    model_name: raw.model_name || "gpt-4o",
+    prompt_version: raw.prompt_version || "v8.0",
+    summary: {
+      total_cases: totalCases,
+      passed_cases: passedCases,
+      failed_cases: failedCases,
+      pass_rate_pct: passRate,
+      citation_accuracy_pct: citationAcc,
+      numerical_accuracy_pct: numericalAcc,
+      injection_resistance_pct: injectionRes,
+      phi_leakage_cases: phiLeakage,
+      overall_score: raw.summary?.overall_score ?? raw.overall_score ?? (passRate / 100),
+      regression_detected: isRegression,
+      regression_notes: raw.summary?.regression_notes || raw.regression_notes || "",
+    },
+    details: Array.isArray(detailsList) ? detailsList : [],
+  };
+}
+
 export default function AdminQualityCenterPage() {
   const [activeTab, setActiveTab] = useState<
     "quality" | "ai_benchmarks" | "outcomes" | "drift" | "feedback_ops"
@@ -276,7 +353,7 @@ export default function AdminQualityCenterPage() {
       setFailures(resFailures.failures || []);
       setRemediations(resRemediations.remediations || []);
       if (resRuns && resRuns.runs && resRuns.runs.length > 0) {
-        setBenchmarkRun(resRuns.runs[0]);
+        setBenchmarkRun(normalizeBenchmarkRun(resRuns.runs[0]));
       }
       setForecasts(resForecasts.forecasts || []);
       setForecastMetrics(resForecastMetrics);
@@ -350,7 +427,7 @@ export default function AdminQualityCenterPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        setBenchmarkRun(data);
+        setBenchmarkRun(normalizeBenchmarkRun(data));
         loadData();
       }
     } catch (err) {
@@ -547,7 +624,7 @@ export default function AdminQualityCenterPage() {
         >
           <Sparkles className="w-4 h-4" />
           AI Regression Suite
-          {benchmarkRun && (
+          {benchmarkRun?.summary?.pass_rate_pct != null && (
             <span className="px-1.5 py-0.2 text-[10px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full font-bold">
               {benchmarkRun.summary.pass_rate_pct.toFixed(0)}%
             </span>
@@ -792,10 +869,12 @@ export default function AdminQualityCenterPage() {
                   <CardBody className="p-4">
                     <div className="text-xs text-slate-500 font-medium">Overall Pass Rate</div>
                     <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                      {benchmarkRun.summary.pass_rate_pct.toFixed(1)}%
+                      {benchmarkRun.summary?.pass_rate_pct != null
+                        ? `${benchmarkRun.summary.pass_rate_pct.toFixed(1)}%`
+                        : "N/A"}
                     </div>
                     <div className="text-[11px] text-slate-400 mt-1">
-                      {benchmarkRun.summary.passed_cases}/{benchmarkRun.summary.total_cases} cases passed
+                      {benchmarkRun.summary?.passed_cases ?? 0}/{benchmarkRun.summary?.total_cases ?? 0} cases passed
                     </div>
                   </CardBody>
                 </Card>
@@ -804,7 +883,9 @@ export default function AdminQualityCenterPage() {
                   <CardBody className="p-4">
                     <div className="text-xs text-slate-500 font-medium">Citation Accuracy</div>
                     <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                      {benchmarkRun.summary.citation_accuracy_pct.toFixed(1)}%
+                      {benchmarkRun.summary?.citation_accuracy_pct != null
+                        ? `${benchmarkRun.summary.citation_accuracy_pct.toFixed(1)}%`
+                        : "N/A"}
                     </div>
                     <div className="text-[11px] text-slate-400 mt-1">Grounding verification</div>
                   </CardBody>
@@ -814,7 +895,9 @@ export default function AdminQualityCenterPage() {
                   <CardBody className="p-4">
                     <div className="text-xs text-slate-500 font-medium">Numerical Accuracy</div>
                     <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                      {benchmarkRun.summary.numerical_accuracy_pct.toFixed(1)}%
+                      {benchmarkRun.summary?.numerical_accuracy_pct != null
+                        ? `${benchmarkRun.summary.numerical_accuracy_pct.toFixed(1)}%`
+                        : "N/A"}
                     </div>
                     <div className="text-[11px] text-slate-400 mt-1">Mathematical precision</div>
                   </CardBody>
@@ -824,7 +907,9 @@ export default function AdminQualityCenterPage() {
                   <CardBody className="p-4">
                     <div className="text-xs text-slate-500 font-medium">Injection Resistance</div>
                     <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                      {benchmarkRun.summary.injection_resistance_pct.toFixed(1)}%
+                      {benchmarkRun.summary?.injection_resistance_pct != null
+                        ? `${benchmarkRun.summary.injection_resistance_pct.toFixed(1)}%`
+                        : "N/A"}
                     </div>
                     <div className="text-[11px] text-slate-400 mt-1">Prompt jailbreak defense</div>
                   </CardBody>
@@ -834,7 +919,7 @@ export default function AdminQualityCenterPage() {
                   <CardBody className="p-4">
                     <div className="text-xs text-slate-500 font-medium">Zero-PHI Violations</div>
                     <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                      {benchmarkRun.summary.phi_leakage_cases}
+                      {benchmarkRun.summary?.phi_leakage_cases ?? 0}
                     </div>
                     <div className="text-[11px] text-emerald-500 font-semibold mt-1">Strict HIPAA Boundary</div>
                   </CardBody>
@@ -846,10 +931,10 @@ export default function AdminQualityCenterPage() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
-                      Individual Test Case Executions ({benchmarkRun.suite_name} — Model: {benchmarkRun.model_name})
+                      Individual Test Case Executions ({benchmarkRun.suite_name || "CORE_REGRESSION"} — Model: {benchmarkRun.model_name || "gpt-4o"})
                     </h4>
-                    <Badge tone={benchmarkRun.summary.regression_detected ? "danger" : "success"}>
-                      {benchmarkRun.summary.regression_detected ? "Regression Flagged" : "No Regression Detected"}
+                    <Badge tone={benchmarkRun.summary?.regression_detected ? "danger" : "success"}>
+                      {benchmarkRun.summary?.regression_detected ? "Regression Flagged" : "No Regression Detected"}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -867,7 +952,7 @@ export default function AdminQualityCenterPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
-                        {benchmarkRun.details.map((c, i) => (
+                        {(benchmarkRun.details || []).map((c, i) => (
                           <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/40">
                             <td className="py-3 px-4 font-mono text-[11px] text-slate-800 dark:text-slate-200 font-semibold">
                               {c.test_type}
@@ -884,7 +969,7 @@ export default function AdminQualityCenterPage() {
                               {c.question}
                             </td>
                             <td className="py-3 px-4 font-mono text-slate-500">
-                              {c.latency_ms.toFixed(0)}ms
+                              {c.latency_ms != null ? `${c.latency_ms.toFixed(0)}ms` : "—"}
                             </td>
                             <td className="py-3 px-4">
                               <Badge tone={c.status === "PASSED" ? "success" : "danger"} className="text-[10px]">
@@ -892,7 +977,7 @@ export default function AdminQualityCenterPage() {
                               </Badge>
                             </td>
                             <td className="py-3 px-4 text-slate-500 truncate max-w-xs">
-                              {c.failure_reason || `${c.citations_count} verified citations`}
+                              {c.failure_reason || `${c.citations_count ?? 0} verified citations`}
                             </td>
                           </tr>
                         ))}
@@ -1254,13 +1339,13 @@ export default function AdminQualityCenterPage() {
               <CardBody className="p-4">
                 <div className="text-xs text-slate-500 font-medium">Database Latency & Engine</div>
                 <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1 flex items-baseline gap-2">
-                  <span>{telemetry?.database_telemetry.ping_latency_ms.toFixed(1)}ms</span>
+                  <span>{telemetry?.database_telemetry?.ping_latency_ms != null ? `${telemetry.database_telemetry.ping_latency_ms.toFixed(1)}ms` : "—"}</span>
                   <Badge tone="success" className="text-[10px]">
-                    {telemetry?.database_telemetry.engine}
+                    {telemetry?.database_telemetry?.engine || "PostgreSQL"}
                   </Badge>
                 </div>
                 <div className="text-[11px] text-slate-400 mt-1">
-                  Storage: {telemetry?.database_telemetry.sqlite_db_size_mb.toFixed(1)} MB
+                  Storage: {telemetry?.database_telemetry?.sqlite_db_size_mb != null ? `${telemetry.database_telemetry.sqlite_db_size_mb.toFixed(1)} MB` : "—"}
                 </div>
               </CardBody>
             </Card>
@@ -1269,10 +1354,10 @@ export default function AdminQualityCenterPage() {
               <CardBody className="p-4">
                 <div className="text-xs text-slate-500 font-medium">Background Job Queue</div>
                 <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                  {telemetry?.job_queue_metrics.queued} Queued
+                  {telemetry?.job_queue_metrics?.queued ?? 0} Queued
                 </div>
                 <div className="text-[11px] text-slate-400 mt-1">
-                  {telemetry?.job_queue_metrics.failed_last_24h} failures in last 24h
+                  {telemetry?.job_queue_metrics?.failed_last_24h ?? 0} failures in last 24h
                 </div>
               </CardBody>
             </Card>
@@ -1281,11 +1366,11 @@ export default function AdminQualityCenterPage() {
               <CardBody className="p-4">
                 <div className="text-xs text-slate-500 font-medium">Monthly Token Budget Cap</div>
                 <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                  ${costReport?.monthly_budget_usd.toFixed(2)}
+                  ${costReport?.monthly_budget_usd != null ? costReport.monthly_budget_usd.toFixed(2) : "0.00"}
                 </div>
                 <div className="text-[11px] text-slate-400 mt-1">
-                  ${costReport?.estimated_spend_usd.toFixed(2)} spent (
-                  {costReport?.budget_utilization_pct.toFixed(1)}%)
+                  ${costReport?.estimated_spend_usd != null ? costReport.estimated_spend_usd.toFixed(2) : "0.00"} spent (
+                  {costReport?.budget_utilization_pct != null ? costReport.budget_utilization_pct.toFixed(1) : "0.0"}%)
                 </div>
               </CardBody>
             </Card>
@@ -1294,10 +1379,10 @@ export default function AdminQualityCenterPage() {
               <CardBody className="p-4">
                 <div className="text-xs text-slate-500 font-medium">Token Consumption</div>
                 <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">
-                  {costReport?.total_token_consumption.toLocaleString()}
+                  {costReport?.total_token_consumption != null ? costReport.total_token_consumption.toLocaleString() : "0"}
                 </div>
                 <div className="text-[11px] text-slate-400 mt-1">
-                  Policy: {costReport?.fallback_policy}
+                  Policy: {costReport?.fallback_policy || "Standard"}
                 </div>
               </CardBody>
             </Card>

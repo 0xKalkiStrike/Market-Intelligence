@@ -310,9 +310,11 @@ class AiEvaluationRegressionService:
                 "injection_resistance_pct": injection_pct,
                 "phi_leakage_cases": phi_leakage_count,
                 "is_regression_detected": is_regression,
+                "regression_detected": is_regression,
                 "execution_time_ms": execution_duration,
             },
             "cases": case_results,
+            "details": case_results,
             "evaluated_at": run_record.created_at.isoformat(),
         }
 
@@ -322,23 +324,46 @@ class AiEvaluationRegressionService:
 
     def list_evaluation_runs(self, db: Session, limit: int = 20) -> List[Dict[str, Any]]:
         runs = db.query(AiRegressionRun).order_by(desc(AiRegressionRun.created_at)).limit(limit).all()
-        return [
-            {
+        result = []
+        for r in runs:
+            try:
+                cases = json.loads(r.results_json) if r.results_json else []
+            except Exception:
+                cases = []
+            pass_rate = round(r.overall_score * 100.0, 1)
+            summary_dict = {
+                "total_cases": r.total_cases,
+                "passed_cases": r.passed_cases,
+                "failed_cases": r.failed_cases,
+                "pass_rate_pct": pass_rate,
+                "citation_accuracy_pct": r.citation_accuracy_pct,
+                "numerical_accuracy_pct": r.numerical_accuracy_pct,
+                "injection_resistance_pct": r.injection_resistance_pct,
+                "phi_leakage_cases": r.phi_leakage_cases,
+                "is_regression_detected": r.is_regression_detected,
+                "regression_detected": r.is_regression_detected,
+                "execution_time_ms": r.execution_time_ms,
+            }
+            result.append({
                 "id": r.id,
+                "run_id": r.id,
                 "suite_name": r.suite_name,
                 "model_name": r.model_name,
                 "prompt_version": r.prompt_version,
                 "total_cases": r.total_cases,
                 "passed_cases": r.passed_cases,
                 "failed_cases": r.failed_cases,
-                "pass_rate_pct": round(r.overall_score * 100.0, 1),
+                "pass_rate_pct": pass_rate,
                 "citation_accuracy_pct": r.citation_accuracy_pct,
                 "numerical_accuracy_pct": r.numerical_accuracy_pct,
                 "injection_resistance_pct": r.injection_resistance_pct,
                 "phi_leakage_cases": r.phi_leakage_cases,
                 "is_regression_detected": r.is_regression_detected,
+                "regression_detected": r.is_regression_detected,
                 "execution_time_ms": r.execution_time_ms,
                 "created_at": r.created_at.isoformat() if r.created_at else None,
-            }
-            for r in runs
-        ]
+                "summary": summary_dict,
+                "cases": cases,
+                "details": cases,
+            })
+        return result
