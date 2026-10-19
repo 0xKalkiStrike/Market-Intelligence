@@ -23,7 +23,6 @@ import {
   FlaskConical,
   LineChart,
   Building2,
-  CreditCard,
   ChevronDown,
   ChevronRight,
   PanelLeftClose,
@@ -87,7 +86,6 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/admin-quality", label: "Quality Center", icon: ShieldCheck, badge: "LIVE", keywords: ["regression", "drift", "audit"] },
       { href: "/organization", label: "Organization & Team", icon: Building2, keywords: ["members", "rbac", "tenants"] },
-      { href: "/organization/billing", label: "Plans & Billing", icon: CreditCard, keywords: ["subscription", "invoices", "pricing"] },
       { href: "/integrations-center", label: "Integrations Hub", icon: Share2, keywords: ["api", "webhooks", "supabase"] },
       { href: "/operations-center", label: "Operations Hub", icon: Activity, keywords: ["jobs", "queues", "workers"] },
       { href: "/workflows", label: "Workflow Reviews", icon: FileText, keywords: ["reviews", "approvals"] },

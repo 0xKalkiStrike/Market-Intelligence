@@ -17,7 +17,6 @@ import {
   Sparkles,
   Bell,
   Building2,
-  CreditCard,
   ShieldCheck,
   Share2,
   Settings,
@@ -143,7 +142,7 @@ const PALETTE_ITEMS: PaletteItem[] = [
     href: "/admin-quality",
     icon: ShieldCheck,
     keywords: ["quality", "remediation", "benchmarks", "drift", "audit"],
-    badge: "P8",
+    badge: "LIVE",
   },
   {
     title: "Organization & Team",
@@ -151,13 +150,6 @@ const PALETTE_ITEMS: PaletteItem[] = [
     href: "/organization",
     icon: Building2,
     keywords: ["team", "members", "org", "users", "tenant"],
-  },
-  {
-    title: "Plans & Billing",
-    category: "Operations",
-    href: "/organization/billing",
-    icon: CreditCard,
-    keywords: ["billing", "subscription", "plan", "invoice", "payment"],
   },
   {
     title: "Integrations Hub",

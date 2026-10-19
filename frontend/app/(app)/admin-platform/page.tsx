@@ -112,7 +112,7 @@ export default function PlatformAdminPage() {
         </div>
         <p className="mt-3 text-xs text-slate-400 max-w-3xl">
           Least-privilege operational oversight. Manage tenant lifecycles, inspect aggregated platform telemetry,
-          and oversee commercial billing without penetrating private organizational datasets.
+          and oversee organizational quotas and platform health without penetrating private organizational datasets.
         </p>
       </div>
 
@@ -184,7 +184,7 @@ export default function PlatformAdminPage() {
         <div className="flex flex-col justify-between gap-4 border-b border-slate-800 px-6 py-4 sm:flex-row sm:items-center">
           <div>
             <h2 className="text-base font-semibold text-white">Customer Workspaces Directory</h2>
-            <p className="text-xs text-slate-400">Manage tenant statuses and inspect commercial subscriptions.</p>
+            <p className="text-xs text-slate-400">Manage tenant lifecycles and inspect operational workspaces.</p>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
