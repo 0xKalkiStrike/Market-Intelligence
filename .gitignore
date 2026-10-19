@@ -16,3 +16,8 @@ out/
 build/
 dist/
 .DS_Store
+*.log
+scratch/
+backend/scratch/
+backend/storage/backups/*
+!backend/storage/backups/.gitkeep
