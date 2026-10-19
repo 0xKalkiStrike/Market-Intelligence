@@ -15,7 +15,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> User:
     if db.query(User).filter(User.email == payload.email).first():
         raise HTTPException(status.HTTP_409_CONFLICT, "Email already registered")
 
-    is_admin = (db.query(User).count() == 0) or (db.query(User).filter(User.is_superuser == True).count() == 0)
+    is_admin = (db.query(User).count() == 0) or (db.query(User).filter(User.is_superuser.is_(True)).count() == 0)
     user = User(
         email=payload.email,
         hashed_password=hash_password(payload.password),

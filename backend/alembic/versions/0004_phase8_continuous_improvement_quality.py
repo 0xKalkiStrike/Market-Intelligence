@@ -157,12 +157,36 @@ def upgrade() -> None:
     op.create_index('idx_drift_records_name', 'model_drift_records', ['model_or_feature_name'])
     op.create_index('idx_drift_records_status', 'model_drift_records', ['drift_status'])
 
-    # 8. Add columns to intelligence_feedbacks using batch_alter_table for SQLite compatibility
-    with op.batch_alter_table('intelligence_feedbacks') as batch_op:
-        batch_op.add_column(sa.Column('status', sa.String(50), server_default='PENDING_REVIEW'))
-        batch_op.add_column(sa.Column('resolution_notes', sa.Text(), server_default=''))
-        batch_op.add_column(sa.Column('resolved_by', sa.String(255), nullable=True))
-        batch_op.add_column(sa.Column('resolved_at', sa.DateTime(), nullable=True))
+    # 8. Create intelligence_feedbacks if missing, or add columns with batch_alter_table
+    bind = op.get_bind()
+    insp = sa.inspect(bind)
+    tables = insp.get_table_names()
+    if 'intelligence_feedbacks' not in tables:
+        op.create_table(
+            'intelligence_feedbacks',
+            sa.Column('id', sa.String(36), primary_key=True),
+            sa.Column('target_type', sa.String(100), nullable=False),
+            sa.Column('target_id', sa.String(255), nullable=False),
+            sa.Column('feedback', sa.String(50), nullable=False),
+            sa.Column('notes', sa.Text(), nullable=True),
+            sa.Column('user_email', sa.String(255), nullable=True),
+            sa.Column('created_at', sa.DateTime(), nullable=False),
+            sa.Column('status', sa.String(50), server_default='PENDING_REVIEW'),
+            sa.Column('resolution_notes', sa.Text(), server_default=''),
+            sa.Column('resolved_by', sa.String(255), nullable=True),
+            sa.Column('resolved_at', sa.DateTime(), nullable=True),
+        )
+    else:
+        columns = [c['name'] for c in insp.get_columns('intelligence_feedbacks')]
+        with op.batch_alter_table('intelligence_feedbacks') as batch_op:
+            if 'status' not in columns:
+                batch_op.add_column(sa.Column('status', sa.String(50), server_default='PENDING_REVIEW'))
+            if 'resolution_notes' not in columns:
+                batch_op.add_column(sa.Column('resolution_notes', sa.Text(), server_default=''))
+            if 'resolved_by' not in columns:
+                batch_op.add_column(sa.Column('resolved_by', sa.String(255), nullable=True))
+            if 'resolved_at' not in columns:
+                batch_op.add_column(sa.Column('resolved_at', sa.DateTime(), nullable=True))
 
 
 def downgrade() -> None:

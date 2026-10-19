@@ -216,16 +216,26 @@ def upgrade() -> None:
     )
     op.create_index('idx_twebhook_org', 'tenant_webhooks', ['organization_id'])
 
-    # 13. Add organization_id column to projects & research_projects
-    with op.batch_alter_table('projects') as batch_op:
-        batch_op.add_column(sa.Column('organization_id', sa.String(36), nullable=True))
-        batch_op.create_foreign_key('fk_projects_organization', 'organizations', ['organization_id'], ['id'], ondelete='SET NULL')
-        batch_op.create_index('idx_projects_org_id', ['organization_id'])
+    # 13. Add organization_id column to projects & research_projects if they exist
+    bind = op.get_bind()
+    insp = sa.inspect(bind)
+    table_names = insp.get_table_names()
 
-    with op.batch_alter_table('research_projects') as batch_op:
-        batch_op.add_column(sa.Column('organization_id', sa.String(36), nullable=True))
-        batch_op.create_foreign_key('fk_research_projects_organization', 'organizations', ['organization_id'], ['id'], ondelete='SET NULL')
-        batch_op.create_index('idx_research_projects_org_id', ['organization_id'])
+    if 'projects' in table_names:
+        cols = [c['name'] for c in insp.get_columns('projects')]
+        if 'organization_id' not in cols:
+            with op.batch_alter_table('projects') as batch_op:
+                batch_op.add_column(sa.Column('organization_id', sa.String(36), nullable=True))
+                batch_op.create_foreign_key('fk_projects_organization', 'organizations', ['organization_id'], ['id'], ondelete='SET NULL')
+                batch_op.create_index('idx_projects_org_id', ['organization_id'])
+
+    if 'research_projects' in table_names:
+        cols = [c['name'] for c in insp.get_columns('research_projects')]
+        if 'organization_id' not in cols:
+            with op.batch_alter_table('research_projects') as batch_op:
+                batch_op.add_column(sa.Column('organization_id', sa.String(36), nullable=True))
+                batch_op.create_foreign_key('fk_research_projects_organization', 'organizations', ['organization_id'], ['id'], ondelete='SET NULL')
+                batch_op.create_index('idx_research_projects_org_id', ['organization_id'])
 
     # 14. Data Migration / Backfill
     bind = op.get_bind()
@@ -294,43 +304,52 @@ def upgrade() -> None:
             }
         )
 
-        # Attach all existing users as OWNER or ANALYST
-        users = bind.execute(sa.text("SELECT id, is_superuser FROM users")).fetchall()
-        for u in users:
-            role = "OWNER" if u[1] else "ANALYST"
-            bind.execute(
-                sa.text("""
-                    INSERT INTO organization_memberships (id, organization_id, user_id, role, is_active, joined_at, updated_at)
-                    VALUES (:id, :org_id, :user_id, :role, 1, :now_dt, :now_dt)
-                """),
-                {
-                    "id": str(uuid.uuid4()),
-                    "org_id": org_id,
-                    "user_id": u[0],
-                    "role": role,
-                    "now_dt": now_dt,
-                }
-            )
+        # Attach all existing users as OWNER or ANALYST if users table exists
+        if 'users' in table_names:
+            users = bind.execute(sa.text("SELECT id, is_superuser FROM users")).fetchall()
+            for u in users:
+                role = "OWNER" if u[1] else "ANALYST"
+                bind.execute(
+                    sa.text("""
+                        INSERT INTO organization_memberships (id, organization_id, user_id, role, is_active, joined_at, updated_at)
+                        VALUES (:id, :org_id, :user_id, :role, 1, :now_dt, :now_dt)
+                    """),
+                    {
+                        "id": str(uuid.uuid4()),
+                        "org_id": org_id,
+                        "user_id": u[0],
+                        "role": role,
+                        "now_dt": now_dt,
+                    }
+                )
 
-        # Backfill projects and research_projects
-        bind.execute(
-            sa.text("UPDATE projects SET organization_id = :org_id WHERE organization_id IS NULL"),
-            {"org_id": org_id}
-        )
-        bind.execute(
-            sa.text("UPDATE research_projects SET organization_id = :org_id WHERE organization_id IS NULL"),
-            {"org_id": org_id}
-        )
+        # Backfill projects and research_projects if they exist
+        if 'projects' in table_names:
+            bind.execute(
+                sa.text("UPDATE projects SET organization_id = :org_id WHERE organization_id IS NULL"),
+                {"org_id": org_id}
+            )
+        if 'research_projects' in table_names:
+            bind.execute(
+                sa.text("UPDATE research_projects SET organization_id = :org_id WHERE organization_id IS NULL"),
+                {"org_id": org_id}
+            )
 
 
 def downgrade() -> None:
-    with op.batch_alter_table('research_projects') as batch_op:
-        batch_op.drop_constraint('fk_research_projects_organization', type_='foreignkey')
-        batch_op.drop_column('organization_id')
+    bind = op.get_bind()
+    insp = sa.inspect(bind)
+    table_names = insp.get_table_names()
 
-    with op.batch_alter_table('projects') as batch_op:
-        batch_op.drop_constraint('fk_projects_organization', type_='foreignkey')
-        batch_op.drop_column('organization_id')
+    if 'research_projects' in table_names:
+        with op.batch_alter_table('research_projects') as batch_op:
+            batch_op.drop_constraint('fk_research_projects_organization', type_='foreignkey')
+            batch_op.drop_column('organization_id')
+
+    if 'projects' in table_names:
+        with op.batch_alter_table('projects') as batch_op:
+            batch_op.drop_constraint('fk_projects_organization', type_='foreignkey')
+            batch_op.drop_column('organization_id')
 
     op.drop_table('tenant_webhooks')
     op.drop_table('tenant_api_keys')
